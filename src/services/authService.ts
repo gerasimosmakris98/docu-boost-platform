@@ -1,3 +1,4 @@
+
 // Mock authentication service
 // Replace with actual OAuth implementations (Supabase, Auth0, Firebase)
 
@@ -10,6 +11,28 @@ export interface User {
   email: string;
   avatar?: string;
   provider: AuthProviderType;
+}
+
+export interface LinkedInProfile {
+  title: string;
+  company: string;
+  headline?: string;
+  summary?: string;
+  experience: {
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }[];
+  education: {
+    school: string;
+    degree: string;
+    year: string;
+  }[];
+  skills: string[];
+  profileUrl?: string;
+  profileScore?: number;
+  recommendations?: string[];
 }
 
 // Mock user data
@@ -60,14 +83,22 @@ export const authService = {
   },
 
   // Import LinkedIn profile data
-  importLinkedInProfile: async (): Promise<any> => {
+  importLinkedInProfile: async (): Promise<LinkedInProfile> => {
     return new Promise((resolve) => {
       setTimeout(() => {
         toast.success('LinkedIn profile imported successfully!');
         resolve({
           title: 'Senior Software Engineer',
           company: 'Tech Company Inc.',
+          headline: 'Innovative software engineer with a passion for creating elegant solutions',
+          summary: 'Experienced software professional with a track record of delivering high-quality products in agile environments.',
           experience: [
+            { 
+              title: 'Senior Software Engineer', 
+              company: 'Tech Company Inc.', 
+              duration: '2020-Present',
+              description: 'Leading development of cloud-based solutions using React, TypeScript, and AWS.' 
+            },
             { 
               title: 'Software Engineer', 
               company: 'Previous Company', 
@@ -88,7 +119,9 @@ export const authService = {
               year: '2016'
             }
           ],
-          skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'HTML/CSS']
+          skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'HTML/CSS', 'AWS', 'Git', 'Agile'],
+          profileUrl: 'https://linkedin.com/in/janesmith',
+          profileScore: 85
         });
       }, 2000);
     });

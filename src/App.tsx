@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import LinkedIn from "./pages/LinkedIn";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +23,7 @@ const App = () => (
             <Route path="/documents" element={<Index />} />
             <Route path="/cover-letters" element={<Index />} />
             <Route path="/assessments" element={<Index />} />
-            <Route path="/linkedin" element={<Index />} />
+            <Route path="/linkedin" element={<LinkedIn />} />
             <Route path="/guides" element={<Index />} />
             <Route path="/courses" element={<Index />} />
             <Route path="/profile" element={<Index />} />

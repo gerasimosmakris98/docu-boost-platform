@@ -1,5 +1,6 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, authService } from '@/services/authService';
+import { User, authService, LinkedInProfile } from '@/services/authService';
 
 // Rename the imported type to avoid conflict with the component
 export type AuthProviderType = 'google' | 'linkedin' | 'twitter';
@@ -8,9 +9,10 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  linkedInProfile: LinkedInProfile | null;
   loginWithProvider: (provider: AuthProviderType) => Promise<void>;
   logout: () => Promise<void>;
-  importLinkedInProfile: () => Promise<any>;
+  importLinkedInProfile: () => Promise<LinkedInProfile>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [linkedInProfile, setLinkedInProfile] = useState<LinkedInProfile | null>(null);
 
   useEffect(() => {
     // Check for existing user session on mount
@@ -44,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await authService.logout();
       setUser(null);
+      setLinkedInProfile(null);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -53,7 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const importLinkedInProfile = async () => {
     try {
-      return await authService.importLinkedInProfile();
+      const profile = await authService.importLinkedInProfile();
+      setLinkedInProfile(profile);
+      return profile;
     } catch (error) {
       console.error('Import LinkedIn profile error:', error);
       throw error;
@@ -66,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
+        linkedInProfile,
         loginWithProvider,
         logout,
         importLinkedInProfile

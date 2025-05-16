@@ -1,40 +1,72 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BrainCircuit, LineChart, PieChart, BarChart } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import AssessmentQuiz from "@/components/assessment/AssessmentQuiz";
+import { 
+  technicalAssessment, 
+  communicationAssessment, 
+  leadershipAssessment, 
+  problemSolvingAssessment 
+} from "@/data/mockAssessments";
 
 const AssessmentSection = () => {
+  const [selectedAssessment, setSelectedAssessment] = useState<any>(null);
+  const [assessmentOpen, setAssessmentOpen] = useState(false);
+
   const assessments = [
     {
-      id: "1",
+      id: "technical",
       title: "Technical Skills",
       progress: 78,
       icon: BrainCircuit,
       color: "bg-blue-500",
+      data: technicalAssessment
     },
     {
-      id: "2",
+      id: "communication",
       title: "Communication",
       progress: 62,
       icon: LineChart,
       color: "bg-emerald-500",
+      data: communicationAssessment
     },
     {
-      id: "3",
+      id: "leadership",
       title: "Leadership",
       progress: 45,
       icon: PieChart,
       color: "bg-purple-500",
+      data: leadershipAssessment
     },
     {
-      id: "4",
+      id: "problem-solving",
       title: "Problem Solving",
       progress: 85,
       icon: BarChart,
       color: "bg-amber-500",
+      data: problemSolvingAssessment
     },
   ];
+
+  const startAssessment = (assessment: any) => {
+    setSelectedAssessment(assessment);
+    setAssessmentOpen(true);
+  };
+
+  const handleCompleteAssessment = (results: any) => {
+    console.log("Assessment results:", results);
+    // In a real app, you would store these results
+  };
 
   return (
     <div>
@@ -62,13 +94,39 @@ const AssessmentSection = () => {
               />
             </CardContent>
             <CardFooter className="pt-0">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-xs text-primary">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-0 h-auto text-xs text-primary"
+                onClick={() => startAssessment(assessment)}
+              >
                 Continue Assessment
               </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+
+      <Dialog open={assessmentOpen} onOpenChange={setAssessmentOpen}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{selectedAssessment?.data.title}</DialogTitle>
+            <DialogDescription>
+              {selectedAssessment?.data.description}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAssessment && (
+            <AssessmentQuiz
+              title={selectedAssessment.data.title}
+              description={selectedAssessment.data.description}
+              questions={selectedAssessment.data.questions}
+              timeLimit={selectedAssessment.data.timeLimit}
+              onComplete={handleCompleteAssessment}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
