@@ -27,7 +27,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const DashboardSidebar = () => {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -65,7 +66,7 @@ const DashboardSidebar = () => {
         "border-r border-border",
         collapsed ? "w-[68px]" : "w-64"
       )}
-      collapsible
+      collapsible="icon"
     >
       <div className={cn(
         "flex h-14 items-center border-b px-4",

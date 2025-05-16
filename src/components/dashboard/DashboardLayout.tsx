@@ -16,7 +16,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   return (
-    <SidebarProvider collapsedWidth={68}>
+    <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <DashboardSidebar />
         <div className="flex flex-col flex-1 min-h-screen overflow-hidden">

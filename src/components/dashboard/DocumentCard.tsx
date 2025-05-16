@@ -18,6 +18,7 @@ interface DocumentCardProps {
   updatedAt: string;
   thumbnail?: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const DocumentCard = ({
@@ -27,6 +28,7 @@ const DocumentCard = ({
   updatedAt,
   thumbnail,
   className,
+  style,
 }: DocumentCardProps) => {
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -42,7 +44,7 @@ const DocumentCard = ({
   };
 
   return (
-    <Card className={cn("document-card overflow-hidden", className)}>
+    <Card className={cn("document-card overflow-hidden", className)} style={style}>
       <div className="relative h-32 bg-muted overflow-hidden">
         {thumbnail ? (
           <img

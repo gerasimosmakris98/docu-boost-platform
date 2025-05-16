@@ -9,6 +9,7 @@ interface TemplateCardProps {
   description: string;
   thumbnail: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const TemplateCard = ({
@@ -17,9 +18,10 @@ const TemplateCard = ({
   description,
   thumbnail,
   className,
+  style,
 }: TemplateCardProps) => {
   return (
-    <Card className={cn("document-card overflow-hidden", className)}>
+    <Card className={cn("document-card overflow-hidden", className)} style={style}>
       <div className="relative h-40 bg-muted overflow-hidden">
         <img
           src={thumbnail}
