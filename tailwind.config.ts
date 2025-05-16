@@ -93,13 +93,53 @@ export default {
 				slideIn: {
 					'0%': { transform: 'translateX(-20px)', opacity: '0' },
 					'100%': { transform: 'translateX(0)', opacity: '1' }
+				},
+				pulse: {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
+				},
+				shimmer: {
+					'0%': { 
+						backgroundPosition: '-200% 0' 
+					},
+					'100%': { 
+						backgroundPosition: '200% 0' 
+					},
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fadeIn 0.3s ease-out forwards',
-				'slide-in': 'slideIn 0.3s ease-out forwards'
+				'slide-in': 'slideIn 0.3s ease-out forwards',
+				'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'shimmer': 'shimmer 2s linear infinite'
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: '65ch',
+						p: {
+							lineHeight: '1.75'
+						},
+						'h1, h2, h3, h4': {
+							fontWeight: '700',
+							marginTop: '1.5em',
+							marginBottom: '0.5em'
+						},
+						a: {
+							textDecoration: 'none',
+							fontWeight: '500'
+						},
+						'a:hover': {
+							textDecoration: 'underline'
+						},
+						li: {
+							marginTop: '0.5em',
+							marginBottom: '0.5em'
+						}
+					}
+				}
 			}
 		}
 	},

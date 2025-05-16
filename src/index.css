@@ -73,6 +73,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
 }
 
@@ -84,6 +93,11 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Fix dark mode text in inputs and textareas */
+  input, textarea, select {
+    @apply bg-background text-foreground;
   }
 }
 
@@ -105,4 +119,53 @@
 .document-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode specific card hover */
+.dark .document-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+/* Resume styles */
+.resume-section {
+  @apply mb-8;
+}
+
+.resume-section-title {
+  @apply text-xl font-semibold mb-4 flex items-center gap-2;
+}
+
+.resume-item {
+  @apply border-l-2 border-primary/20 pl-4 mb-4;
+}
+
+.resume-item-title {
+  @apply font-semibold;
+}
+
+.resume-item-subtitle {
+  @apply flex justify-between text-muted-foreground text-sm;
+}
+
+.resume-item-description {
+  @apply mt-2 text-sm;
+}
+
+/* Skill tag styles */
+.skill-tag {
+  @apply bg-primary/10 text-primary px-3 py-1 rounded-full text-sm inline-block m-1;
+}
+
+/* Responsive utilities */
+.responsive-grid {
+  @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+
+.responsive-grid-tight {
+  @apply grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+}
+
+/* Focus styles that work in both light and dark mode */
+.focus-ring {
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
