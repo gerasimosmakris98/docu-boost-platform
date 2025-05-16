@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader } from "lucide-react";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useAuth, AuthProviderType } from "@/contexts/AuthContext";
 
 interface LoginDialogProps {
   isOpen: boolean;
@@ -18,9 +18,9 @@ interface LoginDialogProps {
 
 const LoginDialog = ({ isOpen, onClose }: LoginDialogProps) => {
   const { loginWithProvider } = useAuth();
-  const [isLoading, setIsLoading] = useState<AuthProvider | null>(null);
+  const [isLoading, setIsLoading] = useState<AuthProviderType | null>(null);
 
-  const handleLogin = async (provider: AuthProvider) => {
+  const handleLogin = async (provider: AuthProviderType) => {
     setIsLoading(provider);
     try {
       await loginWithProvider(provider);

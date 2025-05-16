@@ -1,12 +1,14 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AuthProvider, User, authService } from '@/services/authService';
+import { User, authService } from '@/services/authService';
+
+// Rename the imported type to avoid conflict with the component
+export type AuthProviderType = 'google' | 'linkedin' | 'twitter';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginWithProvider: (provider: AuthProvider) => Promise<void>;
+  loginWithProvider: (provider: AuthProviderType) => Promise<void>;
   logout: () => Promise<void>;
   importLinkedInProfile: () => Promise<any>;
 }
@@ -25,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, 500);
   }, []);
 
-  const loginWithProvider = async (provider: AuthProvider) => {
+  const loginWithProvider = async (provider: AuthProviderType) => {
     setIsLoading(true);
     try {
       const user = await authService.loginWithProvider(provider);

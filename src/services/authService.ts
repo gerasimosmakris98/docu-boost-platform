@@ -1,21 +1,19 @@
-
 // Mock authentication service
 // Replace with actual OAuth implementations (Supabase, Auth0, Firebase)
 
 import { toast } from "sonner";
-
-export type AuthProvider = 'google' | 'linkedin' | 'twitter';
+import { AuthProviderType } from "@/contexts/AuthContext";
 
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  provider: AuthProvider;
+  provider: AuthProviderType;
 }
 
 // Mock user data
-const mockUsers: Record<AuthProvider, User> = {
+const mockUsers: Record<AuthProviderType, User> = {
   google: {
     id: 'g-123456',
     name: 'John Doe',
@@ -41,7 +39,7 @@ const mockUsers: Record<AuthProvider, User> = {
 
 export const authService = {
   // Mock login with provider
-  loginWithProvider: async (provider: AuthProvider): Promise<User> => {
+  loginWithProvider: async (provider: AuthProviderType): Promise<User> => {
     return new Promise((resolve) => {
       // Simulate API call delay
       setTimeout(() => {
