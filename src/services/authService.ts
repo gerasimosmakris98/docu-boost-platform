@@ -1,4 +1,3 @@
-
 // Mock authentication service
 // Replace with actual OAuth implementations (Supabase, Auth0, Firebase)
 
@@ -11,6 +10,10 @@ export interface User {
   email: string;
   avatar?: string;
   provider: AuthProviderType;
+  title?: string;     // Added
+  location?: string;  // Added
+  phone?: string;     // Added
+  website?: string;   // Added
 }
 
 export interface LinkedInProfile {
@@ -42,21 +45,33 @@ const mockUsers: Record<AuthProviderType, User> = {
     name: 'John Doe',
     email: 'john.doe@gmail.com',
     avatar: 'https://i.pravatar.cc/150?u=john',
-    provider: 'google'
+    provider: 'google',
+    title: 'Senior Software Engineer',
+    location: 'San Francisco, CA',
+    phone: '+1 (555) 987-6543',
+    website: 'johndoe.dev'
   },
   linkedin: {
     id: 'l-123456',
     name: 'Jane Smith',
     email: 'jane.smith@linkedin.com',
     avatar: 'https://i.pravatar.cc/150?u=jane',
-    provider: 'linkedin'
+    provider: 'linkedin',
+    title: 'Product Manager',
+    location: 'New York, NY',
+    phone: '+1 (555) 123-4567',
+    website: 'janesmith.pro'
   },
   twitter: {
     id: 't-123456',
     name: 'Sam Wilson',
     email: 'sam.wilson@twitter.com',
     avatar: 'https://i.pravatar.cc/150?u=sam',
-    provider: 'twitter'
+    provider: 'twitter',
+    title: 'UX Designer',
+    location: 'Austin, TX',
+    phone: '+1 (555) 456-7890',
+    website: 'samwilson.design'
   }
 };
 
