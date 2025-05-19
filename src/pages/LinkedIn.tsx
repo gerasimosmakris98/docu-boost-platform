@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import LinkedInImport from "@/components/linkedin/LinkedInImport";
+import LinkedInOptimizer from "@/components/linkedin/LinkedInOptimizer";
 import { 
   Linkedin, 
   User, 
@@ -20,16 +22,21 @@ import {
   Calendar, 
   Briefcase, 
   Star, 
-  CheckCircle 
+  CheckCircle,
+  ArrowRight,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
 import { LinkedInProfile } from "@/services/authService";
+import { documentService } from "@/services/documentService";
+import { conversationService } from "@/services/conversationService";
 
 const LinkedInPage = () => {
   const { user, isAuthenticated, linkedInProfile } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [optimizationScore, setOptimizationScore] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Simulate profile analysis if we have a profile
@@ -51,6 +58,88 @@ const LinkedInPage = () => {
   const handleProfileImported = (profile: LinkedInProfile) => {
     console.log("Profile imported in page component:", profile);
     // Any additional logic after import
+  };
+
+  const handleCreateDocument = async (type: 'resume' | 'cover_letter') => {
+    if (!isAuthenticated || !linkedInProfile) {
+      toast.error("Please import your LinkedIn profile first");
+      return;
+    }
+    
+    try {
+      // First we need to format the LinkedIn profile data for document generation
+      const userProfile = {
+        name: user?.user_metadata?.full_name || '',
+        title: linkedInProfile.title || '',
+        summary: linkedInProfile.summary || '',
+        experience: linkedInProfile.experience.map(exp => ({
+          title: exp.title,
+          company: exp.company,
+          duration: exp.duration,
+          description: exp.description
+        })),
+        education: linkedInProfile.education.map(edu => ({
+          degree: edu.degree,
+          school: edu.school,
+          year: edu.year
+        })),
+        skills: linkedInProfile.skills
+      };
+      
+      // For cover letters, we'll ask the user to provide a job description in a future enhancement
+      const jobDescription = type === 'cover_letter' 
+        ? "This is a placeholder job description. In a future version, the app will ask for a specific job description."
+        : "";
+      
+      toast.loading(`Generating your ${type === 'resume' ? 'resume' : 'cover letter'}...`);
+      
+      // Generate the document using the AI service
+      const document = await documentService.generateDocument(
+        type,
+        userProfile,
+        jobDescription
+      );
+      
+      toast.dismiss();
+      
+      if (document) {
+        toast.success(`Your ${type === 'resume' ? 'resume' : 'cover letter'} has been created!`);
+        
+        // Navigate to view the document
+        navigate(`/documents/${document.id}`);
+      } else {
+        toast.error(`Failed to generate ${type === 'resume' ? 'resume' : 'cover letter'}`);
+      }
+    } catch (error) {
+      console.error(`Error creating ${type}:`, error);
+      toast.error(`Failed to create ${type}`);
+    }
+  };
+
+  const handleStartConversation = async (type: 'resume_feedback' | 'interview_prep') => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to continue");
+      return;
+    }
+    
+    try {
+      // Create a specialized conversation
+      const conversation = await conversationService.createSpecializedConversation(
+        type,
+        undefined, // No linked document yet
+        type === 'interview_prep' ? "Software Engineer position at a tech company" : undefined
+      );
+      
+      if (conversation) {
+        // Navigate to the conversation
+        navigate(`/conversations/${conversation.id}`);
+      } else {
+        throw new Error("Failed to create conversation");
+      }
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+      toast.error("Failed to start conversation");
+    }
   };
 
   return (
@@ -81,81 +170,114 @@ const LinkedInPage = () => {
           {/* Import Section */}
           <LinkedInImport onProfileImported={handleProfileImported} />
 
-          {/* Profile Optimization */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-amber-500" />
-                Profile Optimization
-              </CardTitle>
-              <CardDescription>
-                Get AI-powered suggestions to improve your LinkedIn profile
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {linkedInProfile ? (
-                <div className="space-y-4">
-                  {optimizationScore !== null && (
-                    <div className="relative pt-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold inline-block text-blue-600">
-                            Profile Strength
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-semibold inline-block text-blue-600">
-                            {optimizationScore}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                        <div 
-                          style={{ width: `${optimizationScore}%` }} 
-                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Suggested Improvements:</p>
-                    <ul className="space-y-1.5 text-sm">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Add a more detailed professional headline
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Expand your skills section with relevant keywords
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        Add specific achievements to your experience
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              ) : (
+          {/* Profile Optimization with new Optimizer component */}
+          {linkedInProfile ? (
+            <LinkedInOptimizer 
+              profile={linkedInProfile}
+              onCreateDocument={handleCreateDocument}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500" />
+                  Profile Optimization
+                </CardTitle>
+                <CardDescription>
+                  Get AI-powered suggestions to improve your LinkedIn profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="text-center py-4">
                   <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground">
                     Import your LinkedIn profile first to get optimization suggestions
                   </p>
                 </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleOptimizeProfile} 
-                disabled={!linkedInProfile}
-                className="w-full"
-              >
-                Get Detailed Suggestions
-              </Button>
-            </CardFooter>
-          </Card>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={handleOptimizeProfile} 
+                  disabled={!linkedInProfile}
+                  className="w-full"
+                >
+                  Get Detailed Suggestions
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
         </div>
+
+        {/* AI-Powered Career Tools Section */}
+        {linkedInProfile && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">AI-Powered Career Tools</h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="hover:border-blue-300 transition-all">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-green-500" />
+                    Resume Review
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-sm text-gray-600">
+                    Get AI-powered feedback on your resume and suggestions for improvement.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full flex items-center justify-center gap-1" 
+                    onClick={() => handleStartConversation('resume_feedback')}
+                  >
+                    Start Review <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              <Card className="hover:border-blue-300 transition-all">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-blue-500" />
+                    Interview Prep
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-sm text-gray-600">
+                    Practice with AI-powered mock interviews tailored to your target roles.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    className="w-full flex items-center justify-center gap-1" 
+                    onClick={() => handleStartConversation('interview_prep')}
+                  >
+                    Start Prep <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              <Card className="hover:border-blue-300 transition-all">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Star className="h-5 w-5 text-amber-500" />
+                    Skills Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <p className="text-sm text-gray-600">
+                    Analyze how your skills align with job market demands and get recommendations.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full flex items-center justify-center gap-1">
+                    Analyze Skills <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Profile Preview */}
         {linkedInProfile && (
