@@ -18,24 +18,40 @@ serve(async (req) => {
   try {
     console.log('Perplexity AI response function called');
     const requestData = await req.json();
-    const { prompt, type = "general" } = requestData;
+    const { 
+      prompt, 
+      type = "general",
+      systemPrompt,
+      maxTokens = 1000,
+      temperature = 0.2
+    } = requestData;
 
-    console.log('Request data:', { prompt, type });
+    console.log('Request data:', { 
+      promptLength: prompt?.length || 0, 
+      type,
+      maxTokens,
+      temperature
+    });
 
-    // Different system prompts based on the type of request
-    let systemPrompt = 'You are an AI career advisor that helps users with career guidance, resume optimization, and interview preparation.';
+    // Use provided system prompt or create default one
+    let finalSystemPrompt = systemPrompt || 'You are an AI career advisor that helps users with career guidance, resume optimization, and interview preparation.';
     
-    if (type === "resume" || type === "resume_optimization") {
-      systemPrompt = 'You are an expert resume consultant that specializes in optimizing resumes for applicant tracking systems and hiring managers. Provide detailed, specific feedback and suggestions.';
-    } else if (type === "interview_prep") {
-      systemPrompt = 'You are an expert interview coach that helps professionals prepare for job interviews. Provide detailed, actionable advice for answering questions and presenting yourself professionally.';
-    } else if (type === "linkedin" || type === "linkedin_analysis") {
-      systemPrompt = 'You are a LinkedIn profile optimization expert that helps professionals improve their LinkedIn presence. Analyze the provided profile data and offer specific suggestions for improvement.';
-    } else if (type === "cover_letter" || type === "job_application") {
-      systemPrompt = 'You are a job application strategist that helps professionals apply for jobs effectively. Provide tailored advice on cover letters, application materials, and application strategies.';
+    // Default system prompts based on type if not provided
+    if (!systemPrompt) {
+      if (type === "resume") {
+        finalSystemPrompt = 'You are a friendly resume consultant. Help users create effective resumes. Be concise, specific, and constructive. Focus on practical advice tailored to modern hiring practices. Break down complex concepts into simple steps.';
+      } else if (type === "interview_prep") {
+        finalSystemPrompt = 'You are a supportive interview coach. Provide concise, practical advice for interview preparation. Focus on building confidence and authentic responses. Use examples to illustrate effective answers.';
+      } else if (type === "linkedin") {
+        finalSystemPrompt = 'You are a LinkedIn profile optimization expert. Provide specific, actionable advice for improving online professional presence. Focus on creating compelling profiles that attract recruiters.';
+      } else if (type === "cover_letter") {
+        finalSystemPrompt = 'You are a cover letter specialist. Help users create compelling, tailored cover letters. Focus on connecting their experience to specific roles. Be concise and practical.';
+      } else if (type === "assessment") {
+        finalSystemPrompt = 'You are an assessment preparation coach. Help users prepare for job assessments and tests. Provide practical strategies, sample questions, and preparation techniques.';
+      }
     }
 
-    console.log('Using system prompt:', systemPrompt);
+    console.log('Using system prompt:', finalSystemPrompt.substring(0, 50) + '...');
     
     if (!perplexityApiKey) {
       console.error('PERPLEXITY_API_KEY environment variable not set');
@@ -58,11 +74,11 @@ serve(async (req) => {
         body: JSON.stringify({
           model: 'llama-3.1-sonar-small-128k-online',
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: finalSystemPrompt },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.2,
-          max_tokens: 1000,
+          temperature: temperature,
+          max_tokens: maxTokens,
           top_p: 0.9,
         }),
       });

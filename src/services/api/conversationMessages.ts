@@ -3,8 +3,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/conversationTypes";
 import { asConversationType } from "./conversationApiUtils";
 import { aiProviderService } from "../ai/aiProviderService";
-import { getChatPromptForType } from "../utils/conversationUtils";
-import { formatConversationContext } from "./conversationApiUtils";
+import { 
+  getChatPromptForType, 
+  formatConversationContext, 
+  extractUrlType, 
+  getSystemPromptForType 
+} from "../utils/conversationUtils";
+import { getModelOptions } from "../ai/providerConfigs";
+
+/**
+ * Extract URLs from a message
+ */
+const extractUrls = (text: string): string[] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.match(urlRegex) || [];
+};
+
+/**
+ * Determine if message is brief or requires detailed response
+ * based on content and length
+ */
+const shouldBeBrief = (message: string): boolean => {
+  // Messages with these keywords likely want brief responses
+  const briefKeywords = ['help', 'tip', 'quick', 'start', 'hello', 'hi'];
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // If message is short (less than 15 words)
+  if (message.split(' ').length < 15) {
+    // Check if it contains any brief keywords
+    return briefKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+  
+  // Longer messages typically need more detailed responses
+  return false;
+};
 
 /**
  * Send a message to the conversation and get an AI response
@@ -45,13 +78,13 @@ export const sendMessage = async (
     
     console.log('User message saved successfully:', userMessageData.id);
     
-    // Get previous messages to provide context (limit to 10 for better context)
+    // Get previous messages to provide context (limit to 5 for more focused context)
     const { data: previousMessages, error: prevMsgError } = await supabase
       .from('messages')
       .select('role, content')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(5);
     
     if (prevMsgError) throw prevMsgError;
     
@@ -61,8 +94,29 @@ export const sendMessage = async (
     
     console.log('Context built with message count:', previousMessages?.length);
     
+    // Determine if response should be brief based on message content
+    const brief = shouldBeBrief(content);
+    console.log('Response should be brief:', brief);
+    
+    // Extract any URLs from the message for analysis
+    const urls = extractUrls(content);
+    const hasUrls = urls.length > 0;
+    console.log('URLs detected:', urls.length);
+    
+    // Get model options based on conversation type
+    const modelOptions = getModelOptions(conversationType);
+    console.log('Using model options:', modelOptions);
+    
     // Create prompt based on conversation type and include context
-    const prompt = getChatPromptForType(conversationType, content, contextMessages);
+    const prompt = getChatPromptForType(
+      conversationType, 
+      content, 
+      contextMessages, 
+      { brief, depth: brief ? 'low' : 'medium' }
+    );
+    
+    // Get system prompt based on conversation type
+    const systemPrompt = getSystemPromptForType(conversationType);
     
     let aiResponseContent = '';
     
@@ -86,16 +140,55 @@ export const sendMessage = async (
       
       try {
         // Analyze file with our provider service
-        aiResponseContent = await aiProviderService.analyzeFile(fileUrl, fileName, fileType);
+        aiResponseContent = await aiProviderService.analyzeFile(
+          fileUrl, 
+          fileName, 
+          fileType, 
+          systemPrompt,
+          modelOptions
+        );
         console.log('File analysis complete');
       } catch (fileError) {
         console.error('Error analyzing file:', fileError);
         aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
       }
+    } else if (hasUrls) {
+      // If there are URLs in the message, analyze the first one
+      const urlToAnalyze = urls[0];
+      const urlType = extractUrlType(urlToAnalyze);
+      
+      console.log('Analyzing URL:', urlToAnalyze, 'Type:', urlType);
+      
+      try {
+        // We'll use the regular text generation for now but inform it about the URL
+        const urlAnalysisPrompt = `The user has shared this URL: ${urlToAnalyze}\n\nBased on my analysis, this appears to be a ${urlType} URL.\n\nPlease analyze this URL and provide insights relevant to their career goals.\n\n${prompt}`;
+        
+        aiResponseContent = await aiProviderService.generateResponse(
+          urlAnalysisPrompt, 
+          conversationType, 
+          systemPrompt,
+          modelOptions
+        );
+        console.log('URL analysis complete');
+      } catch (urlError) {
+        console.error('Error analyzing URL:', urlError);
+        // Fall back to regular text generation
+        aiResponseContent = await aiProviderService.generateResponse(
+          prompt, 
+          conversationType,
+          systemPrompt,
+          modelOptions
+        );
+      }
     } else {
       // Generate AI response based on text prompt using our provider service
       console.log('Generating AI response using provider service');
-      aiResponseContent = await aiProviderService.generateResponse(prompt, conversationType);
+      aiResponseContent = await aiProviderService.generateResponse(
+        prompt, 
+        conversationType,
+        systemPrompt,
+        modelOptions
+      );
       console.log('AI response generated successfully');
     }
     
