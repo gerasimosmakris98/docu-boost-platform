@@ -24,6 +24,7 @@ const FileAnalyzer = ({ onAnalysisComplete }: FileAnalyzerProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleFileUploaded = (url: string, fileName: string, fileType: string) => {
+    console.log('File uploaded:', { url, fileName, fileType });
     setUploadedFile({
       url,
       name: fileName,
@@ -42,12 +43,18 @@ const FileAnalyzer = ({ onAnalysisComplete }: FileAnalyzerProps) => {
     setError(null);
 
     try {
+      console.log('Analyzing file:', uploadedFile);
       const analysis = await openaiService.analyzeFile(
         uploadedFile.url,
         uploadedFile.name,
         uploadedFile.type
       );
       
+      if (!analysis) {
+        throw new Error("No analysis was returned");
+      }
+      
+      console.log('Analysis received:', analysis.substring(0, 100) + '...');
       onAnalysisComplete(analysis);
       toast.success("File analysis complete");
     } catch (error: any) {
@@ -58,6 +65,12 @@ const FileAnalyzer = ({ onAnalysisComplete }: FileAnalyzerProps) => {
       setIsAnalyzing(false);
     }
   };
+
+  const supportedFileTypes = [
+    '.pdf', '.doc', '.docx', // Documents
+    '.jpg', '.jpeg', '.png', '.gif', // Images
+    '.txt' // Text files
+  ];
 
   return (
     <Card className="w-full">
@@ -70,10 +83,15 @@ const FileAnalyzer = ({ onAnalysisComplete }: FileAnalyzerProps) => {
       
       <CardContent>
         {!uploadedFile ? (
-          <FileUpload 
-            onFileUploaded={(url, fileName, fileType) => handleFileUploaded(url, fileName, fileType)} 
-            maxSizeMB={10}
-          />
+          <div className="space-y-2">
+            <FileUpload 
+              onFileUploaded={(url, fileName, fileType) => handleFileUploaded(url, fileName, fileType)} 
+              maxSizeMB={10}
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Supported file types: {supportedFileTypes.join(', ')}
+            </p>
+          </div>
         ) : (
           <div className="p-3 border rounded-md flex items-center justify-between">
             <div className="flex items-center gap-2">

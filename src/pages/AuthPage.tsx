@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -24,6 +23,7 @@ import { Link } from "react-router-dom";
 type AuthType = "signin" | "signup" | "magic";
 
 const AuthPage = () => {
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, isLoading, loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
@@ -35,7 +35,8 @@ const AuthPage = () => {
   const [authType, setAuthType] = useState<AuthType>("signin");
   const [error, setError] = useState<string | null>(null);
   
-  // Redirect if already authenticated
+  
+  
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       const from = location.state?.from || "/chat";
@@ -44,6 +45,8 @@ const AuthPage = () => {
   }, [isAuthenticated, isLoading, navigate, location.state]);
 
   const clearError = () => setError(null);
+  
+  
   
   const handleProviderLogin = async (provider: "google") => {
     setLoading(true);
@@ -86,6 +89,7 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+  
   
   return (
     <div className="min-h-screen bg-black text-white flex justify-center items-center p-4 animate-fadeIn">
