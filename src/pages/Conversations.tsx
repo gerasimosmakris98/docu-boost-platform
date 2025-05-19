@@ -246,7 +246,7 @@ const Conversations = () => {
                         className="flex items-center flex-1"
                       >
                         <div className="p-2 rounded-full bg-gray-100 mr-3">
-                          {getConversationIcon(conversation.type as ConversationType)}
+                          {getConversationIcon(conversation.type)}
                         </div>
                         <div>
                           <h4 className="font-medium">{conversation.title}</h4>

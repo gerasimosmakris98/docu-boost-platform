@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatMessage from "@/components/conversation/ChatMessage";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Paperclip, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -137,7 +136,7 @@ const ConversationDetail = () => {
             <div>
               <h1 className="text-xl font-semibold">{conversation?.title || "Conversation"}</h1>
               <p className="text-sm text-gray-500">
-                {conversation?.type === 'resume_feedback' ? 'Resume Review Assistant' :
+                {conversation?.type === 'resume' ? 'Resume Review Assistant' :
                  conversation?.type === 'interview_prep' ? 'Interview Preparation Coach' :
                  conversation?.type === 'cover_letter' ? 'Cover Letter Assistant' :
                  conversation?.type === 'job_search' ? 'Job Search Strategist' :
@@ -167,11 +166,9 @@ const ConversationDetail = () => {
           ) : (
             messages.map((message) => (
               <ChatMessage
-                key={message.id}
-                sender={message.role}
-                content={message.content}
-                timestamp={new Date(message.created_at).toLocaleTimeString()}
-                attachments={message.attachments}
+                key={message.id || `msg-${message.created_at}`}
+                message={message}
+                isLoading={!message.id || message.id.startsWith('temp')}
               />
             ))
           )}

@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export type ConversationType = 'general' | 'resume_feedback' | 'interview_prep' | 'cover_letter' | 'job_search';
+export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search';
 
 export interface Conversation {
   id: string;
@@ -19,7 +19,7 @@ export interface Conversation {
 }
 
 export interface Message {
-  id: string;
+  id?: string;
   conversation_id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -182,7 +182,7 @@ export const conversationService = {
     conversationId: string, 
     content: string, 
     attachments: string[] = []
-  ): Promise<Message | null> {
+  ): Promise<{ aiResponse?: Message } | null> {
     try {
       // Save the user message
       const { data: userMessage, error: userMessageError } = await supabase
@@ -240,8 +240,10 @@ export const conversationService = {
       if (assistantMessageError) throw assistantMessageError;
 
       return {
-        ...assistantMessage,
-        role: assistantMessage.role as 'user' | 'assistant'
+        aiResponse: {
+          ...assistantMessage,
+          role: assistantMessage.role as 'user' | 'assistant'
+        }
       };
     } catch (error) {
       console.error('Error sending message:', error);
@@ -253,7 +255,7 @@ export const conversationService = {
   // Get specialized chat contexts for different document types
   getChatPromptForType(type: ConversationType, documentContent?: string, jobDescription?: string): string {
     switch (type) {
-      case 'resume_feedback':
+      case 'resume':
         return `You are a resume specialist. Here's a resume: "${documentContent}". Please provide detailed feedback.`;
       case 'interview_prep':
         return `You are an interview coach. The job description is: "${jobDescription}". Provide interview preparation guidance.`;
@@ -276,7 +278,7 @@ export const conversationService = {
       let title = '';
       
       switch (type) {
-        case 'resume_feedback':
+        case 'resume':
           title = 'Resume Review';
           break;
         case 'interview_prep':
@@ -304,7 +306,7 @@ export const conversationService = {
         conversation_id: conversation.id,
         role: 'assistant',
         content: `Welcome to your ${title.toLowerCase()} session. I'm here to help you with ${
-          type === 'resume_feedback' ? 'improving your resume' :
+          type === 'resume' ? 'improving your resume' :
           type === 'interview_prep' ? 'preparing for your upcoming interview' :
           type === 'cover_letter' ? 'crafting an effective cover letter' :
           type === 'job_search' ? 'developing an effective job search strategy' :

@@ -52,6 +52,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
           const welcomeMessage = getWelcomeMessage(data.conversation.type as ConversationType);
           setMessages([
             {
+              id: `welcome-${Date.now()}`,
               conversation_id: conversationId,
               role: 'assistant',
               content: welcomeMessage,
@@ -86,6 +87,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     
     // Optimistically add user message to UI
     const tempUserMessage: Message = {
+      id: `temp-user-${Date.now()}`,
       conversation_id: conversationId,
       role: 'user',
       content: userMessage,
@@ -95,7 +97,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     setMessages(prev => [...prev, tempUserMessage]);
     
     // Add temporary loading message
-    const tempLoadingId = Date.now().toString();
+    const tempLoadingId = `temp-loading-${Date.now()}`;
     const tempLoadingMessage: Message = {
       id: tempLoadingId,
       conversation_id: conversationId,
@@ -111,7 +113,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
       const response = await conversationService.sendMessage(conversationId, userMessage);
       
       // Remove temporary loading message and add real response
-      if (response.aiResponse) {
+      if (response && response.aiResponse) {
         setMessages(prev => 
           prev.filter(msg => msg.id !== tempLoadingId).concat(response.aiResponse!)
         );
