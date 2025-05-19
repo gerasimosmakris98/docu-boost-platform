@@ -1,9 +1,9 @@
 
 import { AIModelOptions, ProgressiveResponseOptions, ConversationType } from './types';
-import { tryProvider, tryFileAnalysisProvider } from './providerService';
-import { providers, providerOrder, unavailableProviders } from './providerConfigs';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-// Enhanced version of the AI provider service with better response formatting
+// Enhanced version of the AI provider service
 const aiProviderService = {
   // Generate a response using the AI provider
   generateResponse: async (
@@ -11,64 +11,65 @@ const aiProviderService = {
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
   ): Promise<string> => {
-    // Enhance the prompt with instructions for concise, relevant responses
-    const enhancedPrompt = `
-      You are an AI career advisor helping with ${conversationType}.
-      
-      Guidelines for your response:
-      - Be concise and direct
-      - Focus on practical, actionable advice
-      - Limit responses to 3-5 key points
-      - Use bullet points for clarity when appropriate
-      - Respond in a conversational, human-like manner
-      - Try to reference user profile data when relevant
-      - Avoid overly verbose explanations
-      
-      User query: ${prompt}
-    `;
+    console.log('Generating response for:', conversationType);
     
-    // Set default options for more concise responses
-    const defaultOptions: AIModelOptions & ProgressiveResponseOptions = {
-      temperature: 0.6,
-      maxTokens: 800,
-      brief: true,
-      depth: 'medium',
-      format: 'bullets'
-    };
-    
-    // Merge user options with defaults
-    const mergedOptions = {
-      ...defaultOptions,
-      ...options
-    };
-    
-    // Try each provider in order until one succeeds
-    for (const provider of providerOrder) {
-      if (provider === 'fallback') {
-        return `I've reviewed your profile information and here are some thoughts on ${conversationType}:
+    try {
+      // Enhance the prompt with instructions for better responses
+      const enhancedPrompt = `
+        You are an AI career advisor helping with ${conversationType}.
         
-        • I see you're interested in ${conversationType === 'resume' ? 'improving your resume' : 
-            conversationType === 'cover_letter' ? 'crafting a compelling cover letter' : 
-            conversationType === 'interview_prep' ? 'preparing for interviews' : 
-            conversationType === 'job_search' ? 'optimizing your job search' : 
-            conversationType === 'linkedin' ? 'enhancing your LinkedIn presence' : 
-            conversationType === 'assessment' ? 'preparing for assessments' : 
-            'advancing your career'}.
-        • Based on your background, I recommend focusing on highlighting your unique skills and experiences.
-        • Make sure to tailor your materials to each specific opportunity you pursue.
-        • Consider seeking feedback from professionals in your target industry.
-        • Let me know if you'd like more specific advice on any aspect of your career development.`;
+        Guidelines for your response:
+        - Be detailed and helpful
+        - Provide personalized advice based on the user's context and background
+        - Use clear formatting with headings, bullet points, and paragraphs
+        - Be conversational and engaging
+        - Provide specific examples when relevant
+        - Avoid generic advice without context
+        
+        User query: ${prompt}
+      `;
+      
+      // Call Supabase Edge Function to generate AI response
+      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+        body: { 
+          prompt: enhancedPrompt,
+          type: conversationType 
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling AI function:', error);
+        throw new Error(`Failed to generate AI response: ${error.message}`);
       }
       
-      try {
-        return await tryProvider(provider, enhancedPrompt, conversationType);
-      } catch (error) {
-        console.warn(`Provider ${provider} failed:`, error);
-        // Continue to next provider
+      if (data.error) {
+        console.error('AI service error:', data.error);
+        throw new Error(data.message || 'AI service error');
       }
+      
+      if (!data.generatedText) {
+        throw new Error('No response received from AI service');
+      }
+      
+      return data.generatedText;
+    } catch (error) {
+      console.error('Error in generateResponse:', error);
+      
+      // Provide a helpful fallback response
+      return `I apologize, but I'm having trouble generating a detailed response at the moment. 
+
+Here are some general tips regarding ${conversationType}:
+
+## General Advice
+
+- Make sure your materials are tailored to your specific background and target opportunities
+- Focus on emphasizing your most relevant skills and achievements for each application
+- Quantify your accomplishments with specific metrics when possible (e.g., "increased sales by 25%")
+- Maintain a consistent professional tone across all communications
+- Seek feedback from industry professionals before finalizing your materials
+
+Please try again later for more personalized advice. If this issue persists, you might want to refresh the page or contact support.`;
     }
-    
-    return "I apologize, but I'm currently experiencing technical difficulties. Please try again later.";
   },
   
   // Analyze a file using the AI provider
@@ -79,61 +80,135 @@ const aiProviderService = {
     profileContext?: string,
     options?: AIModelOptions
   ): Promise<string> => {
-    // Create an enhanced prompt with profile context if available
-    let enhancedPrompt = `Analyze this file: ${fileName}`;
-    if (profileContext) {
-      enhancedPrompt = `${profileContext}\n\nAnalyze this file: ${fileName}`;
-    }
+    console.log('Analyzing file:', fileName, fileType);
     
-    // Try each provider in order until one succeeds
-    for (const provider of providerOrder) {
-      if (provider === 'fallback') {
-        return `After reviewing the ${fileName} you shared ${profileContext ? 'and considering your profile information' : ''}, here are my observations:
+    try {
+      // Create file analysis prompt
+      const fileAnalysisPrompt = `
+        Please analyze this ${fileType} file: ${fileName}
         
-        • The document appears to be a ${fileType.includes('image') ? 'visual representation' : 
-            fileType.includes('pdf') ? 'PDF document' : 
-            fileType.includes('word') ? 'Word document' : 'file'} that could be valuable for your career development.
-        • ${profileContext ? 'Based on your background, I suggest focusing on highlighting your key accomplishments and skills.' : 'I recommend ensuring your document clearly communicates your value proposition.'}
-        • Consider organizing the content to emphasize your most relevant experiences.
-        • Make sure the formatting is clean, consistent, and professional.
-        • ${profileContext ? 'Given your professional focus, tailoring this document to your target audience will increase its effectiveness.' : 'Customizing this document for each specific opportunity will increase your chances of success.'}`;
+        ${profileContext ? `User profile context: ${profileContext}` : ''}
+        
+        Guidelines for your analysis:
+        - Provide detailed feedback on the content
+        - Suggest specific improvements
+        - Focus on organization, clarity, and impact
+        - Consider industry standards and best practices
+        - Identify strengths and areas for improvement
+      `;
+      
+      // Call Supabase Edge Function to analyze file
+      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+        body: { 
+          prompt: fileAnalysisPrompt,
+          type: 'file_analysis' 
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling AI function for file analysis:', error);
+        throw new Error(`Failed to analyze file: ${error.message}`);
       }
       
-      try {
-        return await tryFileAnalysisProvider(provider, fileUrl, fileName, fileType, enhancedPrompt);
-      } catch (error) {
-        console.warn(`Provider ${provider} failed file analysis:`, error);
-        // Continue to next provider
+      if (data.error) {
+        console.error('AI service error for file analysis:', data.error);
+        throw new Error(data.message || 'AI service error');
       }
+      
+      if (!data.generatedText) {
+        throw new Error('No analysis received from AI service');
+      }
+      
+      return data.generatedText;
+    } catch (error) {
+      console.error('Error in analyzeFile:', error);
+      
+      // Provide a helpful fallback response for file analysis
+      return `I apologize, but I'm having trouble analyzing your file at the moment. 
+
+Based on the file type (${fileType}), here are some general considerations:
+
+## File Analysis - ${fileName}
+
+- Ensure your document follows industry standard formatting and organization
+- Check for clarity, conciseness, and proper grammar throughout
+- Make sure key information is prominently highlighted
+- Consider the target audience and tailor the content accordingly
+- Review for consistency in style, tone, and terminology
+
+Please try again later for a more detailed analysis. If this issue persists, you might want to refresh the page or try a different file format.`;
     }
-    
-    return "I apologize, but I'm currently experiencing technical difficulties analyzing your file. Please try again later.";
   },
   
   // Analyze a URL using the AI provider
-  analyzeUrl: async (url: string, type: string, profileContext?: string): Promise<string> => {
-    let response = `I've analyzed this ${type} URL: ${url}.`;
+  analyzeUrl: async (
+    url: string, 
+    type: string, 
+    profileContext?: string
+  ): Promise<string> => {
+    console.log('Analyzing URL:', url, type);
     
-    if (profileContext) {
-      response += ` Considering your professional background, here are my key observations:`;
-    } else {
-      response += ` Here are my key observations:`;
+    try {
+      // Create URL analysis prompt
+      const urlAnalysisPrompt = `
+        Please analyze this ${type} URL: ${url}
+        
+        ${profileContext ? `User profile context: ${profileContext}` : ''}
+        
+        Guidelines for your analysis:
+        - Provide detailed feedback on the content of the URL
+        - Suggest specific ways the user can use this information
+        - Focus on how this relates to the user's career development
+        - Consider industry standards and best practices
+        - Identify key takeaways from the content
+      `;
+      
+      // Call Supabase Edge Function to analyze URL
+      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+        body: { 
+          prompt: urlAnalysisPrompt,
+          type: 'url_analysis' 
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling AI function for URL analysis:', error);
+        throw new Error(`Failed to analyze URL: ${error.message}`);
+      }
+      
+      if (data.error) {
+        console.error('AI service error for URL analysis:', data.error);
+        throw new Error(data.message || 'AI service error');
+      }
+      
+      if (!data.generatedText) {
+        throw new Error('No analysis received from AI service');
+      }
+      
+      return data.generatedText;
+    } catch (error) {
+      console.error('Error in analyzeUrl:', error);
+      
+      // Provide a helpful fallback response for URL analysis
+      return `I apologize, but I'm having trouble analyzing this URL at the moment.
+
+Regarding this ${type} resource (${url}), here are some general considerations:
+
+## URL Analysis
+
+- Consider how the information from this resource can be applied to your career development
+- Look for specific insights that relate to your current goals and challenges
+- Compare the advice or information with other industry resources for validation
+- Extract actionable steps you can implement immediately
+- Consider how you might reference or incorporate this information in your professional materials
+
+Please try again later for a more detailed analysis. If this issue persists, you might want to refresh the page or try a different URL.`;
     }
-    
-    response += `
-    
-    • This appears to be a ${type} resource that could be valuable for your career development.
-    • ${profileContext ? 'Based on your profile, I recommend focusing on how this information aligns with your career goals.' : 'Consider how this information aligns with your career goals.'}
-    • Look for actionable insights you can implement immediately to improve your professional prospects.
-    • Consider how these insights can be integrated into your application materials to strengthen your candidacy.
-    • ${profileContext ? 'Given your background, pay special attention to sections that relate to your specific industry or role.' : 'Take note of any industry-specific advice that might be relevant to your situation.'}`;
-    
-    return response;
   },
   
   // Reset unavailable providers list
   resetProviders: () => {
-    unavailableProviders.clear();
+    console.log('Resetting AI providers');
   }
 };
 

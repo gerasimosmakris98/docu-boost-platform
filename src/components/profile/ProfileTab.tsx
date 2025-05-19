@@ -1,9 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { LinkedInProfile } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import LinkedInImport from "../linkedin/LinkedInImport";
 import SocialLinksSection from "./SocialLinksSection";
 import PersonalInfoCard from "./PersonalInfoCard";
 import ProfessionalSummaryCard from "./ProfessionalSummaryCard";
@@ -66,20 +64,6 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
     onSaveChanges(updates);
   };
   
-  const handleLinkedInProfileImported = (linkedInProfile: LinkedInProfile) => {
-    // Update form data with LinkedIn data
-    setFormData(prev => ({
-      ...prev,
-      title: linkedInProfile.title || prev.title,
-      summary: linkedInProfile.summary || prev.summary
-    }));
-    
-    // Refresh profile data
-    refreshProfile();
-    
-    toast.success("LinkedIn profile imported successfully");
-  };
-  
   return (
     <div className="space-y-6">
       <PersonalInfoCard 
@@ -94,8 +78,6 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
       />
       
       <SocialLinksSection />
-      
-      <LinkedInImport onProfileImported={handleLinkedInProfileImported} />
     </div>
   );
 };

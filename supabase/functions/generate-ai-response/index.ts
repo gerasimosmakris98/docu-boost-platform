@@ -20,22 +20,28 @@ serve(async (req) => {
     const requestData = await req.json();
     const { prompt, type = "general" } = requestData;
 
-    console.log('Request data:', { prompt, type });
+    console.log('Request data:', { type });
 
     // Different system prompts based on the type of request
     let systemPrompt = 'You are an AI career advisor that helps users with career guidance, resume optimization, and interview preparation.';
     
-    if (type === "resume_optimization") {
+    if (type === "resume") {
       systemPrompt = 'You are an expert resume consultant that specializes in optimizing resumes for applicant tracking systems and hiring managers. Provide detailed, specific feedback and suggestions.';
+    } else if (type === "cover_letter") {
+      systemPrompt = 'You are an expert cover letter writer that helps professionals create compelling narratives connecting their experience to job requirements. Provide detailed, actionable advice.';
     } else if (type === "interview_prep") {
-      systemPrompt = 'You are an expert interview coach that helps professionals prepare for job interviews. Provide detailed, actionable advice for answering questions and presenting yourself professionally.';
-    } else if (type === "linkedin_analysis") {
-      systemPrompt = 'You are a LinkedIn profile optimization expert that helps professionals improve their LinkedIn presence. Analyze the provided profile data and offer specific suggestions for improvement.';
-    } else if (type === "job_application") {
-      systemPrompt = 'You are a job application strategist that helps professionals apply for jobs effectively. Provide tailored advice on cover letters, application materials, and application strategies.';
+      systemPrompt = 'You are an expert interview coach that helps professionals prepare for job interviews. Provide detailed example answers, strategies for difficult questions, and presentation tips.';
+    } else if (type === "linkedin") {
+      systemPrompt = 'You are a LinkedIn profile optimization expert that helps professionals improve their LinkedIn presence. Analyze profiles and offer specific suggestions for improvement.';
+    } else if (type === "job_search") {
+      systemPrompt = 'You are a job search strategist that helps professionals find and apply for jobs effectively. Provide advice on job boards, networking, application strategies, and company research.';
+    } else if (type === "file_analysis") {
+      systemPrompt = 'You are a document analysis expert that reviews files and provides detailed feedback. Analyze the document for content, structure, clarity, and alignment with career goals.';
+    } else if (type === "url_analysis") {
+      systemPrompt = 'You are a web content analyst that reviews online resources and provides insights. Analyze the content for relevance, quality, and potential applications to career development.';
     }
 
-    console.log('Using system prompt:', systemPrompt);
+    console.log('Using system prompt for:', type);
     
     if (!openAIApiKey) {
       console.error('OPENAI_API_KEY environment variable not set');
@@ -62,7 +68,7 @@ serve(async (req) => {
             { role: 'user', content: prompt }
           ],
           temperature: 0.7,
-          max_tokens: 1000,
+          max_tokens: 1500,
         }),
       });
 

@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 interface SettingsTabProps {
   profileData: {
@@ -16,6 +18,7 @@ interface SettingsTabProps {
 }
 
 const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {
+  const navigate = useNavigate();
   const { isAuthenticated, logout, updateProfile } = useAuth();
   const [name, setName] = useState(profileData.name);
   
@@ -31,20 +34,36 @@ const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {
   const handleLogout = async () => {
     try {
       await logout();
+      navigate("/");
       toast.success("You have been logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
   
+  const handleBackToChat = () => {
+    navigate("/chat");
+  };
+  
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-          <CardDescription>
-            Manage your account settings and preferences
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Account Settings</CardTitle>
+            <CardDescription>
+              Manage your account settings and preferences
+            </CardDescription>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="text-gray-400 hover:text-white md:hidden"
+            onClick={handleBackToChat}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

@@ -1,145 +1,94 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { ConversationType } from "../types/conversationTypes";
 
-// Get user profile data for enhancing AI responses
-export async function getUserProfileContext(userId: string | undefined): Promise<string> {
-  if (!userId) return '';
-  
+/**
+ * Get user profile context for AI responses
+ */
+export const getUserProfileContext = async (userId: string): Promise<string | null> => {
   try {
-    // Get basic profile data
-    const { data: profile, error: profileError } = await supabase
+    if (!userId) return null;
+    
+    // Fetch user profile data
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-      
-    if (profileError) throw profileError;
     
-    // Get social links
-    const { data: socialLinks, error: socialLinksError } = await supabase
-      .from('social_links')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (socialLinksError) throw socialLinksError;
-    
-    // Format the profile context
-    let contextString = 'USER PROFILE CONTEXT:\n';
-    
-    if (profile) {
-      contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-      contextString += profile.title ? `Title: ${profile.title}\n` : '';
-      contextString += profile.summary ? `Professional Summary: ${profile.summary}\n` : '';
-      contextString += profile.location ? `Location: ${profile.location}\n` : '';
+    if (error) {
+      console.error('Error fetching profile for AI context:', error);
+      return null;
     }
     
-    if (socialLinks && socialLinks.length > 0) {
-      contextString += '\nSOCIAL PROFILES:\n';
-      socialLinks.forEach(link => {
-        contextString += `${link.platform}: ${link.url}\n`;
-      });
+    if (!profile) return null;
+    
+    // Create a context summary from profile data
+    let context = `User Profile Information:`;
+    
+    if (profile.full_name) {
+      context += `\n- Name: ${profile.full_name}`;
     }
     
-    return contextString;
+    if (profile.title) {
+      context += `\n- Title: ${profile.title}`;
+    }
     
+    if (profile.location) {
+      context += `\n- Location: ${profile.location}`;
+    }
+    
+    if (profile.summary) {
+      context += `\n- Professional Summary: ${profile.summary}`;
+    }
+    
+    if (profile.skills && profile.skills.length > 0) {
+      context += `\n- Skills: ${profile.skills.join(', ')}`;
+    }
+    
+    return context;
   } catch (error) {
-    console.error('Error fetching user profile context:', error);
-    return '';
+    console.error('Error getting user profile context:', error);
+    return null;
   }
-}
+};
 
-// Get profile data focused on specific areas based on advisor type
-export async function getProfileDataForAdvisor(userId: string | undefined, advisorType: string): Promise<string> {
-  if (!userId) return '';
-  
+/**
+ * Get profile data for specific advisor type
+ */
+export const getProfileDataForAdvisor = async (userId: string, conversationType: ConversationType): Promise<string | null> => {
   try {
-    // Get basic profile data
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-      
-    if (profileError) throw profileError;
+    if (!userId) return null;
     
-    // Get social links for linkedin advisor
-    const { data: socialLinks, error: socialLinksError } = 
-      advisorType === 'linkedin' ? 
-      await supabase
-        .from('social_links')
-        .select('*')
-        .eq('user_id', userId) : 
-      { data: null, error: null };
+    const userContext = await getUserProfileContext(userId);
+    if (!userContext) return null;
     
-    if (socialLinksError) throw socialLinksError;
+    // Add conversation type specific guidance
+    let additionalContext = '';
     
-    // Format context based on advisor type
-    let contextString = `PROFILE DATA FOR ${advisorType.toUpperCase()} ADVISOR:\n\n`;
-    
-    switch(advisorType) {
+    switch (conversationType) {
       case 'resume':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Title: ${profile.title}\n` : '';
-        contextString += profile.summary ? `Professional Summary: ${profile.summary}\n` : '';
-        contextString += `Use this information to provide tailored resume advice.\n`;
+        additionalContext = 'When addressing resume questions, focus on helping the user emphasize their relevant experience and skills, proper formatting, and achievement-focused bullet points.';
         break;
-        
       case 'cover_letter':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Title: ${profile.title}\n` : '';
-        contextString += profile.summary ? `Professional Background: ${profile.summary}\n` : '';
-        contextString += `Use this information to help craft personalized cover letters.\n`;
+        additionalContext = 'For cover letter questions, focus on helping the user craft a compelling narrative that connects their experience to the job requirements.';
         break;
-        
       case 'interview_prep':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Position: ${profile.title}\n` : '';
-        contextString += profile.summary ? `Experience Summary: ${profile.summary}\n` : '';
-        contextString += `Provide interview preparation tips based on this background.\n`;
+        additionalContext = 'When helping with interview preparation, focus on helping the user prepare responses that highlight their relevant experience and skills, and practice common interview scenarios.';
         break;
-        
-      case 'linkedin':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Title: ${profile.title}\n` : '';
-        contextString += profile.summary ? `Profile Summary: ${profile.summary}\n` : '';
-        
-        if (socialLinks && socialLinks.length > 0) {
-          contextString += '\nCurrent Social Profiles:\n';
-          socialLinks.forEach(link => {
-            contextString += `${link.platform}: ${link.url}\n`;
-          });
-        }
-        
-        contextString += `Provide LinkedIn profile optimization advice based on this information.\n`;
-        break;
-        
       case 'job_search':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Position: ${profile.title}\n` : '';
-        contextString += profile.location ? `Location: ${profile.location}\n` : '';
-        contextString += profile.summary ? `Background: ${profile.summary}\n` : '';
-        contextString += `Provide job search advice tailored to this professional background.\n`;
+        additionalContext = 'For job search questions, focus on helping the user develop effective search strategies, identify suitable opportunities, and optimize their application process.';
         break;
-        
-      case 'assessment':
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Role: ${profile.title}\n` : '';
-        contextString += profile.summary ? `Experience: ${profile.summary}\n` : '';
-        contextString += `Provide assessment preparation advice for this professional profile.\n`;
+      case 'linkedin':
+        additionalContext = 'When addressing LinkedIn profile questions, focus on helping the user optimize their profile for visibility, engagement, and professional networking.';
         break;
-        
-      default: // general career advice
-        contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-        contextString += profile.title ? `Current Position: ${profile.title}\n` : '';
-        contextString += profile.location ? `Location: ${profile.location}\n` : '';
-        contextString += profile.summary ? `Career Summary: ${profile.summary}\n` : '';
-        contextString += `Provide general career advice based on this profile.\n`;
+      default:
+        additionalContext = 'Focus on providing personalized career advice based on the user\'s background and goals.';
     }
     
-    return contextString;
-    
+    return `${userContext}\n\nAdvisor Role: ${additionalContext}`;
   } catch (error) {
-    console.error(`Error fetching profile data for ${advisorType} advisor:`, error);
-    return `Could not retrieve complete profile data. Please provide advice based on available information.`;
+    console.error('Error getting profile data for advisor:', error);
+    return null;
   }
-}
+};

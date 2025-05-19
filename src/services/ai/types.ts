@@ -1,40 +1,46 @@
 
-export type AIProvider = 'perplexity' | 'fallback';
+import { ConversationType } from '../types/conversationTypes';
 
-export interface ProviderConfig {
-  functionName: string;
-  analyzeFunction: string;
-  isAvailable: boolean;
-  maxTokens: number;
-  temperature: number;
-}
+// Available AI providers
+export type AIProvider = 'openai' | 'fallback';
 
-export interface FileAnalysisOptions {
-  fileUrl: string;
-  fileName: string;
-  fileType: string;
-  fileContent?: string;
-}
-
-export interface UrlAnalysisOptions {
-  url: string;
-  type: 'linkedin' | 'job' | 'company' | 'assessment' | 'general';
-}
-
+// Base AI model options
 export interface AIModelOptions {
   temperature?: number;
   maxTokens?: number;
   topP?: number;
-  presencePenalty?: number;
   frequencyPenalty?: number;
+  presencePenalty?: number;
 }
 
+// Options for progressive/streaming responses
 export interface ProgressiveResponseOptions {
-  brief: boolean;
-  depth: 'low' | 'medium' | 'high';
-  format?: 'steps' | 'bullets' | 'paragraphs';
+  brief?: boolean;
+  depth?: 'low' | 'medium' | 'high';
+  format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
 }
 
-// Import the ConversationType from the main types file to avoid duplication
-import type { ConversationType } from '../types/conversationTypes';
-export type { ConversationType };
+// Complete AI Provider Service interface
+export interface AIProviderService {
+  generateResponse: (
+    prompt: string, 
+    conversationType: ConversationType,
+    options?: AIModelOptions & ProgressiveResponseOptions
+  ) => Promise<string>;
+  
+  analyzeFile: (
+    fileUrl: string,
+    fileName: string,
+    fileType: string,
+    profileContext?: string,
+    options?: AIModelOptions
+  ) => Promise<string>;
+  
+  analyzeUrl: (
+    url: string,
+    type: string,
+    profileContext?: string
+  ) => Promise<string>;
+  
+  resetProviders: () => void;
+}

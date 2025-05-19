@@ -1,8 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "../types/conversationTypes";
+import { Message, ConversationType } from "../types/conversationTypes";
+import { asConversationType } from "./conversationApiUtils";
 import { getAiResponse } from "./aiResponseHandlers";
-import { formatConversationContext, asConversationType } from "./conversationApiUtils";
+import { formatConversationContext } from "./conversationUtils";
 import { toast } from "sonner";
 
 /**
@@ -21,7 +22,14 @@ export const sendMessage = async (
       .eq('id', conversationId)
       .single();
     
-    if (convError) throw convError;
+    if (convError) {
+      console.error('Error fetching conversation:', convError);
+      toast.error("Couldn't load conversation");
+      throw convError;
+    }
+    
+    const conversationType = asConversationType(conversationData.type);
+    console.log(`Sending message for conversation type: ${conversationType}`);
     
     // Insert user message
     const { data: userMessageData, error: userMessageError } = await supabase
@@ -35,11 +43,15 @@ export const sendMessage = async (
       .select()
       .single();
 
-    if (userMessageError) throw userMessageError;
+    if (userMessageError) {
+      console.error('Error saving user message:', userMessageError);
+      toast.error("Couldn't save your message");
+      throw userMessageError;
+    }
     
     console.log('User message saved successfully:', userMessageData.id);
     
-    // Get previous messages to provide context (limit to 10 for better context)
+    // Get previous messages to provide context
     const { data: previousMessages, error: prevMsgError } = await supabase
       .from('messages')
       .select('role, content')
@@ -47,16 +59,18 @@ export const sendMessage = async (
       .order('created_at', { ascending: false })
       .limit(10);
     
-    if (prevMsgError) throw prevMsgError;
+    if (prevMsgError) {
+      console.error('Error fetching previous messages:', prevMsgError);
+      throw prevMsgError;
+    }
     
     // Build context from previous messages
     const contextMessages = previousMessages ? 
       formatConversationContext(previousMessages.reverse()) : '';
     
-    // Get AI response with fallback handling
-    // Convert string to ConversationType using the utility function
+    // Get AI response with context
     const aiResponseContent = await getAiResponse(
-      asConversationType(conversationData.type),
+      conversationType,
       content,
       contextMessages,
       attachments
@@ -74,7 +88,11 @@ export const sendMessage = async (
       .select()
       .single();
 
-    if (aiMessageError) throw aiMessageError;
+    if (aiMessageError) {
+      console.error('Error saving AI response:', aiMessageError);
+      toast.error("Couldn't save AI response");
+      throw aiMessageError;
+    }
     
     console.log('AI response saved successfully');
 
@@ -83,8 +101,6 @@ export const sendMessage = async (
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId);
-
-    console.log('Conversation timestamp updated');
 
     const aiResponse: Message = {
       id: aiMessageData.id,
@@ -97,6 +113,7 @@ export const sendMessage = async (
     return { aiResponse };
   } catch (error) {
     console.error('Error sending message:', error);
+    toast.error("Failed to get AI response");
     return null;
   }
 };

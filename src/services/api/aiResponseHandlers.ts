@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
 import { aiProviderService } from "../ai/aiProviderService";
 import { getChatPromptForType } from "../utils/conversationUtils";
-import { getTemplateFallbackResponse } from "./messageUtils";
+import { extractUrlType } from "./conversationUtils";
+import { getUserProfileContext } from "./profileUtils";
+import { getModelOptions } from "../ai/providerConfigs";
 
 /**
  * Get an AI response with fallback handling
@@ -15,15 +17,27 @@ export const getAiResponse = async (
   attachments: string[] = []
 ): Promise<string> => {
   try {
+    console.log('Generating AI response for:', conversationType);
+    
+    // Get user profile context to enhance the response
+    const userId = await getCurrentUserId();
+    const profileContext = userId ? await getUserProfileContext(userId) : null;
+    
     // Create prompt based on conversation type and include context
     const prompt = getChatPromptForType(conversationType, userMessage, contextMessages);
+    const enhancedPrompt = profileContext 
+      ? `${profileContext}\n\n${prompt}` 
+      : prompt;
+    
+    // Get model options based on conversation type
+    const options = getModelOptions(conversationType);
     
     let aiResponseContent = '';
     
     // Handle file attachments if present
     if (attachments && attachments.length > 0) {
       console.log('Processing attachments:', attachments);
-      // For simplicity, we'll just analyze the first attachment
+      // Analyze the first attachment
       const fileUrl = attachments[0];
       const fileName = fileUrl.split('/').pop() || 'file';
       // Determine file type from URL/name
@@ -38,27 +52,49 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
-      try {
-        // Analyze file using our provider service
-        aiResponseContent = await aiProviderService.analyzeFile(fileUrl, fileName, fileType);
-        console.log('File analysis complete');
-      } catch (fileError: any) {
-        console.error('Error analyzing file:', fileError);
-        // Use fallback for file analysis errors
-        aiResponseContent = `I notice you've uploaded a file (${fileName}). However, I'm currently unable to analyze it due to service limitations. Here are some general tips instead:\n\n${getFileFallbackResponse(fileExtension)}`;
+      // Analyze file using AI provider service
+      aiResponseContent = await aiProviderService.analyzeFile(
+        fileUrl, 
+        fileName, 
+        fileType,
+        profileContext || undefined
+      );
+      console.log('File analysis complete');
+    } 
+    // Check for URLs in the message
+    else if (containsUrl(userMessage)) {
+      // Extract the first URL from the message
+      const url = extractFirstUrl(userMessage);
+      if (url) {
+        const urlType = extractUrlType(url);
+        console.log('Analyzing URL:', url, 'Type:', urlType);
+        
+        // Analyze URL using AI provider service
+        aiResponseContent = await aiProviderService.analyzeUrl(
+          url, 
+          urlType, 
+          profileContext || undefined
+        );
+        console.log('URL analysis complete');
+      } else {
+        // Fallback to text generation if URL extraction fails
+        aiResponseContent = await aiProviderService.generateResponse(
+          enhancedPrompt, 
+          conversationType,
+          options
+        );
       }
-    } else {
-      // Generate AI response based on text prompt using our provider service
+    } 
+    // Standard text analysis
+    else {
+      // Generate AI response based on text prompt
       console.log('Generating AI response using provider service');
-      try {
-        aiResponseContent = await aiProviderService.generateResponse(prompt, conversationType);
-        console.log('AI response generated successfully');
-      } catch (error: any) {
-        console.error('Error generating AI response:', error);
-        // Use fallback template response
-        console.log('Using fallback template response');
-        aiResponseContent = getTemplateFallbackResponse(userMessage, conversationType);
-      }
+      aiResponseContent = await aiProviderService.generateResponse(
+        enhancedPrompt, 
+        conversationType,
+        options
+      );
+      console.log('AI response generated successfully');
     }
     
     return aiResponseContent;
@@ -69,15 +105,31 @@ export const getAiResponse = async (
 };
 
 /**
- * Get a fallback response for file analysis based on file type
+ * Check if a string contains a URL
  */
-const getFileFallbackResponse = (fileExtension: string): string => {
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
-    return "When analyzing images for career purposes, I typically look for clarity, professionalism, and appropriateness for your industry. Make sure your image has good lighting, a neutral background, and presents you in professional attire if it's a headshot.";
-  } else if (fileExtension === 'pdf') {
-    return "When reviewing PDF documents like resumes or cover letters, I look for clear formatting, consistent styling, appropriate length (1-2 pages for resumes), strong accomplishment statements, and relevant keywords for your target industry.";
-  } else if (['doc', 'docx'].includes(fileExtension)) {
-    return "When reviewing Word documents like resumes or cover letters, I check for professional formatting, clear section headings, bullet points highlighting achievements (not just duties), relevant keywords, and proper grammar and spelling.";
+const containsUrl = (text: string): boolean => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return urlRegex.test(text);
+};
+
+/**
+ * Extract the first URL from a string
+ */
+const extractFirstUrl = (text: string): string | null => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const matches = text.match(urlRegex);
+  return matches ? matches[0] : null;
+};
+
+/**
+ * Get the current user ID
+ */
+const getCurrentUserId = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
   }
-  return "When analyzing files, I typically look for clear organization, relevant content, and proper formatting appropriate to the document type and your industry standards.";
 };

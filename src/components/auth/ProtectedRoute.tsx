@@ -7,9 +7,10 @@ import { Bot } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  fallback?: ReactNode; // Added fallback prop
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
@@ -32,6 +33,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
+    // If fallback is provided, use it, otherwise redirect to auth
+    if (fallback) {
+      return <>{fallback}</>;
+    }
     // Save the attempted URL for redirection after login
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }

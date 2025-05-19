@@ -5,8 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import ProfileTab from "@/components/profile/ProfileTab";
 import SettingsTab from "@/components/profile/SettingsTab";
-import ProfileChatTab from "@/components/profile/ProfileChatTab";
-import { User, UserCircle, Settings, LogOut, MessageSquare } from "lucide-react";
+import { User, UserCircle, Settings, LogOut, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -66,6 +65,10 @@ const Profile = () => {
       toast.error("Failed to sign out");
     }
   };
+  
+  const handleBackToChat = () => {
+    navigate("/chat");
+  };
 
   // If not authenticated, don't render the profile page at all
   if (!isAuthenticated) {
@@ -97,12 +100,12 @@ const Profile = () => {
             >
               <Settings className="mr-2 h-4 w-4" /> Account Settings
             </Button>
-            <Button 
-              variant="ghost" 
-              className={`w-full justify-start ${currentTab === 'chat' ? 'bg-gray-800' : ''}`}
-              onClick={() => setCurrentTab('chat')}
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-400 hover:text-white mt-6"
+              onClick={handleBackToChat}
             >
-              <MessageSquare className="mr-2 h-4 w-4" /> Chat with AI
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Chat
             </Button>
           </nav>
           
@@ -122,13 +125,25 @@ const Profile = () => {
       <div className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="space-y-6">
+            {/* Header with back button for mobile */}
+            <div className="flex items-center justify-between md:hidden mb-6">
+              <h2 className="text-xl font-bold">Your Profile</h2>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-gray-400 hover:text-white"
+                onClick={handleBackToChat}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
             {/* Mobile Tabs */}
             <div className="md:hidden">
               <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                   <TabsTrigger value="settings">Settings</TabsTrigger>
-                  <TabsTrigger value="chat">Chat</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -151,11 +166,6 @@ const Profile = () => {
                 }}
                 onSaveChanges={handleSaveChanges}
               />
-            )}
-            
-            {/* Chat Content */}
-            {currentTab === "chat" && (
-              <ProfileChatTab />
             )}
           </div>
         </div>
