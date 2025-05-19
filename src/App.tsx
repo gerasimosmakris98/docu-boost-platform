@@ -3,40 +3,41 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import LinkedIn from "./pages/LinkedIn";
-import Profile from "./pages/Profile";
-import Conversations from "./pages/Conversations";
-import ConversationDetail from "./pages/ConversationDetail";
+
+import MainLayout from "@/layouts/MainLayout";
+import ChatPage from "@/pages/ChatPage";
+import AuthPage from "@/pages/AuthPage";
+import NotFound from "@/pages/NotFound";
+import UserProfile from "@/pages/UserProfile";
+import NewChat from "@/pages/NewChat";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="dark">
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/documents" element={<Index />} />
-              <Route path="/cover-letters" element={<Index />} />
-              <Route path="/assessments" element={<Index />} />
-              <Route path="/linkedin" element={<LinkedIn />} />
-              <Route path="/guides" element={<Index />} />
-              <Route path="/courses" element={<Index />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Index />} />
-              {/* Conversation routes */}
-              <Route path="/conversations" element={<Conversations />} />
-              <Route path="/conversations/:id" element={<ConversationDetail />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              {/* Public routes */}
+              <Route path="/auth" element={<AuthPage />} />
+
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                <Route path="/" element={<Navigate to="/chat" replace />} />
+                <Route path="/chat" element={<NewChat />} />
+                <Route path="/chat/:conversationId" element={<ChatPage />} />
+                <Route path="/profile" element={<UserProfile />} />
+              </Route>
+
+              {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

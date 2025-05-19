@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search';
+export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin';
 
 export interface Conversation {
   id: string;
@@ -19,7 +19,7 @@ export interface Conversation {
 }
 
 export interface Message {
-  id?: string;
+  id: string;
   conversation_id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -182,7 +182,7 @@ export const conversationService = {
     conversationId: string, 
     content: string, 
     attachments: string[] = []
-  ): Promise<{ aiResponse?: Message } | null> {
+  ): Promise<{ aiResponse: Message } | null> {
     try {
       // Save the user message
       const { data: userMessage, error: userMessageError } = await supabase
@@ -262,7 +262,9 @@ export const conversationService = {
       case 'cover_letter':
         return `You are a cover letter expert. Here's a job description: "${jobDescription}". Please help craft an impressive cover letter.`;
       case 'job_search':
-        return 'You are a job search strategist. Provide detailed advice for finding and applying to jobs effectively.';
+        return `You are a job search strategist. Provide detailed advice for finding and applying to jobs effectively.`;
+      case 'linkedin':
+        return `You are a LinkedIn profile optimization expert. Please help improve this LinkedIn profile for better visibility and impact.`;
       default:
         return 'You are a helpful career assistant. How can I help you with your career goals today?';
     }
@@ -290,8 +292,11 @@ export const conversationService = {
         case 'job_search':
           title = 'Job Search Strategy';
           break;
+        case 'linkedin':
+          title = 'LinkedIn Optimization';
+          break;
         default:
-          title = 'General Career Advice';
+          title = 'Career Advice';
       }
       
       const conversation = await this.createConversation(title, type, {
@@ -310,6 +315,7 @@ export const conversationService = {
           type === 'interview_prep' ? 'preparing for your upcoming interview' :
           type === 'cover_letter' ? 'crafting an effective cover letter' :
           type === 'job_search' ? 'developing an effective job search strategy' :
+          type === 'linkedin' ? 'optimizing your LinkedIn profile' :
           'your career questions'
         }. What specific assistance do you need today?`
       });
