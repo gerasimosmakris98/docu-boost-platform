@@ -1,8 +1,9 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Pages
@@ -17,7 +18,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<ChatPage />} />
+            <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
             <Route path="/chat/:id" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
@@ -26,6 +27,13 @@ function App() {
           </Routes>
         </Router>
         <Toaster />
+        <SonnerToaster 
+          position="top-right" 
+          toastOptions={{
+            className: 'bg-gray-900 text-white border border-gray-800',
+            duration: 3000
+          }}
+        />
       </AuthProvider>
     </ThemeProvider>
   );

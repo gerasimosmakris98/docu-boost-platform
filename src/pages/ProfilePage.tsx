@@ -1,145 +1,135 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { 
+  User, 
+  Mail, 
+  Calendar, 
+  LogOut,
+  ArrowLeft,
+  Loader2 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { User, ChevronLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import ChatSidebar from "@/components/chat/ChatSidebar";
-import { conversationService } from "@/services/conversationService";
+import { formatDistanceToNow } from "date-fns";
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    if (user) {
-      setEmail(user.email || "");
-      setName(user.user_metadata?.full_name || "");
+    if (!user) {
+      navigate("/auth");
     }
-  }, [user]);
+  }, [user, navigate]);
   
   const handleLogout = async () => {
-    await logout();
-    navigate("/auth");
-    toast.success("Logged out successfully");
-  };
-  
-  const handleCreateNewChat = async () => {
+    setIsLoading(true);
     try {
-      toast.loading("Creating new conversation...");
-      const newConversation = await conversationService.createSpecializedConversation('general');
-      
-      if (newConversation) {
-        navigate(`/chat/${newConversation.id}`);
-        toast.dismiss();
-        toast.success("New conversation created");
-      }
+      await logout();
+      navigate("/auth");
+      toast.success("Logged out successfully");
     } catch (error) {
-      console.error("Error creating conversation:", error);
-      toast.error("Failed to create conversation");
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-full max-w-xs">
-        <ChatSidebar 
-          onNewChat={handleCreateNewChat}
-        />
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
       </div>
-      
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto bg-gray-950">
-        <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
-          <div className="mb-6">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              asChild
-              className="mb-4"
-            >
-              <Link to="/" className="flex items-center text-gray-400 hover:text-white">
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back to Chat
-              </Link>
-            </Button>
+    );
+  }
+  
+  const joinedDate = user.created_at || new Date().toISOString();
+  const joinedTimeAgo = formatDistanceToNow(new Date(joinedDate), { addSuffix: true });
+  
+  return (
+    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      <div className="max-w-md mx-auto">
+        <Button 
+          variant="ghost" 
+          className="mb-6 pl-0 text-gray-400 hover:text-white"
+          onClick={() => navigate("/chat")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Chat
+        </Button>
+        
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-green-500" />
+                User Profile
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Manage your account settings and preferences
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="flex items-center gap-4 mb-6">
+              <Avatar className="h-16 w-16 border-2 border-green-500/20">
+                <AvatarImage src={user.avatar_url || user.user_metadata?.avatar_url} />
+                <AvatarFallback className="bg-green-700 text-xl">
+                  {(user.email || 'U').substring(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div>
+                <h3 className="font-medium text-lg">
+                  {user.user_metadata?.full_name || 'User'}
+                </h3>
+                <p className="text-gray-400 text-sm">{user.email}</p>
+              </div>
+            </div>
             
-            <h1 className="text-2xl font-bold">Profile Settings</h1>
-            <p className="text-gray-400">Manage your account settings and preferences</p>
-          </div>
-          
-          <Card className="bg-gray-900 border-gray-800 shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src="" alt="Profile" />
-                  <AvatarFallback className="bg-green-700 text-xl">
-                    <User className="h-8 w-8" />
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div>
-                  <h3 className="font-medium">{name || "User"}</h3>
-                  <p className="text-sm text-gray-400">{email}</p>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-400">Email:</span>
+                <span>{user.email}</span>
               </div>
               
-              <Separator className="bg-gray-800" />
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input 
-                      id="name" 
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)}
-                      className="bg-gray-800 border-gray-700"
-                      readOnly
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      value={email} 
-                      className="bg-gray-800 border-gray-700"
-                      readOnly
-                    />
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-400">Joined:</span>
+                <span>{joinedTimeAgo}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
           
-          <Card className="bg-gray-900 border-gray-800 shadow-lg">
-            <CardHeader>
-              <CardTitle>Account Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                variant="destructive" 
-                onClick={handleLogout}
-              >
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+          <CardFooter>
+            <Button 
+              variant="destructive" 
+              onClick={handleLogout}
+              disabled={isLoading}
+              className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-800/30"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

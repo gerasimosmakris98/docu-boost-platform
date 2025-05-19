@@ -1,23 +1,23 @@
 
-import { Json } from "@/integrations/supabase/types";
+export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin' | 'assessment';
 
-export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin';
-
-// Make ConversationMetadata compatible with Json type by adding index signature
 export interface ConversationMetadata {
   linkedDocumentId?: string;
   jobDescription?: string;
   attachments?: string[];
-  [key: string]: Json | undefined; // Add index signature to make it compatible with Json type
+  linkedinProfile?: string;
+  assessmentUrl?: string;
+  companyUrl?: string;
+  [key: string]: any;
 }
 
 export interface Conversation {
   id: string;
-  user_id: string;
   title: string;
   type: ConversationType;
   created_at: string;
   updated_at: string;
+  user_id: string;
   metadata: ConversationMetadata;
 }
 
@@ -30,7 +30,6 @@ export interface Message {
   attachments?: string[];
 }
 
-export interface ConversationMessage {
-  role: 'user' | 'assistant';
-  content: string;
+export interface ConversationMessage extends Message {
+  isLoading?: boolean;
 }

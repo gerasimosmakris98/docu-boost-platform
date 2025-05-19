@@ -3,8 +3,7 @@ import {
   Conversation, 
   ConversationMetadata, 
   Message, 
-  ConversationType,
-  ConversationMessage 
+  ConversationType
 } from "./types/conversationTypes";
 
 import {
@@ -28,8 +27,7 @@ export type {
   ConversationType, 
   Conversation, 
   Message, 
-  ConversationMetadata,
-  ConversationMessage
+  ConversationMetadata
 };
 
 // Create a single service object that combines all the functionality

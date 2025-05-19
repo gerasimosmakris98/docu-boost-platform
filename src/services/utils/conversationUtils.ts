@@ -1,36 +1,40 @@
 
 import { ConversationType } from "../types/conversationTypes";
 
-export const getChatPromptForType = (type: ConversationType, documentContent?: string, jobDescription?: string): string => {
-  switch (type) {
-    case 'resume':
-      return `You are a resume specialist. Here's a resume: "${documentContent || ''}". Please provide detailed feedback.`;
-    case 'interview_prep':
-      return `You are an interview coach. The job description is: "${jobDescription || ''}". Provide interview preparation guidance.`;
-    case 'cover_letter':
-      return `You are a cover letter expert. Here's a job description: "${jobDescription || ''}". Please help craft an impressive cover letter.`;
-    case 'job_search':
-      return `You are a job search strategist. Provide detailed advice for finding and applying to jobs effectively.`;
-    case 'linkedin':
-      return `You are a LinkedIn profile optimization expert. Please help improve this LinkedIn profile for better visibility and impact.`;
-    default:
-      return 'You are a helpful career assistant. How can I help you with your career goals today?';
-  }
-};
-
 export const getWelcomeMessageForType = (type: ConversationType): string => {
   switch (type) {
     case 'resume':
-      return "Welcome to the Resume Builder! I'm here to help you create a professional, effective resume. How would you like to begin?";
-    case 'cover_letter':
-      return "Welcome to the Cover Letter Assistant! I'll help you craft a compelling cover letter that stands out. What would you like help with today?";
+      return "Welcome to the Resume Advisor! I'll help you create, improve, and optimize your resume for job applications. Upload your current resume or share a job posting to get started.";
     case 'interview_prep':
-      return "Welcome to Interview Preparation! I'll help you prepare for your upcoming interviews. How would you like to begin your preparation?";
+      return "Welcome to the Interview Advisor! I'll help you prepare for interviews with practice questions, feedback on your answers, and tips for success. What kind of interview are you preparing for?";
+    case 'cover_letter':
+      return "Welcome to the Cover Letter Advisor! I'll help you craft compelling cover letters tailored to specific job positions. Share the job posting or tell me about the role you're applying for.";
     case 'job_search':
-      return "Welcome to Job Search Strategy! I'll help you find and apply for positions that match your skills and career goals. How would you like to start?";
+      return "Welcome to the Job Search Advisor! I'll help you develop strategies for finding and applying to jobs that match your skills and goals. What stage of your job search are you in?";
     case 'linkedin':
-      return "Welcome to LinkedIn Optimization! I'll help you create a profile that attracts recruiters and showcases your professional brand. What aspect would you like to work on first?";
+      return "Welcome to the LinkedIn Advisor! I'll help you optimize your LinkedIn profile to attract recruiters and showcase your professional brand. Share your profile URL or let's discuss specific sections you want to improve.";
+    case 'assessment':
+      return "Welcome to the Assessment Advisor! I'll help you prepare for job assessments, tests, and coding challenges. What type of assessment are you facing?";
     default:
-      return "Hello! I'm your career AI assistant. I can help with resumes, cover letters, interview preparation, and general career advice. What would you like assistance with today?";
+      return "Hello! I'm your AI Career Advisor. I can help with resumes, cover letters, interview preparation, job searching, LinkedIn optimization, and more. What would you like assistance with today?";
+  }
+};
+
+export const getChatPromptForType = (type: ConversationType): string => {
+  switch (type) {
+    case 'resume':
+      return "I'll help you with your resume. You can ask me to review your existing resume, help you create a new one, or optimize it for a specific job. Upload your resume or job description to get started.";
+    case 'interview_prep':
+      return "I'll help you prepare for interviews. I can provide practice questions, feedback on your answers, or tips for specific interview types (behavioral, technical, etc.).";
+    case 'cover_letter':
+      return "I'll help you craft a compelling cover letter. Share details about the job you're applying for, and I'll help you highlight relevant skills and experiences.";
+    case 'job_search':
+      return "I'll help you with your job search strategy. I can provide tips on finding opportunities, networking, application tracking, and more.";
+    case 'linkedin':
+      return "I'll help you optimize your LinkedIn profile. I can provide feedback on your headline, summary, experience, and other sections to increase visibility to recruiters.";
+    case 'assessment':
+      return "I'll help you prepare for job assessments and tests. Let me know what type of assessment you're facing, and I'll provide guidance on how to approach it.";
+    default:
+      return "How can I assist with your career today? I can help with resumes, cover letters, interview preparation, job searching, and more.";
   }
 };

@@ -4,7 +4,7 @@ import { Conversation, ConversationMetadata, Message, ConversationType } from ".
 
 // Helper function to safely convert string to ConversationType
 const asConversationType = (type: string): ConversationType => {
-  const validTypes: ConversationType[] = ['general', 'resume', 'interview_prep', 'cover_letter', 'job_search', 'linkedin'];
+  const validTypes: ConversationType[] = ['general', 'resume', 'interview_prep', 'cover_letter', 'job_search', 'linkedin', 'assessment'];
   return validTypes.includes(type as ConversationType) 
     ? (type as ConversationType) 
     : 'general';
@@ -20,7 +20,10 @@ const parseMetadata = (metadataRaw: any): ConversationMetadata => {
   return {
     linkedDocumentId: typeof metadataRaw.linkedDocumentId === 'string' ? metadataRaw.linkedDocumentId : undefined,
     jobDescription: typeof metadataRaw.jobDescription === 'string' ? metadataRaw.jobDescription : undefined,
-    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined
+    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined,
+    linkedinProfile: typeof metadataRaw.linkedinProfile === 'string' ? metadataRaw.linkedinProfile : undefined,
+    assessmentUrl: typeof metadataRaw.assessmentUrl === 'string' ? metadataRaw.assessmentUrl : undefined,
+    companyUrl: typeof metadataRaw.companyUrl === 'string' ? metadataRaw.companyUrl : undefined
   };
 };
 
@@ -38,7 +41,7 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
       ...item,
       type: asConversationType(item.type),
       metadata: parseMetadata(item.metadata)
-    }));
+    } as Conversation));
   } catch (error) {
     console.error('Error fetching conversations:', error);
     return [];
@@ -70,7 +73,7 @@ export const fetchConversation = async (id: string): Promise<{ conversation: Con
       ...conversation,
       type: asConversationType(conversation.type),
       metadata: parseMetadata(conversation.metadata)
-    } : null;
+    } as Conversation : null;
 
     const parsedMessages = (messagesData || []).map(msg => ({
       ...msg,
@@ -120,7 +123,7 @@ export const createConversation = async (
       ...data,
       type: asConversationType(data.type),
       metadata: parseMetadata(data.metadata)
-    } : null;
+    } as Conversation : null;
   } catch (error) {
     console.error('Error creating conversation:', error);
     return null;
@@ -162,7 +165,7 @@ export const updateConversation = async (
       ...data,
       type: asConversationType(data.type),
       metadata: parseMetadata(data.metadata)
-    } : null;
+    } as Conversation : null;
   } catch (error) {
     console.error('Error updating conversation:', error);
     return null;
@@ -204,9 +207,9 @@ export const sendMessage = async (
     if (userMessageError) throw userMessageError;
 
     // Simulate AI response (this will be replaced with actual AI integration)
-    const aiResponseContent = `I'm your AI assistant. You said: "${content}"${
+    const aiResponseContent = `I'm your AI career assistant. You said: "${content}"${
       attachments.length > 0 ? ` and shared ${attachments.length} attachment(s)` : ''
-    }. How can I help you further?`;
+    }. How can I help you further with your career questions?`;
 
     // Insert AI response
     const { data: aiMessageData, error: aiMessageError } = await supabase
@@ -239,20 +242,10 @@ export const sendMessage = async (
 // Create a specialized conversation for a specific purpose
 export const createSpecializedConversation = async (
   type: ConversationType,
-  documentId?: string,
-  jobDescription?: string
+  metadata: ConversationMetadata = {}
 ): Promise<Conversation | null> => {
   try {
     let title = '';
-    const metadata: ConversationMetadata = {};
-    
-    if (documentId) {
-      metadata.linkedDocumentId = documentId;
-    }
-    
-    if (jobDescription) {
-      metadata.jobDescription = jobDescription;
-    }
     
     switch (type) {
       case 'resume':
@@ -268,7 +261,10 @@ export const createSpecializedConversation = async (
         title = 'Job Search Strategy';
         break;
       case 'linkedin':
-        title = 'LinkedIn Optimization';
+        title = 'LinkedIn Profile Optimization';
+        break;
+      case 'assessment':
+        title = 'Assessment Preparation';
         break;
       default:
         title = 'AI Career Assistant';
@@ -321,7 +317,7 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
         ...recent,
         type: asConversationType(recent.type),
         metadata: parseMetadata(recent.metadata)
-      } : null;
+      } as Conversation : null;
     }
     
     // Otherwise create a new general conversation
