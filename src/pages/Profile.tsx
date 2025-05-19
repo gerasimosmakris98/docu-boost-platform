@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -192,7 +191,7 @@ const Profile = () => {
                 name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
                 email: user?.email || 'email@example.com'
               }}
-              onSaveChanges={() => handleSaveChanges({})}
+              onSaveChanges={handleSaveChanges}
             />
           </TabsContent>
         </Tabs>

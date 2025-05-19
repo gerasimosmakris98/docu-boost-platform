@@ -1,22 +1,23 @@
 
 import React from "react";
-import { User as UserType } from "@/services/authService";
 import ProfileHeader from "./ProfileHeader";
 import ProfileSummary from "./ProfileSummary";
 
+interface ProfileData {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  website: string;
+}
+
 interface ProfileTabProps {
-  profileData: UserType | {
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    website: string;
-  };
+  profileData: ProfileData;
   resumeData: {
     summary: string;
   };
-  onSaveChanges: () => void;
+  onSaveChanges: (updates: any) => void;
 }
 
 const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps) => {

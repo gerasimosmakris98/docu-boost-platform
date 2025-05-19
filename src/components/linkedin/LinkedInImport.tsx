@@ -2,8 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LinkedInProfile } from "@/services/authService";
-import { useAuth } from "@/contexts/AuthContext";
+import { LinkedInProfile, useAuth } from "@/contexts/AuthContext";
 import { Linkedin, Loader, FileCheck, FileText } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,8 +16,8 @@ const LinkedInImport = ({ onProfileImported }: LinkedInImportProps) => {
   const [importSuccess, setImportSuccess] = useState(false);
 
   const handleImport = async () => {
-    if (!isAuthenticated || user?.provider !== 'linkedin') {
-      toast.error("Please sign in with LinkedIn first");
+    if (!isAuthenticated) {
+      toast.error("Please sign in first");
       return;
     }
 
@@ -68,9 +67,9 @@ const LinkedInImport = ({ onProfileImported }: LinkedInImportProps) => {
           <div className="text-center py-4">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">
-              {isAuthenticated && user?.provider === 'linkedin'
+              {isAuthenticated
                 ? "Ready to import your LinkedIn profile"
-                : "Sign in with LinkedIn to import your profile data"}
+                : "Sign in to import your profile data"}
             </p>
           </div>
         )}
@@ -78,7 +77,7 @@ const LinkedInImport = ({ onProfileImported }: LinkedInImportProps) => {
       <CardFooter>
         <Button
           onClick={handleImport}
-          disabled={isImporting || !isAuthenticated || user?.provider !== 'linkedin'}
+          disabled={isImporting || !isAuthenticated}
           className="w-full gap-2"
         >
           {isImporting ? (

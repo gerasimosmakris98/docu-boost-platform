@@ -169,7 +169,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       toast.success('Signed in successfully!');
-      return data.session;
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
@@ -197,7 +196,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       toast.success('Account created successfully! Please check your email to confirm your account.');
-      return data.session;
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
       throw error;
@@ -212,24 +210,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Clean up existing state
       cleanupAuthState();
       
-      // Map the provider name from our app to Supabase's expected format
-      // Note: LinkedIn now uses linkedin_oidc instead of deprecated linkedin
-      const providerMapping: Record<AuthProviderType, string> = {
-        'google': 'google',
-        'linkedin_oidc': 'linkedin_oidc',
-        'twitter': 'twitter'
-      };
-
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: providerMapping[provider],
+        provider: provider,
         options: {
           redirectTo: window.location.origin + '/profile'
         }
       });
 
       if (error) throw error;
-      
-      return data;
     } catch (error: any) {
       toast.error(error.message || `Failed to sign in with ${provider}`);
       throw error;
