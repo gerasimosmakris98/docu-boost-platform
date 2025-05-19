@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -45,7 +46,14 @@ export const conversationService = {
       return (data || []).map(item => ({
         ...item,
         type: item.type as ConversationType,
-        metadata: item.metadata || {}
+        metadata: item.metadata ? 
+          typeof item.metadata === 'object' ? 
+            {
+              linkedDocumentId: item.metadata.linkedDocumentId as string | undefined,
+              jobDescription: item.metadata.jobDescription as string | undefined,
+              attachments: Array.isArray(item.metadata.attachments) ? item.metadata.attachments as string[] : undefined
+            } : {}
+          : {}
       }));
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -79,7 +87,14 @@ export const conversationService = {
         conversation: conversation ? {
           ...conversation,
           type: conversation.type as ConversationType,
-          metadata: conversation.metadata || {}
+          metadata: conversation.metadata ? 
+            typeof conversation.metadata === 'object' ? 
+              {
+                linkedDocumentId: conversation.metadata.linkedDocumentId as string | undefined,
+                jobDescription: conversation.metadata.jobDescription as string | undefined,
+                attachments: Array.isArray(conversation.metadata.attachments) ? conversation.metadata.attachments as string[] : undefined
+              } : {}
+            : {}
         } : null, 
         messages: messages?.map(msg => ({
           ...msg,
@@ -126,7 +141,14 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
-        metadata: data.metadata || {}
+        metadata: data.metadata ? 
+          typeof data.metadata === 'object' ? 
+            {
+              linkedDocumentId: data.metadata.linkedDocumentId as string | undefined,
+              jobDescription: data.metadata.jobDescription as string | undefined,
+              attachments: Array.isArray(data.metadata.attachments) ? data.metadata.attachments as string[] : undefined
+            } : {}
+          : {}
       };
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -150,7 +172,14 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
-        metadata: data.metadata || {}
+        metadata: data.metadata ? 
+          typeof data.metadata === 'object' ? 
+            {
+              linkedDocumentId: data.metadata.linkedDocumentId as string | undefined,
+              jobDescription: data.metadata.jobDescription as string | undefined,
+              attachments: Array.isArray(data.metadata.attachments) ? data.metadata.attachments as string[] : undefined
+            } : {}
+          : {}
       };
     } catch (error) {
       console.error('Error updating conversation:', error);
