@@ -77,5 +77,5 @@ export const aiProviderService = {
   }
 };
 
-// Re-export the type for other modules to use
-export { AIProvider };
+// Re-export the type using explicit "export type" syntax to fix isolatedModules issue
+export type { AIProvider };
