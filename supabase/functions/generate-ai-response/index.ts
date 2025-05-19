@@ -39,7 +39,13 @@ serve(async (req) => {
     
     if (!openAIApiKey) {
       console.error('OPENAI_API_KEY environment variable not set');
-      throw new Error('OpenAI API key is not configured');
+      return new Response(JSON.stringify({
+        error: "OpenAI API key is not configured",
+        errorCode: "api_key_missing"
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
     try {
@@ -63,10 +69,15 @@ serve(async (req) => {
         console.error('OpenAI API error:', errorData);
         
         // Check for quota exceeded error
-        if (errorData.error?.code === 'insufficient_quota') {
+        if (errorData.error?.code === 'insufficient_quota' || 
+            errorData.error?.message?.includes('quota') ||
+            errorData.error?.message?.includes('exceeded')) {
+          console.warn('OpenAI API quota exceeded');
+          
           return new Response(JSON.stringify({ 
             error: "OpenAI API quota exceeded",
-            errorCode: "insufficient_quota"
+            errorCode: "insufficient_quota",
+            message: errorData.error?.message
           }), {
             status: 402,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -93,10 +104,15 @@ serve(async (req) => {
       console.error('OpenAI API request error:', openAiError);
       
       // Check if it's a quota error
-      if (openAiError.message?.includes('quota') || openAiError.message?.includes('insufficient_quota')) {
+      if (openAiError.message?.includes('quota') || 
+          openAiError.message?.includes('exceeded') || 
+          openAiError.message?.includes('insufficient_quota')) {
+        console.warn('OpenAI API quota exceeded from caught error');
+        
         return new Response(JSON.stringify({ 
           error: "OpenAI API quota exceeded",
-          errorCode: "insufficient_quota"
+          errorCode: "insufficient_quota",
+          message: openAiError.message
         }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,7 +123,10 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Error in generate-ai-response function:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Failed to generate AI response' }), {
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Failed to generate AI response',
+      errorCode: "internal_error"
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

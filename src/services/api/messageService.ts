@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/conversationTypes";
 import { getAiResponse } from "./aiResponseHandlers";
-import { formatConversationContext } from "./conversationApiUtils";
+import { formatConversationContext, asConversationType } from "./conversationApiUtils";
 import { toast } from "sonner";
 
 /**
@@ -54,8 +54,9 @@ export const sendMessage = async (
       formatConversationContext(previousMessages.reverse()) : '';
     
     // Get AI response with fallback handling
+    // Convert string to ConversationType using the utility function
     const aiResponseContent = await getAiResponse(
-      conversationData.type,
+      asConversationType(conversationData.type),
       content,
       contextMessages,
       attachments
