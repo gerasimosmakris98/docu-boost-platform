@@ -3,12 +3,13 @@ project_id = "mpjcflpgrvtixxtajhdl"
 
 [api]
 port = 54321
-schemas = ["public", "storage"]
+schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
 port = 54322
+shadow_port = 54320
 major_version = 15
 
 [studio]
@@ -23,25 +24,18 @@ pop3_port = 54326
 file_size_limit = "50MiB"
 
 [auth]
-site_url = "https://aicareeradvisor.lovable.app"
-additional_redirect_urls = ["https://aicareeradvisor.lovable.app"]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
-enable_signup = true
+enable_refresh_token_rotation = true
+refresh_token_expiry = 604800
 
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false
-
-[auth.sms]
-enable_signup = true
-
-# Define the Edge Functions
 [functions]
-port = 54321
-
+[functions.generate-ai-response]
+verify_jwt = true
 [functions.analyze-file]
 verify_jwt = true
-
-[functions.generate-ai-response]
+[functions.perplexity-ai-response]
+verify_jwt = true
+[functions.perplexity-analyze-file]
 verify_jwt = true

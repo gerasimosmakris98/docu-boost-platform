@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
-import { openaiService } from "../openaiService";
+import { aiProviderService } from "../aiProviderService";
 import { getChatPromptForType } from "../utils/conversationUtils";
 import { getTemplateFallbackResponse } from "./messageUtils";
 
@@ -39,35 +39,25 @@ export const getAiResponse = async (
       }
       
       try {
-        // Analyze file with OpenAI
-        aiResponseContent = await openaiService.analyzeFile(fileUrl, fileName, fileType);
+        // Analyze file using our provider service
+        aiResponseContent = await aiProviderService.analyzeFile(fileUrl, fileName, fileType);
         console.log('File analysis complete');
       } catch (fileError: any) {
         console.error('Error analyzing file:', fileError);
         // Use fallback for file analysis errors
-        if (fileError.message?.includes('quota') || fileError.message?.includes('insufficient_quota')) {
-          aiResponseContent = `I notice you've uploaded a file (${fileName}). However, I'm currently unable to analyze it due to API quota limitations. Here are some general tips about ${fileExtension} files:\n\n${getFileFallbackResponse(fileExtension)}`;
-        } else {
-          aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
-        }
+        aiResponseContent = `I notice you've uploaded a file (${fileName}). However, I'm currently unable to analyze it due to service limitations. Here are some general tips instead:\n\n${getFileFallbackResponse(fileExtension)}`;
       }
     } else {
-      // Generate AI response based on text prompt using openai service
-      console.log('Generating AI response using OpenAI service');
+      // Generate AI response based on text prompt using our provider service
+      console.log('Generating AI response using provider service');
       try {
-        aiResponseContent = await openaiService.generateResponse(prompt, conversationType);
+        aiResponseContent = await aiProviderService.generateResponse(prompt, conversationType);
         console.log('AI response generated successfully');
       } catch (error: any) {
         console.error('Error generating AI response:', error);
-        // Check if it's a quota error
-        if (error.message?.includes('quota') || 
-            error.message?.includes('insufficient_quota') || 
-            error.status === 402) {
-          console.log('Using fallback template response due to quota issue');
-          aiResponseContent = getTemplateFallbackResponse(userMessage, conversationType);
-        } else {
-          aiResponseContent = `I apologize, but I encountered an error while generating a response. ${error.message || 'Please try again later.'}`;
-        }
+        // Use fallback template response
+        console.log('Using fallback template response');
+        aiResponseContent = getTemplateFallbackResponse(userMessage, conversationType);
       }
     }
     

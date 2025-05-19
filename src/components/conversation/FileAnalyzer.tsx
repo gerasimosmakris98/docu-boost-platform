@@ -9,7 +9,7 @@ import {
   Check,
   AlertCircle 
 } from 'lucide-react';
-import { openaiService } from '@/services/openaiService';
+import { aiProviderService } from '@/services/aiProviderService';
 import { toast } from 'sonner';
 import FileUpload from '@/components/common/FileUpload';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +44,7 @@ const FileAnalyzer = ({ onAnalysisComplete }: FileAnalyzerProps) => {
 
     try {
       console.log('Analyzing file:', uploadedFile);
-      const analysis = await openaiService.analyzeFile(
+      const analysis = await aiProviderService.analyzeFile(
         uploadedFile.url,
         uploadedFile.name,
         uploadedFile.type

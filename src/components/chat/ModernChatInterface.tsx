@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import MessagesList from "./components/MessagesList";
 import ChatInput from "./components/ChatInput";
+import { aiProviderService } from "@/services/aiProviderService";
 
 interface ModernChatInterfaceProps {
   conversationId?: string;
@@ -30,6 +30,13 @@ const ModernChatInterface = ({
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
+  
+  // Reset AI providers when component mounts or conversation changes
+  useEffect(() => {
+    if (conversationId) {
+      aiProviderService.resetProviders();
+    }
+  }, [conversationId]);
   
   const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
@@ -82,7 +89,7 @@ const ModernChatInterface = ({
           id: `error-${Date.now()}`,
           conversation_id: conversationId,
           role: 'assistant',
-          content: "I apologize, but I'm currently experiencing some technical difficulties. This might be due to high demand or system limitations. Here are some general tips instead:\n\n- Keep your resume concise and focused on achievements\n- Tailor your application materials to each job description\n- Prepare for interviews by researching the company and practicing common questions\n- Follow up after interviews with a thank you note\n\nPlease try again in a few moments.",
+          content: "I apologize, but I'm currently experiencing some technical difficulties. I've switched to a basic guidance mode to help you. Here are some general tips:\n\n- Keep your resume concise and focused on achievements\n- Tailor your application materials to each job description\n- Prepare for interviews by researching the company and practicing common questions\n- Follow up after interviews with a thank you note\n\nPlease try again in a few moments.",
           created_at: new Date().toISOString()
         };
         
@@ -91,21 +98,25 @@ const ModernChatInterface = ({
         );
         
         toast.error("AI service is currently unavailable", {
-          description: "This might be due to usage limits. Please try again later."
+          description: "Using fallback mode with simplified responses"
         });
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
       
       // Create a more descriptive error message depending on the error type
-      let errorMessage = "I apologize, but I encountered an error while processing your request. Please try again later.";
+      let errorMessage = "I apologize, but I encountered an error while processing your request. I've switched to a simplified response mode to continue helping you.";
       
-      // Check if it's a quota exceeded error
-      if (error.message?.includes('quota') || error.message?.includes('exceeded') || error.status === 402) {
-        errorMessage = "I apologize, but we've reached our AI usage limit at the moment. This is typically due to high demand or API quota limitations. Here are some general tips related to your request:\n\n- Focus on quantifiable achievements in your career materials\n- Use keywords from job descriptions in your resume and cover letters\n- Prepare specific examples for behavioral interview questions\n- Network actively on LinkedIn by engaging with industry content\n\nPlease try again later when our quota resets.";
+      // Check if it's a quota exceeded or rate limit error
+      if (error.message?.includes('quota') || 
+          error.message?.includes('exceeded') || 
+          error.message?.includes('rate limit') || 
+          error.status === 429 || 
+          error.status === 402) {
+        errorMessage = "I apologize, but we've reached our AI usage limit with our current provider. I've switched to a simplified guidance mode to continue helping you. Here are some general tips related to your request:\n\n- Focus on quantifiable achievements in your career materials\n- Use keywords from job descriptions in your resume and cover letters\n- Prepare specific examples for behavioral interview questions\n- Network actively on LinkedIn by engaging with industry content";
         
-        toast.error("AI usage limit reached", {
-          description: "Our OpenAI API quota has been exceeded. Please try again later or contact support.",
+        toast.error("AI service limit reached", {
+          description: "Using fallback mode with simplified responses",
         });
       } else {
         toast.error("Failed to send message");

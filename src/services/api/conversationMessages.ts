@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types/conversationTypes";
 import { asConversationType } from "./conversationApiUtils";
-import { openaiService } from "../openaiService";
+import { aiProviderService } from "../aiProviderService";
 import { getChatPromptForType } from "../utils/conversationUtils";
 import { formatConversationContext } from "./conversationApiUtils";
 
@@ -85,17 +85,17 @@ export const sendMessage = async (
       }
       
       try {
-        // Analyze file with OpenAI
-        aiResponseContent = await openaiService.analyzeFile(fileUrl, fileName, fileType);
+        // Analyze file with our provider service
+        aiResponseContent = await aiProviderService.analyzeFile(fileUrl, fileName, fileType);
         console.log('File analysis complete');
       } catch (fileError) {
         console.error('Error analyzing file:', fileError);
         aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
       }
     } else {
-      // Generate AI response based on text prompt using openai service
-      console.log('Generating AI response using OpenAI service');
-      aiResponseContent = await openaiService.generateResponse(prompt, conversationType);
+      // Generate AI response based on text prompt using our provider service
+      console.log('Generating AI response using provider service');
+      aiResponseContent = await aiProviderService.generateResponse(prompt, conversationType);
       console.log('AI response generated successfully');
     }
     
