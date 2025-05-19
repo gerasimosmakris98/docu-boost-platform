@@ -1,94 +1,18 @@
+
 import { useState, useEffect } from "react";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
 import ProfileTab from "@/components/profile/ProfileTab";
-import ResumeTab from "@/components/profile/ResumeTab";
 import SettingsTab from "@/components/profile/SettingsTab";
-
-// Sample resume data (will use for non-auth users or as fallback)
-const sampleResume = {
-  personal: {
-    name: "Alex Johnson",
-    title: "Senior Software Engineer",
-    email: "alex.johnson@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    website: "alexjohnson.dev",
-  },
-  summary: "Senior Software Engineer with 8+ years of experience developing scalable web applications using React, Node.js, and TypeScript. Passionate about clean code, performance optimization, and creating intuitive user experiences.",
-  experience: [
-    {
-      title: "Senior Software Engineer",
-      company: "TechCorp Inc.",
-      location: "San Francisco, CA",
-      period: "Jan 2020 - Present",
-      description: "Lead developer for the company's flagship product, a SaaS platform serving over 50,000 users. Implemented microservices architecture that improved system reliability by 35% and reduced latency by 42%.",
-    },
-    {
-      title: "Software Engineer",
-      company: "WebSolutions LLC",
-      location: "Austin, TX",
-      period: "Mar 2017 - Dec 2019",
-      description: "Developed and maintained client-facing applications using React and Redux. Collaborated with UX designers to implement responsive interfaces that increased user engagement by 28%.",
-    },
-    {
-      title: "Junior Developer",
-      company: "StartupHub",
-      location: "Portland, OR",
-      period: "Jun 2015 - Feb 2017",
-      description: "Built interactive front-end components using JavaScript and jQuery. Participated in code reviews and agile development processes.",
-    },
-  ],
-  education: [
-    {
-      degree: "Master of Science in Computer Science",
-      school: "Stanford University",
-      location: "Stanford, CA",
-      year: "2015",
-    },
-    {
-      degree: "Bachelor of Science in Computer Engineering",
-      school: "University of Washington",
-      location: "Seattle, WA",
-      year: "2013",
-    },
-  ],
-  skills: [
-    "JavaScript/TypeScript",
-    "React",
-    "Node.js",
-    "GraphQL",
-    "AWS",
-    "Docker",
-    "Kubernetes",
-    "CI/CD",
-    "System Design",
-    "Agile Methodologies",
-  ],
-  languages: [
-    { name: "English", level: "Native" },
-    { name: "Spanish", level: "Professional" },
-    { name: "French", level: "Basic" },
-  ],
-  certifications: [
-    {
-      name: "AWS Certified Solutions Architect",
-      issuer: "Amazon Web Services",
-      year: "2022",
-    },
-    {
-      name: "Google Cloud Professional Developer",
-      issuer: "Google",
-      year: "2021",
-    },
-  ],
-};
+import { User, UserCircle, Settings, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  const { user, profile, isAuthenticated, refreshProfile, updateProfile } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile, isAuthenticated, refreshProfile, updateProfile, logout } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("profile");
   
@@ -98,7 +22,7 @@ const Profile = () => {
     }
   }, [isAuthenticated, refreshProfile]);
   
-  // Use real user data if logged in, otherwise use sample data
+  // Use real user data if logged in, otherwise use placeholder data
   const profileData = isAuthenticated && profile ? {
     name: profile.full_name || user?.user_metadata?.full_name || 'Anonymous User',
     title: profile.title || 'Professional',
@@ -106,28 +30,27 @@ const Profile = () => {
     phone: profile.phone || '',
     location: profile.location || '',
     website: profile.website || '',
-  } : sampleResume.personal;
+  } : {
+    name: 'Guest User',
+    title: 'Visitor',
+    email: 'guest@example.com',
+    phone: '',
+    location: '',
+    website: '',
+  };
   
-  const resumeData = sampleResume;
-
   const handleLogin = () => {
     setLoginDialogOpen(true);
-  };
-
-  const handleDownloadResume = () => {
-    toast.success("Resume downloaded successfully!");
-  };
-  
-  const handleShareResume = () => {
-    toast.success("Resume link copied to clipboard!");
   };
   
   const handleSaveChanges = async (updates: any) => {
     if (isAuthenticated) {
       try {
         await updateProfile(updates);
+        toast.success("Profile updated successfully");
       } catch (error) {
         console.error('Error updating profile:', error);
+        toast.error("Failed to update profile");
       }
     } else {
       toast.error("Please log in to save your changes");
@@ -135,68 +58,113 @@ const Profile = () => {
     }
   };
 
-  return (
-    <DashboardLayout>
-      {!isAuthenticated ? (
-        <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
-          <h2 className="text-xl font-semibold mb-2">Sign in to view your profile</h2>
-          <p className="text-muted-foreground mb-4">
-            Create an account or sign in to view and manage your profile
-          </p>
-          <button 
-            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-            onClick={handleLogin}
-          >
-            Sign In
-          </button>
-          <LoginDialog
-            isOpen={loginDialogOpen}
-            onClose={() => setLoginDialogOpen(false)}
-          />
-        </div>
-      ) : null}
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate("/");
+      toast.success("Signed out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to sign out");
+    }
+  };
 
-      <div className="space-y-6">
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="resume">Resume</TabsTrigger>
-            <TabsTrigger value="settings">Account Settings</TabsTrigger>
-          </TabsList>
+  return (
+    <div className="flex h-screen bg-black text-white overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-64 border-r border-gray-800 p-4 hidden md:block">
+        <div className="flex flex-col h-full">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold">Your Profile</h2>
+            <p className="text-sm text-gray-400">Manage your account</p>
+          </div>
           
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <ProfileTab 
-              profileData={profileData}
-              resumeData={{
-                summary: profile?.summary || resumeData.summary
-              }}
-              onSaveChanges={handleSaveChanges}
-            />
-          </TabsContent>
+          <nav className="space-y-1 flex-1">
+            <Button 
+              variant="ghost" 
+              className={`w-full justify-start ${currentTab === 'profile' ? 'bg-gray-800' : ''}`}
+              onClick={() => setCurrentTab('profile')}
+            >
+              <User className="mr-2 h-4 w-4" /> Personal Info
+            </Button>
+            <Button 
+              variant="ghost" 
+              className={`w-full justify-start ${currentTab === 'settings' ? 'bg-gray-800' : ''}`}
+              onClick={() => setCurrentTab('settings')}
+            >
+              <Settings className="mr-2 h-4 w-4" /> Account Settings
+            </Button>
+          </nav>
           
-          {/* Resume Tab */}
-          <TabsContent value="resume" className="space-y-6">
-            <ResumeTab 
-              resumeData={resumeData}
-              onDownload={handleDownloadResume}
-              onShare={handleShareResume}
-            />
-          </TabsContent>
-          
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <SettingsTab 
-              profileData={{
-                name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
-                email: user?.email || 'email@example.com'
-              }}
-              onSaveChanges={handleSaveChanges}
-            />
-          </TabsContent>
-        </Tabs>
+          <div className="mt-auto">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+            </Button>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          {!isAuthenticated ? (
+            <div className="mb-6 p-6 bg-gray-900/50 rounded-lg text-center border border-gray-800">
+              <UserCircle className="mx-auto h-16 w-16 text-gray-500 mb-2" />
+              <h2 className="text-xl font-semibold mb-2">Sign in to view your profile</h2>
+              <p className="text-gray-400 mb-4">
+                Create an account or sign in to view and manage your profile
+              </p>
+              <Button 
+                onClick={handleLogin}
+              >
+                Sign In
+              </Button>
+              
+              <LoginDialog
+                isOpen={loginDialogOpen}
+                onClose={() => setLoginDialogOpen(false)}
+              />
+            </div>
+          ) : null}
+
+          <div className="space-y-6">
+            {/* Mobile Tabs */}
+            <div className="md:hidden">
+              <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="profile">Profile</TabsTrigger>
+                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            {/* Profile Content */}
+            {currentTab === "profile" && (
+              <ProfileTab 
+                profileData={profileData}
+                resumeData={{ summary: profile?.summary || '' }}
+                onSaveChanges={handleSaveChanges}
+              />
+            )}
+            
+            {/* Settings Content */}
+            {currentTab === "settings" && (
+              <SettingsTab 
+                profileData={{
+                  name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+                  email: user?.email || 'email@example.com'
+                }}
+                onSaveChanges={handleSaveChanges}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

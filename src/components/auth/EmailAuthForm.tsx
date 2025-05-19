@@ -62,7 +62,7 @@ const EmailAuthForm = ({
         // Handle signin with Supabase
         await loginWithEmail(email, password);
         toast.success("Signed in successfully");
-        onSuccess?.("/");
+        onSuccess?.("/chat");
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -76,7 +76,7 @@ const EmailAuthForm = ({
     <form onSubmit={handleEmailAuth} className="space-y-4">
       {authType === "signup" && (
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name</Label>
+          <Label htmlFor="fullName" className="text-gray-300">Full Name</Label>
           <Input
             id="fullName"
             type="text"
@@ -84,12 +84,13 @@ const EmailAuthForm = ({
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required={authType === "signup"}
+            className="bg-gray-900/50 border-gray-700 placeholder:text-gray-500"
           />
         </div>
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-gray-300">Email</Label>
         <Input
           id="email"
           type="email"
@@ -97,17 +98,18 @@ const EmailAuthForm = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="bg-gray-900/50 border-gray-700 placeholder:text-gray-500"
         />
       </div>
       
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-gray-300">Password</Label>
           {authType === "signin" && onForgotPassword && (
             <Button 
               type="button" 
               variant="link" 
-              className="p-0 h-auto text-xs"
+              className="p-0 h-auto text-xs text-primary"
               onClick={(e) => {
                 e.preventDefault();
                 onForgotPassword();
@@ -124,12 +126,13 @@ const EmailAuthForm = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="bg-gray-900/50 border-gray-700 placeholder:text-gray-500"
         />
       </div>
       
       {authType === "signup" && (
         <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-gray-300">Confirm Password</Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -137,6 +140,7 @@ const EmailAuthForm = ({
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required={authType === "signup"}
+            className="bg-gray-900/50 border-gray-700 placeholder:text-gray-500"
           />
         </div>
       )}

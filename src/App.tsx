@@ -12,6 +12,7 @@ import CookieConsent from '@/components/legal/CookieConsent';
 // Eager loaded pages
 import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
+import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import Profile from '@/pages/Profile';
@@ -24,8 +25,8 @@ const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
 
 // Loading fallback
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+  <div className="flex items-center justify-center h-screen bg-black">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
   </div>
 );
 
@@ -37,32 +38,20 @@ function App() {
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<Navigate to="/chat" replace />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
                 <Route 
                   path="/chat" 
-                  element={
-                    <ProtectedRoute>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  } 
+                  element={<ChatPage />} 
                 />
                 <Route 
                   path="/chat/:id" 
-                  element={
-                    <ProtectedRoute>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  } 
+                  element={<ChatPage />} 
                 />
                 <Route 
                   path="/profile" 
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } 
+                  element={<Profile />} 
                 />
                 
                 {/* Legal Pages */}

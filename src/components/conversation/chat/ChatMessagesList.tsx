@@ -1,4 +1,3 @@
-
 import { RefObject } from "react";
 import ChatMessage from "@/components/conversation/ChatMessage";
 import { Message } from "@/services/conversationService";
@@ -19,15 +18,39 @@ const ChatMessagesList = ({ messages, loading, messagesEndRef }: ChatMessagesLis
     );
   }
   
+  // Format long messages for better readability
+  const formatMessageContent = (content: string) => {
+    // Keep the character limit reasonable
+    const maxPreviewLength = 1000;
+    
+    // If the message is too long, truncate it and add an ellipsis
+    if (content.length > maxPreviewLength) {
+      return content.substring(0, maxPreviewLength) + "...";
+    }
+    
+    return content;
+  };
+  
   return (
     <div className="space-y-4">
-      {messages.map((message, index) => (
-        <ChatMessage 
-          key={message.id || index}
-          message={message}
-          isLoading={message.id === undefined || message.id.startsWith('temp')}
-        />
-      ))}
+      {messages.map((message, index) => {
+        // Format the message content for better display
+        const formattedContent = formatMessageContent(message.content);
+        
+        // Clone the message and update its content
+        const displayMessage = {
+          ...message,
+          content: formattedContent
+        };
+        
+        return (
+          <ChatMessage 
+            key={message.id || index}
+            message={displayMessage}
+            isLoading={message.id === undefined || message.id.startsWith('temp')}
+          />
+        );
+      })}
       <div ref={messagesEndRef} />
     </div>
   );
