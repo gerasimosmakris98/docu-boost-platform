@@ -10,7 +10,8 @@ import {
   PenTool,
   BrainCircuit,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  MessageSquare
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const DashboardSidebar = () => {
     { title: "Resume/CV", url: "/documents", icon: FileText },
     { title: "Cover Letters", url: "/cover-letters", icon: PenTool },
     { title: "Assessments", url: "/assessments", icon: BrainCircuit },
+    { title: "Conversations", url: "/conversations", icon: MessageSquare },
     { title: "LinkedIn Profile", url: "/linkedin", icon: Briefcase },
   ];
 

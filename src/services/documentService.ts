@@ -1,64 +1,150 @@
 
-// Mock document processing service
-// Would be replaced with actual implementation using pdf-parse, mammoth.js, etc.
-
+import { supabase } from "@/integrations/supabase/client";
+import { aiService } from "./aiService";
 import { toast } from "sonner";
 
-export interface ParsedDocument {
+export type DocumentType = 'resume' | 'cover_letter' | 'other';
+
+export interface Document {
+  id: string;
+  user_id: string;
   title: string;
-  content: {
-    summary?: string;
-    experience?: string[];
-    education?: string[];
-    skills?: string[];
-    contact?: Record<string, string>;
-  };
-  rawText: string;
-  fileType: 'pdf' | 'docx' | 'doc' | 'txt';
-  originalFileName: string;
+  type: DocumentType;
+  content: string;
+  job_description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const documentService = {
-  parseDocument: async (file: File): Promise<ParsedDocument> => {
-    return new Promise((resolve) => {
-      // In a real implementation, we would:
-      // 1. Parse PDF using pdf-parse
-      // 2. Parse DOCX using mammoth.js
-      // 3. Extract structured data from the content
+  // Get all documents for the current user
+  async getDocuments(): Promise<Document[]> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast.error('Failed to load documents');
+      return [];
+    }
+  },
+
+  // Get a single document by id
+  async getDocument(id: string): Promise<Document | null> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      toast.error('Failed to load document');
+      return null;
+    }
+  },
+
+  // Create a new document
+  async createDocument(
+    title: string, 
+    type: DocumentType, 
+    content: string, 
+    job_description?: string
+  ): Promise<Document | null> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .insert([{ title, type, content, job_description }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating document:', error);
+      toast.error('Failed to create document');
+      return null;
+    }
+  },
+
+  // Update an existing document
+  async updateDocument(
+    id: string, 
+    updates: Partial<Document>
+  ): Promise<Document | null> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating document:', error);
+      toast.error('Failed to update document');
+      return null;
+    }
+  },
+
+  // Delete a document
+  async deleteDocument(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+      return false;
+    }
+  },
+
+  // Generate document content using AI
+  async generateDocument(
+    type: 'resume' | 'cover_letter',
+    userProfile: any,
+    jobDescription: string
+  ): Promise<Document | null> {
+    try {
+      // Get AI-generated content
+      const generated = await aiService.generateDocument(
+        type,
+        userProfile,
+        jobDescription
+      );
       
-      // For now, we'll mock the response
-      setTimeout(() => {
-        const fileType = file.name.split('.').pop()?.toLowerCase();
-        
-        const mockParsed: ParsedDocument = {
-          title: file.name.replace(/\.(pdf|docx|doc|txt)$/i, ''),
-          content: {
-            summary: "Experienced software engineer with a passion for creating elegant solutions to complex problems. Proficient in multiple programming languages and frameworks with a focus on web development.",
-            experience: [
-              "Senior Software Engineer at TechCorp (2020-Present)",
-              "Software Developer at InnovateSoft (2018-2020)",
-              "Junior Developer at StartupXYZ (2016-2018)"
-            ],
-            education: [
-              "Bachelor of Computer Science, University of Technology (2016)"
-            ],
-            skills: [
-              "JavaScript", "TypeScript", "React", "Node.js", "Python", "Java", "Git", "AWS"
-            ],
-            contact: {
-              email: "example@email.com",
-              phone: "(123) 456-7890",
-              location: "San Francisco, CA"
-            }
-          },
-          rawText: "This would be the full raw text of the document...",
-          fileType: (fileType as 'pdf' | 'docx' | 'doc' | 'txt') || 'pdf',
-          originalFileName: file.name
-        };
-        
-        toast.success(`Document "${file.name}" parsed successfully!`);
-        resolve(mockParsed);
-      }, 2000);
-    });
+      if (!generated) {
+        throw new Error('Failed to generate document content');
+      }
+      
+      // Create a new document with the generated content
+      const document = await this.createDocument(
+        generated.title,
+        type,
+        generated.content,
+        jobDescription
+      );
+      
+      return document;
+    } catch (error) {
+      console.error('Error generating document:', error);
+      toast.error('Failed to generate document');
+      return null;
+    }
   }
 };

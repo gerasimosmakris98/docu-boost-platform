@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LinkedIn from "./pages/LinkedIn";
 import Profile from "./pages/Profile";
+import Conversations from "./pages/Conversations";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,9 @@ const App = () => (
               <Route path="/courses" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Index />} />
+              {/* New conversation routes */}
+              <Route path="/conversations" element={<Conversations />} />
+              <Route path="/conversations/:id" element={<Conversations />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
