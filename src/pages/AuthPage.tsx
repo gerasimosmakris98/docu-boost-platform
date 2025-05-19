@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -27,6 +28,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  // Fix the type definition to explicitly include "magic"
   const [authType, setAuthType] = useState<"signin" | "signup" | "magic">("signin");
   const [error, setError] = useState<string | null>(null);
   
