@@ -13,6 +13,9 @@ export const createUserMessage = async (
     // Validate message content
     const validatedContent = validateMessageContent(content);
     
+    // Convert attachment objects to string URLs for database storage
+    const attachmentUrls = attachments ? attachments.map(attachment => attachment.url) : undefined;
+    
     // Insert message into the database
     const { data, error } = await supabase
       .from('messages')
@@ -20,7 +23,7 @@ export const createUserMessage = async (
         conversation_id: conversationId,
         role: 'user',
         content: validatedContent,
-        attachments
+        attachments: attachmentUrls
       })
       .select('*')
       .single();
