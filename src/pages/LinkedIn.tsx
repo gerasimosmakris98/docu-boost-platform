@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -35,8 +36,64 @@ const LinkedInPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, linkedInProfile } = useAuth();
   const navigate = useNavigate();
+
+  const handleCreateDocument = async (type: 'resume' | 'cover_letter') => {
+    if (!isAuthenticated || !linkedInProfile) {
+      toast.error("Please import your LinkedIn profile first");
+      return;
+    }
+    
+    try {
+      // First we need to format the LinkedIn profile data for document generation
+      const userProfile = {
+        name: user?.user_metadata?.full_name || '',
+        title: linkedInProfile.title || '',
+        summary: linkedInProfile.summary || '',
+        experience: linkedInProfile.experience.map(exp => ({
+          title: exp.title,
+          company: exp.company,
+          duration: exp.duration,
+          description: exp.description
+        })),
+        education: linkedInProfile.education.map(edu => ({
+          degree: edu.degree,
+          school: edu.school,
+          year: edu.year
+        })),
+        skills: linkedInProfile.skills
+      };
+      
+      // For cover letters, we'll ask the user to provide a job description in a future enhancement
+      const jobDescription = type === 'cover_letter' 
+        ? "This is a placeholder job description. In a future version, the app will ask for a specific job description."
+        : "";
+      
+      toast.loading(`Generating your ${type === 'resume' ? 'resume' : 'cover letter'}...`);
+      
+      // Generate the document using the AI service
+      const document = await documentService.generateDocument(
+        type,
+        userProfile,
+        jobDescription
+      );
+      
+      toast.dismiss();
+      
+      if (document) {
+        toast.success(`Your ${type === 'resume' ? 'resume' : 'cover letter'} has been created!`);
+        
+        // Navigate to view the document
+        navigate(`/documents/${document.id}`);
+      } else {
+        toast.error(`Failed to generate ${type === 'resume' ? 'resume' : 'cover letter'}`);
+      }
+    } catch (error) {
+      console.error(`Error creating ${type}:`, error);
+      toast.error(`Failed to create ${type}`);
+    }
+  };
 
   const handleStartConversation = async (type: 'interview_prep' | 'resume') => {
     if (!isAuthenticated) {
@@ -103,7 +160,7 @@ const LinkedInPage = () => {
               <p className="text-sm text-gray-400">
                 Analyze your profile and receive actionable recommendations to enhance your professional brand.
               </p>
-              <LinkedInOptimizer />
+              <LinkedInOptimizer profile={linkedInProfile || null} onCreateDocument={handleCreateDocument} />
             </CardContent>
             <CardFooter className="justify-end">
               <Button onClick={() => setIsOptimizing(true)}>
@@ -189,7 +246,7 @@ const LinkedInPage = () => {
         </div>
       </div>
 
-      <LoginDialog open={showLoginDialog} onClose={() => setShowLoginDialog(false)} />
+      <LoginDialog isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} />
     </DashboardLayout>
   );
 };

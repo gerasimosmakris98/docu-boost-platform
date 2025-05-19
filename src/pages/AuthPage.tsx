@@ -57,9 +57,9 @@ const AuthPage = () => {
       } else if (authType === "signup") {
         await signUpWithEmail(email, password, name);
         navigate("/chat");
-      } else {
-        // Magic link login - reuse loginWithEmail without password
-        await loginWithEmail(email);
+      } else if (authType === "magic") {
+        // Pass empty string as password for magic link login
+        await loginWithEmail(email, "");
         toast.success(`Magic link sent to ${email}. Please check your inbox.`);
       }
     } catch (error: any) {
