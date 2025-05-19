@@ -74,6 +74,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachments: string[] | null
           content: string
           conversation_id: string
           created_at: string
@@ -81,6 +82,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          attachments?: string[] | null
           content: string
           conversation_id: string
           created_at?: string
@@ -88,6 +90,7 @@ export type Database = {
           role: string
         }
         Update: {
+          attachments?: string[] | null
           content?: string
           conversation_id?: string
           created_at?: string

@@ -36,7 +36,7 @@ export const sendMessage = async (
         conversation_id: conversationId,
         role: 'user',
         content,
-        attachments
+        attachments: attachments || []
       })
       .select()
       .single();
@@ -105,7 +105,8 @@ export const sendMessage = async (
       .insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: aiResponseContent
+        content: aiResponseContent,
+        attachments: []
       })
       .select()
       .single();
