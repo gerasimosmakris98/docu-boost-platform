@@ -1,5 +1,5 @@
 
-export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin' | 'assessment';
+export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin' | 'assessment' | 'linkedin_analysis';
 
 export interface ConversationMetadata {
   linkedDocumentId?: string;

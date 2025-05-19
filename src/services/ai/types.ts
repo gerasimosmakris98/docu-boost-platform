@@ -35,4 +35,6 @@ export interface ProgressiveResponseOptions {
   format?: 'steps' | 'bullets' | 'paragraphs';
 }
 
-export type ConversationType = 'resume' | 'cover_letter' | 'interview_prep' | 'job_search' | 'linkedin' | 'assessment' | 'general' | 'linkedin_analysis';
+// Import the ConversationType from the main types file to avoid duplication
+import { ConversationType } from '../types/conversationTypes';
+export { ConversationType };

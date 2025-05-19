@@ -1,6 +1,6 @@
 
 import { aiProviderService } from './aiProviderService';
-import { ConversationType } from './types';
+import { ConversationType } from '../types/conversationTypes';
 
 /**
  * Analyze a LinkedIn profile by generating a response with LinkedIn-specific prompt
