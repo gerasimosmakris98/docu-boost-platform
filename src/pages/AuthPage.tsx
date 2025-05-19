@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -20,6 +19,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
+type AuthType = "signin" | "signup" | "magic";
+
 const AuthPage = () => {
   const navigate = useNavigate();
   const { loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
@@ -28,7 +29,7 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [authType, setAuthType] = useState<"signin" | "signup" | "magic">("signin");
+  const [authType, setAuthType] = useState<AuthType>("signin");
   const [error, setError] = useState<string | null>(null);
   
   const handleProviderLogin = async (provider: "google") => {
@@ -142,7 +143,7 @@ const AuthPage = () => {
             <Tabs 
               defaultValue="signin" 
               value={authType}
-              onValueChange={(value) => setAuthType(value as "signin" | "signup" | "magic")}
+              onValueChange={(value) => setAuthType(value as AuthType)}
               className="w-full"
             >
               <TabsList className="grid grid-cols-3 mb-6">
