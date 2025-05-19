@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,10 +65,8 @@ const AuthPage = () => {
     
     try {
       await signInWithMagicLink(email);
-      toast({
-        title: "Check your email!",
-        description: "We've sent you a magic link to sign in.",
-      });
+      // Use sonner toast instead of shadcn/ui toast to match the rest of the file
+      toast.success("Check your email! We've sent you a magic link to sign in.");
       setIsSubmitting(false);
     } catch (error: any) {
       toast.error(error.message || "Failed to send magic link");
