@@ -2,10 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const openaiService = {
-  generateResponse: async (prompt: string): Promise<string> => {
+  generateResponse: async (prompt: string, type: string = "general"): Promise<string> => {
     try {
       const { data, error } = await supabase.functions.invoke("generate-ai-response", {
-        body: { prompt },
+        body: { prompt, type },
       });
 
       if (error) throw new Error(error.message);
@@ -45,7 +45,6 @@ export const openaiService = {
     }
   },
   
-  // New method to analyze LinkedIn profiles
   analyzeLinkedInProfile: async (profileData: any): Promise<string> => {
     try {
       const { data, error } = await supabase.functions.invoke("generate-ai-response", {

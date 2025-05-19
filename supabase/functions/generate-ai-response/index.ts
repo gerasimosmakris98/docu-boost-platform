@@ -36,6 +36,12 @@ serve(async (req) => {
     }
 
     console.log('Using system prompt:', systemPrompt);
+    
+    if (!openAIApiKey) {
+      console.error('OPENAI_API_KEY environment variable not set');
+      throw new Error('OpenAI API key is not configured');
+    }
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
