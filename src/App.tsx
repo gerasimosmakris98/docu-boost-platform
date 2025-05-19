@@ -38,20 +38,42 @@ function App() {
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<HomePage />} />
+                {/* Home route redirects to /chat if authenticated, otherwise shows HomePage */}
+                <Route 
+                  path="/" 
+                  element={
+                    <ProtectedRoute fallback={<HomePage />}>
+                      <Navigate to="/chat" replace />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+                
+                {/* Protected routes */}
                 <Route 
                   path="/chat" 
-                  element={<ChatPage />} 
+                  element={
+                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
+                      <ChatPage />
+                    </ProtectedRoute>
+                  } 
                 />
                 <Route 
                   path="/chat/:id" 
-                  element={<ChatPage />} 
+                  element={
+                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
+                      <ChatPage />
+                    </ProtectedRoute>
+                  } 
                 />
                 <Route 
                   path="/profile" 
-                  element={<Profile />} 
+                  element={
+                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
                 />
                 
                 {/* Legal Pages */}

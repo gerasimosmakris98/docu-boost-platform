@@ -1,13 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { advisors } from "@/components/chat/advisorData";
 import { conversationService } from "@/services/conversationService";
+import { ConversationType } from "@/services/types/conversationTypes";
 import { toast } from "sonner";
 
 const ProfileChatTab = () => {
@@ -18,7 +19,8 @@ const ProfileChatTab = () => {
   const handleStartChat = async (advisorType: string) => {
     try {
       setIsCreating(true);
-      const conversation = await conversationService.createSpecializedConversation(advisorType);
+      // Cast the string to ConversationType to fix the type error
+      const conversation = await conversationService.createSpecializedConversation(advisorType as ConversationType);
       if (conversation) {
         navigate(`/chat/${conversation.id}`);
       }
@@ -44,6 +46,16 @@ const ProfileChatTab = () => {
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Chat
+        </Button>
+        
+        {/* Added X button for more obvious closing */}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-gray-400 hover:text-white"
+          onClick={handleBackToChat}
+        >
+          <X className="h-5 w-5" />
         </Button>
       </div>
       

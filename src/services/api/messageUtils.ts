@@ -2,6 +2,45 @@
 import { ConversationType } from "../types/conversationTypes";
 
 /**
+ * Extract URLs from a message
+ */
+export const extractUrls = (text: string): string[] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.match(urlRegex) || [];
+};
+
+/**
+ * Determine if message is brief or requires detailed response
+ * based on content and length
+ */
+export const shouldBeBrief = (message: string): boolean => {
+  // Messages with these keywords likely want brief responses
+  const briefKeywords = ['help', 'tip', 'quick', 'start', 'hello', 'hi'];
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // If message is short (less than 15 words)
+  if (message.split(' ').length < 15) {
+    // Check if it contains any brief keywords
+    return briefKeywords.some(keyword => lowerMessage.includes(keyword));
+  }
+  
+  // Longer messages typically need more detailed responses
+  return false;
+};
+
+/**
+ * Extract URL type from a URL string
+ */
+export const extractUrlType = (url: string): string => {
+  if (url.includes('linkedin.com')) return 'linkedin';
+  if (url.includes('indeed.com') || url.includes('ziprecruiter.com')) return 'job';
+  if (url.includes('github.com')) return 'github';
+  if (url.includes('docs.google.com')) return 'document';
+  return 'website';
+};
+
+/**
  * Get a template fallback response when OpenAI API is unavailable
  */
 export const getTemplateFallbackResponse = (userMessage: string, type: ConversationType): string => {

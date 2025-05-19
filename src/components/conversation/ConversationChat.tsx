@@ -84,12 +84,12 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     if (files.length > 0) {
       try {
         setSending(true);
-        // Show uploading state
+        // Show uploading state - Using 'assistant' role instead of 'system'
         const tempLoadingId = `temp-upload-${Date.now()}`;
         const tempLoadingMessage: Message = {
           id: tempLoadingId,
           conversation_id: conversationId,
-          role: 'system',
+          role: 'assistant',
           content: 'Uploading file(s)...',
           created_at: new Date().toISOString()
         };
@@ -144,7 +144,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     const tempLoadingMessage: Message = {
       id: tempLoadingId,
       conversation_id: conversationId,
-      role: 'assistant',
+      role: 'assistant', // Changed from 'system' to 'assistant'
       content: '...',
       created_at: new Date().toISOString()
     };
