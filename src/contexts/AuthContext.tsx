@@ -31,10 +31,9 @@ export interface LinkedInProfile {
   recommendations?: string[];
 }
 
-// User profile interface
+// User profile interface - updated to match the database schema
 export interface UserProfile {
   id: string;
-  user_id: string;
   full_name?: string;
   avatar_url?: string;
   website?: string;
@@ -42,6 +41,10 @@ export interface UserProfile {
   location?: string;
   phone?: string;
   updated_at?: string;
+  username?: string;
+  headline?: string;
+  summary?: string;
+  created_at?: string;
 }
 
 export interface AuthContextType {
@@ -80,7 +83,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single();
 
       if (error) {
@@ -305,13 +308,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       
+      // Update the profile data with id
+      const profileData = {
+        id: user.id,
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...data,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(profileData);
       
       if (error) throw error;
       

@@ -1,137 +1,203 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  LogOut,
-  ArrowLeft,
-  Loader2 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import LoginDialog from "@/components/auth/LoginDialog";
+import ProfileTab from "@/components/profile/ProfileTab";
+import ResumeTab from "@/components/profile/ResumeTab";
+import SettingsTab from "@/components/profile/SettingsTab";
+
+// Sample resume data (will use for non-auth users or as fallback)
+const sampleResume = {
+  personal: {
+    name: "Alex Johnson",
+    title: "Senior Software Engineer",
+    email: "alex.johnson@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    website: "alexjohnson.dev",
+  },
+  summary: "Senior Software Engineer with 8+ years of experience developing scalable web applications using React, Node.js, and TypeScript. Passionate about clean code, performance optimization, and creating intuitive user experiences.",
+  experience: [
+    {
+      title: "Senior Software Engineer",
+      company: "TechCorp Inc.",
+      location: "San Francisco, CA",
+      period: "Jan 2020 - Present",
+      description: "Lead developer for the company's flagship product, a SaaS platform serving over 50,000 users. Implemented microservices architecture that improved system reliability by 35% and reduced latency by 42%.",
+    },
+    {
+      title: "Software Engineer",
+      company: "WebSolutions LLC",
+      location: "Austin, TX",
+      period: "Mar 2017 - Dec 2019",
+      description: "Developed and maintained client-facing applications using React and Redux. Collaborated with UX designers to implement responsive interfaces that increased user engagement by 28%.",
+    },
+    {
+      title: "Junior Developer",
+      company: "StartupHub",
+      location: "Portland, OR",
+      period: "Jun 2015 - Feb 2017",
+      description: "Built interactive front-end components using JavaScript and jQuery. Participated in code reviews and agile development processes.",
+    },
+  ],
+  education: [
+    {
+      degree: "Master of Science in Computer Science",
+      school: "Stanford University",
+      location: "Stanford, CA",
+      year: "2015",
+    },
+    {
+      degree: "Bachelor of Science in Computer Engineering",
+      school: "University of Washington",
+      location: "Seattle, WA",
+      year: "2013",
+    },
+  ],
+  skills: [
+    "JavaScript/TypeScript",
+    "React",
+    "Node.js",
+    "GraphQL",
+    "AWS",
+    "Docker",
+    "Kubernetes",
+    "CI/CD",
+    "System Design",
+    "Agile Methodologies",
+  ],
+  languages: [
+    { name: "English", level: "Native" },
+    { name: "Spanish", level: "Professional" },
+    { name: "French", level: "Basic" },
+  ],
+  certifications: [
+    {
+      name: "AWS Certified Solutions Architect",
+      issuer: "Amazon Web Services",
+      year: "2022",
+    },
+    {
+      name: "Google Cloud Professional Developer",
+      issuer: "Google",
+      year: "2021",
+    },
+  ],
+};
 
 const ProfilePage = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, profile, isAuthenticated, refreshProfile, updateProfile } = useAuth();
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState("profile");
   
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
+    if (isAuthenticated) {
+      refreshProfile();
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, refreshProfile]);
   
-  const handleLogout = async () => {
-    setIsLoading(true);
-    try {
-      await logout();
-      navigate("/auth");
-      toast.success("Logged out successfully");
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast.error("Failed to log out");
-    } finally {
-      setIsLoading(false);
-    }
+  // Use real user data if logged in, otherwise use sample data
+  const profileData = isAuthenticated && profile ? {
+    name: profile.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+    title: profile.title || 'Professional',
+    email: user?.email || 'email@example.com',
+    phone: profile.phone || '',
+    location: profile.location || '',
+    website: profile.website || '',
+  } : sampleResume.personal;
+  
+  const resumeData = sampleResume;
+
+  const handleLogin = () => {
+    setLoginDialogOpen(true);
+  };
+
+  const handleDownloadResume = () => {
+    toast.success("Resume downloaded successfully!");
   };
   
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-black">
-        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-      </div>
-    );
-  }
+  const handleShareResume = () => {
+    toast.success("Resume link copied to clipboard!");
+  };
   
-  const joinedDate = user.created_at || new Date().toISOString();
-  const joinedTimeAgo = formatDistanceToNow(new Date(joinedDate), { addSuffix: true });
-  
+  const handleSaveChanges = async (updates: any) => {
+    if (isAuthenticated) {
+      try {
+        await updateProfile(updates);
+      } catch (error) {
+        console.error('Error updating profile:', error);
+      }
+    } else {
+      toast.error("Please log in to save your changes");
+      setLoginDialogOpen(true);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
-      <div className="max-w-md mx-auto">
-        <Button 
-          variant="ghost" 
-          className="mb-6 pl-0 text-gray-400 hover:text-white"
-          onClick={() => navigate("/chat")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Chat
-        </Button>
-        
-        <Card className="bg-gray-900 border-gray-800">
-          <CardHeader>
-            <CardTitle className="text-xl">
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-green-500" />
-                User Profile
-              </div>
-            </CardTitle>
-            <CardDescription>
-              Manage your account settings and preferences
-            </CardDescription>
-          </CardHeader>
+    <DashboardLayout>
+      {!isAuthenticated ? (
+        <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
+          <h2 className="text-xl font-semibold mb-2">Sign in to view your profile</h2>
+          <p className="text-muted-foreground mb-4">
+            Create an account or sign in to view and manage your profile
+          </p>
+          <button 
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+            onClick={handleLogin}
+          >
+            Sign In
+          </button>
+          <LoginDialog
+            isOpen={loginDialogOpen}
+            onClose={() => setLoginDialogOpen(false)}
+          />
+        </div>
+      ) : null}
+
+      <div className="space-y-6">
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="resume">Resume</TabsTrigger>
+            <TabsTrigger value="settings">Account Settings</TabsTrigger>
+          </TabsList>
           
-          <CardContent>
-            <div className="flex items-center gap-4 mb-6">
-              <Avatar className="h-16 w-16 border-2 border-green-500/20">
-                <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-green-700 text-xl">
-                  {(user.email || 'U').substring(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              <div>
-                <h3 className="font-medium text-lg">
-                  {user.user_metadata?.full_name || 'User'}
-                </h3>
-                <p className="text-gray-400 text-sm">{user.email}</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-400">Email:</span>
-                <span>{user.email}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-400">Joined:</span>
-                <span>{joinedTimeAgo}</span>
-              </div>
-            </div>
-          </CardContent>
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <ProfileTab 
+              profileData={profileData}
+              resumeData={{
+                summary: profile?.summary || resumeData.summary
+              }}
+              onSaveChanges={handleSaveChanges}
+            />
+          </TabsContent>
           
-          <CardFooter>
-            <Button 
-              variant="destructive" 
-              onClick={handleLogout}
-              disabled={isLoading}
-              className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-800/30"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging out...
-                </>
-              ) : (
-                <>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
+          {/* Resume Tab */}
+          <TabsContent value="resume" className="space-y-6">
+            <ResumeTab 
+              resumeData={resumeData}
+              onDownload={handleDownloadResume}
+              onShare={handleShareResume}
+            />
+          </TabsContent>
+          
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <SettingsTab 
+              profileData={{
+                name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+                email: user?.email || 'email@example.com'
+              }}
+              onSaveChanges={handleSaveChanges}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

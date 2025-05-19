@@ -1,3 +1,4 @@
+
 // Mock authentication service
 // Replace with actual OAuth implementations (Supabase, Auth0, Firebase)
 
