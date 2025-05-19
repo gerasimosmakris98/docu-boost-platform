@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
@@ -5,9 +6,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner";
+import { cleanupAuthState } from "@/services/authService";
 
 const AuthPage = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +17,7 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, signUp, signInWithMagicLink } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -24,16 +26,16 @@ const AuthPage = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Clean up auth state before signin
+    cleanupAuthState();
+    
     try {
       await signIn(email, password);
-      navigate("/chat");
+      // The signIn function now handles navigation
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign-in failed",
-        description: error.message,
-      });
-    } finally {
+      console.error("Sign in error:", error);
+      toast.error(error.message || "Failed to sign in");
       setIsSubmitting(false);
     }
   };
@@ -41,16 +43,16 @@ const AuthPage = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Clean up auth state before signup
+    cleanupAuthState();
+    
     try {
       await signUp(email, password, fullName);
-      navigate("/chat");
+      // The signUp function now handles navigation
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign-up failed",
-        description: error.message,
-      });
-    } finally {
+      console.error("Sign up error:", error);
+      toast.error(error.message || "Failed to sign up");
       setIsSubmitting(false);
     }
   };
@@ -58,24 +60,25 @@ const AuthPage = () => {
   const handleMagicLinkSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Clean up auth state before magic link
+    cleanupAuthState();
+    
     try {
       await signInWithMagicLink(email);
       toast({
         title: "Check your email!",
         description: "We've sent you a magic link to sign in.",
       });
+      setIsSubmitting(false);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Magic link sign-in failed",
-        description: error.message,
-      });
-    } finally {
+      toast.error(error.message || "Failed to send magic link");
       setIsSubmitting(false);
     }
   };
   
   const handleGuestAccess = () => {
+    // For guest access, we don't need authentication
     navigate("/chat");
   };
 

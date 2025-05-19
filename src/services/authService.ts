@@ -4,6 +4,7 @@
 
 import { toast } from "sonner";
 import { AuthProviderType } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface User {
   id: string;
@@ -37,6 +38,23 @@ export interface LinkedInProfile {
   profileScore?: number;
   recommendations?: string[];
 }
+
+// Utility function to clean up auth state
+export const cleanupAuthState = () => {
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  // Remove from sessionStorage if in use
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
 
 // Mock user data
 const mockUsers: Record<string, User> = {
@@ -75,6 +93,16 @@ const mockUsers: Record<string, User> = {
 export const authService = {
   // Mock login with provider
   loginWithProvider: async (provider: AuthProviderType): Promise<User> => {
+    // Clean up existing auth state
+    cleanupAuthState();
+    
+    // Attempt global sign out first
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (err) {
+      // Continue even if this fails
+    }
+    
     return new Promise((resolve) => {
       // Simulate API call delay
       setTimeout(() => {
@@ -86,6 +114,9 @@ export const authService = {
 
   // Mock logout
   logout: async (): Promise<void> => {
+    // Clean up auth state
+    cleanupAuthState();
+    
     return new Promise((resolve) => {
       setTimeout(() => {
         toast.info('Signed out successfully');

@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { cleanupAuthState } from '@/services/authService';
 
 // Define missing types that other components are using
 export type AuthProviderType = 'google' | 'twitter' | 'linkedin_oidc';
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [linkedInProfile, setLinkedInProfile] = useState<LinkedInProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Fetch user profile from database
@@ -100,95 +101,143 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Get user session and profile on mount
   useEffect(() => {
-    const getSession = async () => {
-      setIsLoading(true);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session) {
-          setIsAuthenticated(true);
-          setUser(session.user);
-          
-          // Fetch user profile if authenticated
-          const userProfile = await fetchProfile(session.user.id);
-          if (userProfile) {
-            setProfile(userProfile);
-          }
-        }
-      } catch (error) {
-        console.error("Error getting session:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getSession();
-
-    // Listen for changes on auth state (login, logout, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session: Session | null) => {
+    let isMounted = true;
+    
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`Auth state change: ${event}`, session);
+      
+      if (!isMounted) return;
+      
       if (event === 'SIGNED_IN') {
         setIsAuthenticated(true);
         setUser(session?.user || null);
         
-        // Fetch profile when signed in
+        // Defer profile fetching to next tick to avoid potential deadlocks
         if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
-          if (userProfile) {
-            setProfile(userProfile);
-          }
+          setTimeout(async () => {
+            if (isMounted) {
+              const userProfile = await fetchProfile(session.user.id);
+              if (userProfile && isMounted) {
+                setProfile(userProfile);
+              }
+              if (isMounted) setIsLoading(false);
+            }
+          }, 0);
+        } else {
+          setIsLoading(false);
         }
       } else if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
         setUser(null);
         setProfile(null);
         setLinkedInProfile(null);
+        setIsLoading(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed');
       }
     });
 
+    // THEN check for existing session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session);
+        
+        if (session && isMounted) {
+          setIsAuthenticated(true);
+          setUser(session.user);
+          
+          // Fetch user profile if authenticated
+          const userProfile = await fetchProfile(session.user.id);
+          if (userProfile && isMounted) {
+            setProfile(userProfile);
+          }
+        }
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
+    
     try {
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      // Attempt global sign out before signing in
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
       if (error) throw error;
+      
       setIsAuthenticated(true);
-      setUser(user);
+      setUser(data.user);
+      
       toast.success('Signed in successfully!');
-      navigate('/dashboard');
+      
+      // Force page reload for a clean state
+      window.location.href = '/chat';
     } catch (error: any) {
       console.error("Sign-in error:", error);
       toast.error(error.message || 'Failed to sign in.');
-    } finally {
       setIsLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, meta: any = {}) => {
     setIsLoading(true);
+    
     try {
-      const { data: { user }, error } = await supabase.auth.signUp({
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      // Attempt global sign out before signing up
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: meta
         }
       });
+      
       if (error) throw error;
+      
       setIsAuthenticated(true);
-      setUser(user);
+      setUser(data.user);
+      
       toast.success('Signed up successfully!');
-      navigate('/dashboard');
+      
+      // Force page reload for a clean state
+      window.location.href = '/chat';
     } catch (error: any) {
       console.error("Sign-up error:", error);
       toast.error(error.message || 'Failed to sign up.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -196,14 +245,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithMagicLink = async (email: string) => {
     setIsLoading(true);
     try {
+      // Clean up existing state first
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          // emailRedirectTo: `${window.location.origin}/dashboard`,
         }
       });
+      
       if (error) throw error;
+      
       toast.success('Check your email for the magic link to sign in!');
     } catch (error: any) {
       console.error("Magic link sign-in error:", error);
@@ -216,14 +269,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) throw error;
+      
       setIsAuthenticated(false);
       setUser(null);
       setProfile(null);
       setLinkedInProfile(null);
+      
       toast.success('Signed out successfully!');
-      navigate('/');
+      
+      // Force page reload for a clean state
+      window.location.href = '/auth';
     } catch (error: any) {
       console.error("Sign-out error:", error);
       toast.error(error.message || 'Failed to sign out.');
@@ -236,6 +296,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginWithProvider = async (provider: AuthProviderType) => {
     setIsLoading(true);
     try {
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -250,7 +320,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       console.error(`Sign-in with ${provider} error:`, error);
       toast.error(error.message || `Failed to sign in with ${provider}.`);
-    } finally {
       setIsLoading(false);
     }
   };

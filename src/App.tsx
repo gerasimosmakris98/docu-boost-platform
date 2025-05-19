@@ -12,7 +12,13 @@ import ChatPage from '@/pages/ChatPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFound from '@/pages/NotFound';
 
+// Auth state cleanup utility
+import { cleanupAuthState } from '@/services/authService';
+
 function App() {
+  // Clean up any existing auth state on app initialization
+  cleanupAuthState();
+  
   return (
     <ThemeProvider defaultTheme="dark">
       <Router>
