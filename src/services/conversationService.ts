@@ -1,373 +1,66 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { 
+  Conversation, 
+  ConversationMetadata, 
+  Message, 
+  ConversationType,
+  ConversationMessage 
+} from "./types/conversationTypes";
 
-export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin';
+import {
+  fetchConversations,
+  fetchConversation,
+  createConversation,
+  updateConversation,
+  deleteConversation,
+  sendMessage,
+  createSpecializedConversation,
+  createDefaultConversation
+} from "./api/conversationApi";
 
-export interface ConversationMetadata {
-  linkedDocumentId?: string;
-  jobDescription?: string;
-  attachments?: string[];
-}
+import {
+  getChatPromptForType,
+  getWelcomeMessageForType
+} from "./utils/conversationUtils";
 
-export interface Conversation {
-  id: string;
-  user_id: string;
-  title: string;
-  type: ConversationType;
-  created_at: string;
-  updated_at: string;
-  metadata: ConversationMetadata;
-}
-
-export interface Message {
-  id: string;
-  conversation_id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  created_at: string;
-  attachments?: string[];
-}
-
-export interface ConversationMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-// Helper function to safely parse metadata from Supabase response
-const parseMetadata = (metadataRaw: any): ConversationMetadata => {
-  if (!metadataRaw) return {};
-  
-  if (typeof metadataRaw !== 'object') return {};
-  
-  // Handle object case
-  return {
-    linkedDocumentId: typeof metadataRaw.linkedDocumentId === 'string' ? metadataRaw.linkedDocumentId : undefined,
-    jobDescription: typeof metadataRaw.jobDescription === 'string' ? metadataRaw.jobDescription : undefined,
-    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined
-  };
+// Re-export types
+export { 
+  ConversationType, 
+  Conversation, 
+  Message, 
+  ConversationMetadata,
+  ConversationMessage
 };
 
+// Create a single service object that combines all the functionality
 export const conversationService = {
   // Fetch user's conversations
-  async getConversations(): Promise<Conversation[]> {
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      
-      return (data || []).map(item => ({
-        ...item,
-        type: item.type as ConversationType,
-        metadata: parseMetadata(item.metadata)
-      }));
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      toast.error('Failed to load conversations');
-      return [];
-    }
-  },
+  getConversations: fetchConversations,
 
   // Fetch a specific conversation with its messages
-  async getConversation(id: string): Promise<{ conversation: Conversation | null, messages: Message[] }> {
-    try {
-      // Get the conversation
-      const { data: conversation, error: conversationError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (conversationError) throw conversationError;
-
-      // Get the messages for this conversation
-      const { data: messages, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', id)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) throw messagesError;
-
-      return { 
-        conversation: conversation ? {
-          ...conversation,
-          type: conversation.type as ConversationType,
-          metadata: parseMetadata(conversation.metadata)
-        } : null, 
-        messages: messages?.map(msg => ({
-          ...msg,
-          role: msg.role as 'user' | 'assistant'
-        })) || []
-      };
-    } catch (error) {
-      console.error('Error fetching conversation:', error);
-      toast.error('Failed to load conversation');
-      return { conversation: null, messages: [] };
-    }
-  },
+  getConversation: fetchConversation,
 
   // Create a new conversation
-  async createConversation(
-    title: string, 
-    type: ConversationType,
-    metadata?: ConversationMetadata
-  ): Promise<Conversation | null> {
-    try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const { data, error } = await supabase
-        .from('conversations')
-        .insert({
-          title, 
-          type,
-          user_id: user.id,
-          metadata
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      return {
-        ...data,
-        type: data.type as ConversationType,
-        metadata: parseMetadata(data.metadata)
-      };
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      toast.error('Failed to create conversation');
-      return null;
-    }
-  },
+  createConversation,
 
   // Update a conversation
-  async updateConversation(id: string, updates: Partial<Conversation>): Promise<Conversation | null> {
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      return {
-        ...data,
-        type: data.type as ConversationType,
-        metadata: parseMetadata(data.metadata)
-      };
-    } catch (error) {
-      console.error('Error updating conversation:', error);
-      toast.error('Failed to update conversation');
-      return null;
-    }
-  },
+  updateConversation,
 
   // Delete a conversation
-  async deleteConversation(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', id);
+  deleteConversation,
 
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
-      toast.error('Failed to delete conversation');
-      return false;
-    }
-  },
-
-  // Chat with AI - this will handle sending user messages and receiving AI responses
-  async sendMessage(
-    conversationId: string, 
-    content: string, 
-    attachments: string[] = []
-  ): Promise<{ aiResponse: Message } | null> {
-    try {
-      // Save the user message
-      const { data: userMessage, error: userMessageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'user',
-          content,
-          attachments
-        })
-        .select()
-        .single();
-
-      if (userMessageError) throw userMessageError;
-
-      // Get the conversation history for context
-      const { data: conversationData, error: conversationError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', conversationId)
-        .single();
-
-      if (conversationError) throw conversationError;
-
-      const { data: previousMessages, error: previousMessagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (previousMessagesError) throw previousMessagesError;
-
-      // Format messages for the AI
-      const messageHistory: ConversationMessage[] = previousMessages
-        .map(msg => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content
-        }));
-
-      // Call the AI service to get a response - will be updated to use an edge function
-      // For now, just create a mock response
-      const aiResponse = `I'm processing your request about: "${content}". ${
-        attachments.length > 0 ? 
-        `I see you've attached ${attachments.length} file(s). Let me analyze that for you.` : 
-        "This is a placeholder response until the AI edge function is implemented."
-      }`;
-
-      // Save the AI response
-      const { data: assistantMessage, error: assistantMessageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: aiResponse
-        })
-        .select()
-        .single();
-
-      if (assistantMessageError) throw assistantMessageError;
-
-      return {
-        aiResponse: {
-          ...assistantMessage,
-          role: assistantMessage.role as 'user' | 'assistant'
-        }
-      };
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
-      return null;
-    }
-  },
+  // Chat with AI
+  sendMessage,
 
   // Get specialized chat contexts for different document types
-  getChatPromptForType(type: ConversationType, documentContent?: string, jobDescription?: string): string {
-    switch (type) {
-      case 'resume':
-        return `You are a resume specialist. Here's a resume: "${documentContent}". Please provide detailed feedback.`;
-      case 'interview_prep':
-        return `You are an interview coach. The job description is: "${jobDescription}". Provide interview preparation guidance.`;
-      case 'cover_letter':
-        return `You are a cover letter expert. Here's a job description: "${jobDescription}". Please help craft an impressive cover letter.`;
-      case 'job_search':
-        return `You are a job search strategist. Provide detailed advice for finding and applying to jobs effectively.`;
-      case 'linkedin':
-        return `You are a LinkedIn profile optimization expert. Please help improve this LinkedIn profile for better visibility and impact.`;
-      default:
-        return 'You are a helpful career assistant. How can I help you with your career goals today?';
-    }
-  },
+  getChatPromptForType,
 
-  // Create a specialized conversation for a specific purpose (resume review, interview prep, etc.)
-  async createSpecializedConversation(
-    type: ConversationType, 
-    documentId?: string,
-    jobDescription?: string
-  ): Promise<Conversation | null> {
-    try {
-      let title = '';
-      
-      switch (type) {
-        case 'resume':
-          title = 'Resume Review';
-          break;
-        case 'interview_prep':
-          title = 'Interview Preparation';
-          break;
-        case 'cover_letter':
-          title = 'Cover Letter Assistant';
-          break;
-        case 'job_search':
-          title = 'Job Search Strategy';
-          break;
-        case 'linkedin':
-          title = 'LinkedIn Optimization';
-          break;
-        default:
-          title = 'Career Advice';
-      }
-      
-      const metadata: ConversationMetadata = {};
-      
-      if (documentId) {
-        metadata.linkedDocumentId = documentId;
-      }
-      
-      if (jobDescription) {
-        metadata.jobDescription = jobDescription;
-      }
-      
-      const conversation = await this.createConversation(title, type, metadata);
-      
-      if (!conversation) throw new Error('Failed to create conversation');
-      
-      // Add an initial assistant message to guide the user
-      await supabase.from('messages').insert({
-        conversation_id: conversation.id,
-        role: 'assistant',
-        content: `Welcome to your ${title.toLowerCase()} session. I'm here to help you with ${
-          type === 'resume' ? 'improving your resume' :
-          type === 'interview_prep' ? 'preparing for your upcoming interview' :
-          type === 'cover_letter' ? 'crafting an effective cover letter' :
-          type === 'job_search' ? 'developing an effective job search strategy' :
-          type === 'linkedin' ? 'optimizing your LinkedIn profile' :
-          'your career questions'
-        }. What specific assistance do you need today?`
-      });
-      
-      return conversation;
-    } catch (error) {
-      console.error('Error creating specialized conversation:', error);
-      toast.error('Failed to create specialized chat');
-      return null;
-    }
-  },
-  
+  // Get welcome message for conversation type
+  getWelcomeMessageForType,
+
+  // Create a specialized conversation
+  createSpecializedConversation,
+
   // Create a default conversation if none exists
-  async createDefaultConversation(): Promise<Conversation | null> {
-    try {
-      const conversations = await this.getConversations();
-      
-      // If user already has conversations, don't create a new one
-      if (conversations.length > 0) {
-        return conversations[0]; // Return the most recent conversation
-      }
-      
-      // Create a new general advisor conversation
-      return this.createSpecializedConversation('general');
-    } catch (error) {
-      console.error('Error creating default conversation:', error);
-      toast.error('Failed to create default conversation');
-      return null;
-    }
-  }
+  createDefaultConversation
 };
