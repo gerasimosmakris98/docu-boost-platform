@@ -6,11 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { FaGoogle, FaGithub, FaLinkedin } from "react-icons/fa";
-import { MdEmail } from "react-icons/md";
+import { Loader2, Mail, Github, Linkedin, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 type AuthType = "signin" | "signup";
 type ProviderType = "email" | "magic" | "oauth";
@@ -210,7 +208,7 @@ const AuthPage = () => {
         onClick={() => handleOAuthSignIn('google')}
         disabled={isLoading}
       >
-        <FaGoogle className="mr-2 h-4 w-4" />
+        <LogIn className="mr-2 h-4 w-4" />
         Continue with Google
       </Button>
       
@@ -220,7 +218,7 @@ const AuthPage = () => {
         onClick={() => handleOAuthSignIn('github')}
         disabled={isLoading}
       >
-        <FaGithub className="mr-2 h-4 w-4" />
+        <Github className="mr-2 h-4 w-4" />
         Continue with GitHub
       </Button>
       
@@ -230,7 +228,7 @@ const AuthPage = () => {
         onClick={() => handleOAuthSignIn('linkedin')}
         disabled={isLoading}
       >
-        <FaLinkedin className="mr-2 h-4 w-4" />
+        <Linkedin className="mr-2 h-4 w-4" />
         Continue with LinkedIn
       </Button>
     </div>
@@ -255,7 +253,7 @@ const AuthPage = () => {
             <Tabs defaultValue="email" className="w-full" onValueChange={(value) => setProviderType(value as ProviderType)}>
               <TabsList className="grid w-full grid-cols-3 mb-4">
                 <TabsTrigger value="email" className="flex items-center gap-1">
-                  <MdEmail className="h-4 w-4" />
+                  <Mail className="h-4 w-4" />
                   <span className="hidden sm:inline">Email</span>
                 </TabsTrigger>
                 <TabsTrigger value="magic" className="flex items-center gap-1">
@@ -263,7 +261,7 @@ const AuthPage = () => {
                   <span className="hidden sm:inline">Magic Link</span>
                 </TabsTrigger>
                 <TabsTrigger value="oauth" className="flex items-center gap-1">
-                  <FaGoogle className="h-3 w-3" />
+                  <LogIn className="h-3 w-3" />
                   <span className="hidden sm:inline">OAuth</span>
                 </TabsTrigger>
               </TabsList>
