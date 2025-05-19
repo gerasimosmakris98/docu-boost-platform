@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 import { Conversation, ConversationMetadata, Message, ConversationType } from "../types/conversationTypes";
+import { generateChatResponse } from "./chatApi";
 
 // Helper function to safely convert string to ConversationType
 const asConversationType = (type: string): ConversationType => {
@@ -195,21 +196,57 @@ export const sendMessage = async (
   attachments: string[] = []
 ): Promise<{ aiResponse: Message } | null> => {
   try {
+    // Get conversation type to customize AI response
+    const { data: conversationData, error: convError } = await supabase
+      .from('conversations')
+      .select('type')
+      .eq('id', conversationId)
+      .single();
+    
+    if (convError) {
+      console.error('Error getting conversation type:', convError);
+      throw convError;
+    }
+    
+    const conversationType = asConversationType(conversationData.type);
+
     // Insert user message
-    const { error: userMessageError } = await supabase
+    const { data: userMsgData, error: userMessageError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
         role: 'user',
-        content
-      });
+        content,
+        attachments
+      })
+      .select()
+      .single();
 
     if (userMessageError) throw userMessageError;
 
-    // Simulate AI response (this will be replaced with actual AI integration)
-    const aiResponseContent = `I'm your AI career assistant. You said: "${content}"${
-      attachments.length > 0 ? ` and shared ${attachments.length} attachment(s)` : ''
-    }. How can I help you further with your career questions?`;
+    // Get conversation history for context
+    const { data: historyData, error: historyError } = await supabase
+      .from('messages')
+      .select('role, content')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+      .limit(10); // Limit to avoid token limits
+
+    if (historyError) throw historyError;
+
+    // Format message history for AI
+    const messageHistory = historyData.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content
+    }));
+
+    // Get AI response via chatApi
+    const aiResponseContent = await generateChatResponse(
+      content,
+      messageHistory,
+      conversationType,
+      attachments
+    );
 
     // Insert AI response
     const { data: aiMessageData, error: aiMessageError } = await supabase
@@ -231,6 +268,12 @@ export const sendMessage = async (
       content: aiMessageData.content,
       created_at: aiMessageData.created_at
     };
+
+    // Update conversation timestamp
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
 
     return { aiResponse };
   } catch (error) {

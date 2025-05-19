@@ -1,5 +1,6 @@
 
 import { ConversationMessage, ConversationType } from "../aiService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatRequestBody {
   messages: {
@@ -16,7 +17,7 @@ interface ChatResponseBody {
 }
 
 /**
- * Calls an external AI API to generate a chat response
+ * Calls an AI API to generate a chat response
  */
 export const generateChatResponse = async (
   message: string,
@@ -43,36 +44,29 @@ export const generateChatResponse = async (
       }
     ];
 
-    // Make API call to our own backend endpoint
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Call our Supabase edge function
+    const { data, error } = await supabase.functions.invoke('ai-chat', {
+      body: {
         messages: formattedMessages,
         conversationType,
         attachments
-      } as ChatRequestBody),
+      }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(`Failed to invoke AI chat: ${error.message}`);
     }
-
-    const data = await response.json() as ChatResponseBody;
     
-    if (data.error) {
-      throw new Error(data.error);
+    if (!data || data.error) {
+      throw new Error(data?.error || 'No response from AI service');
     }
     
     return data.content;
   } catch (error) {
     console.error('Error in generateChatResponse:', error);
     
-    // Instead of just throwing the error, let's provide a fallback response
-    // This ensures that users still get a response even if the API fails
+    // Provide a fallback response even if the API fails
     return `I apologize, but I encountered an error while processing your request. ${error instanceof Error ? error.message : 'Please try again later.'}`;
   }
 };
