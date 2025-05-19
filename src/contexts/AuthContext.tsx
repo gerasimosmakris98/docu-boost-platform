@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, cleanupAuthState } from '@/integrations/supabase/client';
 
 export type AuthProviderType = 'google' | 'linkedin_oidc' | 'twitter';
 
@@ -58,24 +58,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Helper function to clean up auth state to prevent limbo states
-const cleanupAuthState = () => {
-  // Remove standard auth tokens
-  localStorage.removeItem('supabase.auth.token');
-  // Remove all Supabase auth keys from localStorage
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      localStorage.removeItem(key);
-    }
-  });
-  // Remove from sessionStorage if in use
-  Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      sessionStorage.removeItem(key);
-    }
-  });
-};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -184,6 +166,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Continue even if this fails
       }
 
+      // If password is empty, it's a magic link login
+      if (!password) {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+        });
+        
+        if (error) throw error;
+        
+        toast.success(`Magic link sent to ${email}. Please check your inbox.`);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -192,6 +186,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       toast.success('Signed in successfully!');
+      
+      // Force page reload for a clean state
+      window.location.href = '/';
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
@@ -236,7 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: window.location.origin + '/profile'
+          redirectTo: window.location.origin
         }
       });
 
@@ -265,6 +262,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLinkedInProfile(null);
       
       toast.info('Signed out successfully');
+      
+      // Force page reload for a clean state
+      window.location.href = '/auth';
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
       throw error;
