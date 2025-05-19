@@ -26,13 +26,11 @@ const ConversationDetail = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Function to load conversation and messages
-  const loadConversation = async () => {
-    if (!id) return;
-    
+  const loadConversation = async (conversationId: string) => {
     try {
       setIsLoading(true);
       const { conversation: loadedConversation, messages: loadedMessages } = 
-        await conversationService.getConversation(id);
+        await conversationService.getConversation(conversationId);
       
       if (!loadedConversation) {
         toast.error("Conversation not found");
@@ -50,7 +48,7 @@ const ConversationDetail = () => {
     }
   };
   
-  // Load conversation on component mount
+  // Create or load conversation on component mount
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("Please sign in to view conversations");
@@ -58,7 +56,31 @@ const ConversationDetail = () => {
       return;
     }
     
-    loadConversation();
+    const initializeConversation = async () => {
+      setIsLoading(true);
+      try {
+        // If ID is provided, load that conversation
+        if (id) {
+          await loadConversation(id);
+        } else {
+          // If no ID, create a default conversation or load the most recent one
+          const defaultConversation = await conversationService.createDefaultConversation();
+          if (defaultConversation) {
+            navigate(`/conversations/${defaultConversation.id}`);
+          } else {
+            toast.error("Failed to create a conversation");
+            navigate("/conversations");
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing conversation:", error);
+        toast.error("Failed to initialize conversation");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initializeConversation();
   }, [id, isAuthenticated, navigate]);
   
   // Scroll to bottom when messages change
@@ -111,7 +133,7 @@ const ConversationDetail = () => {
       if (response) {
         setMessages(prev => prev.filter(msg => msg.id !== optimisticAIMessage.id));
         // Append real AI response
-        await loadConversation(); // Reload all messages to ensure consistency
+        await loadConversation(id); // Reload all messages to ensure consistency
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -140,13 +162,14 @@ const ConversationDetail = () => {
                  conversation?.type === 'interview_prep' ? 'Interview Preparation Coach' :
                  conversation?.type === 'cover_letter' ? 'Cover Letter Assistant' :
                  conversation?.type === 'job_search' ? 'Job Search Strategist' :
+                 conversation?.type === 'linkedin' ? 'LinkedIn Optimization Expert' :
                  'AI Career Assistant'}
               </p>
             </div>
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={loadConversation}
+              onClick={() => id && loadConversation(id)}
               disabled={isLoading}
             >
               <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

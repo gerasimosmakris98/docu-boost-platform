@@ -1,162 +1,127 @@
 
-import { useLocation } from "react-router-dom";
-import { NavLink } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  User, 
-  Briefcase, 
-  Settings, 
-  PenTool,
-  BrainCircuit,
-  BookOpen,
-  GraduationCap,
-  MessageSquare
-} from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar
-} from "@/components/ui/sidebar";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { 
+  User, 
+  Home, 
+  FileText, 
+  Users, 
+  MessageSquare, 
+  Settings, 
+  LogOut, 
+  Briefcase 
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import AdvisorList from "../advisor/AdvisorList";
+import { conversationService } from "@/services/conversationService";
 
 const DashboardSidebar = () => {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { logout } = useAuth();
   const location = useLocation();
-  const currentPath = location.pathname;
-
-  const mainItems = [
-    { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    { title: "Resume/CV", url: "/documents", icon: FileText },
-    { title: "Cover Letters", url: "/cover-letters", icon: PenTool },
-    { title: "Assessments", url: "/assessments", icon: BrainCircuit },
-    { title: "Conversations", url: "/conversations", icon: MessageSquare },
-    { title: "LinkedIn Profile", url: "/linkedin", icon: Briefcase },
-  ];
-
-  const resourceItems = [
-    { title: "Guides", url: "/guides", icon: BookOpen },
-    { title: "Courses", url: "/courses", icon: GraduationCap },
-  ];
-
+  const navigate = useNavigate();
+  
   const isActive = (path: string) => {
-    if (path === '/' && currentPath === '/') return true;
-    if (path !== '/' && currentPath.startsWith(path)) return true;
-    return false;
+    return location.pathname.startsWith(path);
   };
 
-  const getNavClass = ({ isActive }: { isActive: boolean }) => {
-    return cn(
-      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-      isActive 
-        ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-    );
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+    toast.success("Logged out successfully");
+  };
+
+  const startNewChat = async () => {
+    try {
+      toast.loading("Creating new conversation...");
+      const conversation = await conversationService.createSpecializedConversation('general');
+      
+      if (conversation) {
+        navigate(`/chat/${conversation.id}`);
+        toast.dismiss();
+      } else {
+        toast.error("Failed to create conversation");
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      toast.error("Failed to create conversation");
+    }
   };
 
   return (
-    <Sidebar 
-      className={cn(
-        "border-r border-border",
-        collapsed ? "w-[68px]" : "w-64"
-      )}
-      collapsible="icon"
-    >
-      <div className={cn(
-        "flex h-14 items-center border-b px-4",
-        collapsed ? "justify-center" : "justify-between"
-      )}>
-        {!collapsed && (
-          <span className="text-xl font-semibold tracking-tight">CareerAI</span>
-        )}
-        <SidebarTrigger />
+    <div className="w-64 border-r bg-background h-[calc(100vh-64px)] flex flex-col">
+      <div className="p-4">
+        <Button 
+          variant="default" 
+          className="w-full justify-start gap-2" 
+          onClick={startNewChat}
+        >
+          <MessageSquare className="h-4 w-4" />
+          New Conversation
+        </Button>
       </div>
 
-      <SidebarContent className="p-2">
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>Main</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClass}
-                      end={item.url === "/"}
-                    >
-                      <item.icon className={cn("h-5 w-5", collapsed && "mx-auto")} />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
+        <Link
+          to="/"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-md text-sm font-medium",
+            isActive("/") && !isActive("/profile") && !isActive("/conversations") && !isActive("/chat")
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
+          <Home className="mr-2 h-4 w-4" />
+          Dashboard
+        </Link>
 
-        <SidebarGroup className="mt-4">
-          {!collapsed && <SidebarGroupLabel>Resources</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {resourceItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={getNavClass}
-                    >
-                      <item.icon className={cn("h-5 w-5", collapsed && "mx-auto")} />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <Link
+          to="/chat"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-md text-sm font-medium",
+            isActive("/chat") || isActive("/conversations")
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Conversations
+        </Link>
+
+        <div>
+          <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+            AI ADVISORS
+          </div>
+          <AdvisorList />
+        </div>
+
+        <Link
+          to="/profile"
+          className={cn(
+            "flex items-center px-3 py-2 rounded-md text-sm font-medium",
+            isActive("/profile")
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          )}
+        >
+          <User className="mr-2 h-4 w-4" />
+          Profile
+        </Link>
 
         <div className="mt-auto">
-          <SidebarGroup className="mt-4">
-            {!collapsed && <SidebarGroupLabel>User</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/profile"
-                      className={getNavClass}
-                    >
-                      <User className={cn("h-5 w-5", collapsed && "mx-auto")} />
-                      {!collapsed && <span>Profile</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/settings"
-                      className={getNavClass}
-                    >
-                      <Settings className={cn("h-5 w-5", collapsed && "mx-auto")} />
-                      {!collapsed && <span>Settings</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </div>
-      </SidebarContent>
-    </Sidebar>
+      </nav>
+    </div>
   );
 };
 

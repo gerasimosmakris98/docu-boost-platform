@@ -4,6 +4,12 @@ import { toast } from "sonner";
 
 export type ConversationType = 'general' | 'resume' | 'interview_prep' | 'cover_letter' | 'job_search' | 'linkedin';
 
+export interface ConversationMetadata {
+  linkedDocumentId?: string;
+  jobDescription?: string;
+  attachments?: string[];
+}
+
 export interface Conversation {
   id: string;
   user_id: string;
@@ -11,11 +17,7 @@ export interface Conversation {
   type: ConversationType;
   created_at: string;
   updated_at: string;
-  metadata?: {
-    linkedDocumentId?: string;
-    jobDescription?: string;
-    attachments?: string[];
-  };
+  metadata: ConversationMetadata;
 }
 
 export interface Message {
@@ -32,6 +34,20 @@ export interface ConversationMessage {
   content: string;
 }
 
+// Helper function to safely parse metadata from Supabase response
+const parseMetadata = (metadataRaw: any): ConversationMetadata => {
+  if (!metadataRaw) return {};
+  
+  if (typeof metadataRaw !== 'object') return {};
+  
+  // Handle object case
+  return {
+    linkedDocumentId: typeof metadataRaw.linkedDocumentId === 'string' ? metadataRaw.linkedDocumentId : undefined,
+    jobDescription: typeof metadataRaw.jobDescription === 'string' ? metadataRaw.jobDescription : undefined,
+    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined
+  };
+};
+
 export const conversationService = {
   // Fetch user's conversations
   async getConversations(): Promise<Conversation[]> {
@@ -46,14 +62,7 @@ export const conversationService = {
       return (data || []).map(item => ({
         ...item,
         type: item.type as ConversationType,
-        metadata: item.metadata ? 
-          typeof item.metadata === 'object' ? 
-            {
-              linkedDocumentId: item.metadata.linkedDocumentId as string | undefined,
-              jobDescription: item.metadata.jobDescription as string | undefined,
-              attachments: Array.isArray(item.metadata.attachments) ? item.metadata.attachments as string[] : undefined
-            } : {}
-          : {}
+        metadata: parseMetadata(item.metadata)
       }));
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -87,14 +96,7 @@ export const conversationService = {
         conversation: conversation ? {
           ...conversation,
           type: conversation.type as ConversationType,
-          metadata: conversation.metadata ? 
-            typeof conversation.metadata === 'object' ? 
-              {
-                linkedDocumentId: conversation.metadata.linkedDocumentId as string | undefined,
-                jobDescription: conversation.metadata.jobDescription as string | undefined,
-                attachments: Array.isArray(conversation.metadata.attachments) ? conversation.metadata.attachments as string[] : undefined
-              } : {}
-            : {}
+          metadata: parseMetadata(conversation.metadata)
         } : null, 
         messages: messages?.map(msg => ({
           ...msg,
@@ -112,10 +114,7 @@ export const conversationService = {
   async createConversation(
     title: string, 
     type: ConversationType,
-    metadata?: {
-      linkedDocumentId?: string;
-      jobDescription?: string;
-    }
+    metadata?: ConversationMetadata
   ): Promise<Conversation | null> {
     try {
       // Get the current user
@@ -141,14 +140,7 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
-        metadata: data.metadata ? 
-          typeof data.metadata === 'object' ? 
-            {
-              linkedDocumentId: data.metadata.linkedDocumentId as string | undefined,
-              jobDescription: data.metadata.jobDescription as string | undefined,
-              attachments: Array.isArray(data.metadata.attachments) ? data.metadata.attachments as string[] : undefined
-            } : {}
-          : {}
+        metadata: parseMetadata(data.metadata)
       };
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -172,14 +164,7 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
-        metadata: data.metadata ? 
-          typeof data.metadata === 'object' ? 
-            {
-              linkedDocumentId: data.metadata.linkedDocumentId as string | undefined,
-              jobDescription: data.metadata.jobDescription as string | undefined,
-              attachments: Array.isArray(data.metadata.attachments) ? data.metadata.attachments as string[] : undefined
-            } : {}
-          : {}
+        metadata: parseMetadata(data.metadata)
       };
     } catch (error) {
       console.error('Error updating conversation:', error);
@@ -252,7 +237,11 @@ export const conversationService = {
 
       // Call the AI service to get a response - will be updated to use an edge function
       // For now, just create a mock response
-      const aiResponse = `I'm processing your request about: "${content}". This is a placeholder response until the AI edge function is implemented.`;
+      const aiResponse = `I'm processing your request about: "${content}". ${
+        attachments.length > 0 ? 
+        `I see you've attached ${attachments.length} file(s). Let me analyze that for you.` : 
+        "This is a placeholder response until the AI edge function is implemented."
+      }`;
 
       // Save the AI response
       const { data: assistantMessage, error: assistantMessageError } = await supabase
@@ -327,10 +316,17 @@ export const conversationService = {
           title = 'Career Advice';
       }
       
-      const conversation = await this.createConversation(title, type, {
-        linkedDocumentId: documentId,
-        jobDescription
-      });
+      const metadata: ConversationMetadata = {};
+      
+      if (documentId) {
+        metadata.linkedDocumentId = documentId;
+      }
+      
+      if (jobDescription) {
+        metadata.jobDescription = jobDescription;
+      }
+      
+      const conversation = await this.createConversation(title, type, metadata);
       
       if (!conversation) throw new Error('Failed to create conversation');
       
@@ -352,6 +348,25 @@ export const conversationService = {
     } catch (error) {
       console.error('Error creating specialized conversation:', error);
       toast.error('Failed to create specialized chat');
+      return null;
+    }
+  },
+  
+  // Create a default conversation if none exists
+  async createDefaultConversation(): Promise<Conversation | null> {
+    try {
+      const conversations = await this.getConversations();
+      
+      // If user already has conversations, don't create a new one
+      if (conversations.length > 0) {
+        return conversations[0]; // Return the most recent conversation
+      }
+      
+      // Create a new general advisor conversation
+      return this.createSpecializedConversation('general');
+    } catch (error) {
+      console.error('Error creating default conversation:', error);
+      toast.error('Failed to create default conversation');
       return null;
     }
   }
