@@ -1,6 +1,6 @@
 
-import { aiProviderService as baseAiProviderService } from './aiProviderService';
 import { AIModelOptions, ProgressiveResponseOptions, ConversationType } from './types';
+import { aiProviderService as baseService } from './providerService';
 
 // Enhanced version of the AI provider service with better response formatting
 const aiProviderService = {
@@ -40,7 +40,7 @@ const aiProviderService = {
     };
     
     // Call the base service with enhanced prompt and options
-    return await baseAiProviderService.generateResponse(
+    return await baseService.generateResponse(
       enhancedPrompt, 
       conversationType, 
       mergedOptions
@@ -48,8 +48,8 @@ const aiProviderService = {
   },
   
   // Pass through other methods from the base service
-  analyzeFile: baseAiProviderService.analyzeFile,
-  analyzeUrl: baseAiProviderService.analyzeUrl
+  analyzeFile: baseService.analyzeFile,
+  analyzeUrl: baseService.analyzeUrl
 };
 
 export { aiProviderService };
