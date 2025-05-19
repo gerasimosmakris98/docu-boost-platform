@@ -3,19 +3,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareerAI - AI-Powered Resume & CV Builder</title>
-    <meta name="description" content="Create professional resumes, CVs, and cover letters with AI. Get assessments and improve your career opportunities." />
-    <meta name="author" content="CareerAI" />
-
-    <meta property="og:title" content="CareerAI - AI-Powered Resume & CV Builder" />
-    <meta property="og:description" content="Create professional resumes, CVs, and cover letters with AI. Get assessments and improve your career opportunities." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>AI Career Advisor - AI-Powered Career Guidance</title>
+    <meta name="description" content="Get personalized AI career guidance, resume optimization, interview preparation and cover letter help to boost your job search and career advancement." />
+    <meta name="author" content="AI Career Advisor" />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
+    <meta property="og:url" content="https://aicareeradvisor.lovable.app/" />
+    <meta property="og:title" content="AI Career Advisor - AI-Powered Career Guidance" />
+    <meta property="og:description" content="Get personalized AI career guidance, resume optimization, interview preparation and cover letter help to boost your job search and career advancement." />
+    <meta property="og:image" content="https://aicareeradvisor.lovable.app/icons/social-preview.png" />
+    
+    <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="AI Career Advisor - AI-Powered Career Guidance" />
+    <meta name="twitter:description" content="Get personalized AI career guidance, resume optimization, interview preparation and cover letter help to boost your job search and career advancement." />
+    <meta name="twitter:image" content="https://aicareeradvisor.lovable.app/icons/social-preview.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icons/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AI Career Advisor" />
   </head>
 
   <body>
@@ -23,5 +38,19 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+              console.error('ServiceWorker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

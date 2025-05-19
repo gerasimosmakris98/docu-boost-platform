@@ -1,5 +1,5 @@
 
-export type AIProvider = 'openai' | 'perplexity' | 'fallback';
+export type AIProvider = 'perplexity' | 'fallback';
 
 export interface ProviderConfig {
   functionName: string;

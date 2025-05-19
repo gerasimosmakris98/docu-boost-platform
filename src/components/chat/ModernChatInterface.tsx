@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -6,6 +7,8 @@ import { conversationService, Conversation, Message } from "@/services/conversat
 import MessagesList from "./components/MessagesList";
 import ChatInput from "./components/ChatInput";
 import { aiProviderService } from "@/services/ai/aiProviderService";
+import { useIsMobile } from "@/hooks/use-mobile";
+import Footer from "@/components/layout/Footer";
 
 interface ModernChatInterfaceProps {
   conversationId?: string;
@@ -22,6 +25,8 @@ const ModernChatInterface = ({
 }: ModernChatInterfaceProps) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isSending, setIsSending] = useState(false);
@@ -37,6 +42,13 @@ const ModernChatInterface = ({
       aiProviderService.resetProviders();
     }
   }, [conversationId]);
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
   
   const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
@@ -141,24 +153,47 @@ const ModernChatInterface = ({
   
   return (
     <div className="flex flex-col h-full bg-black">
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      {/* Conversation title for mobile */}
+      {isMobile && conversation && (
+        <div className="p-3 border-b border-gray-800 flex items-center">
+          <h1 className="text-lg font-medium truncate">{conversation.title}</h1>
+        </div>
+      )}
+      
+      {/* Messages area with optimized performance for mobile */}
+      <div 
+        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain" 
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
         <MessagesList 
           messages={messages} 
           isLoading={isLoading} 
           isModern={true}
         />
+        <div ref={messagesEndRef} />
       </div>
       
       {/* Input area */}
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        isDisabled={!isAuthenticated}
-        isSending={isSending}
-        isModern={true}
-      />
+      <div>
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          isDisabled={!isAuthenticated}
+          isSending={isSending}
+          isModern={true}
+        />
+        {/* Mini footer only visible on desktop */}
+        {!isMobile && <div className="px-4 py-2">
+          <div className="flex justify-end space-x-3 text-xs text-gray-500">
+            <Link to="/legal/terms" className="hover:text-gray-300">Terms</Link>
+            <Link to="/legal/privacy" className="hover:text-gray-300">Privacy</Link>
+          </div>
+        </div>}
+      </div>
     </div>
   );
 };
+
+// We need to add the Link component import at the top
+import { Link } from "react-router-dom";
 
 export default ModernChatInterface;

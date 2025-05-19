@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -175,5 +174,68 @@
   
   .responsive-text-lg {
     font-size: 1.125rem;
+  }
+}
+
+/* Viewport and touch improvements */
+@layer base {
+  html, body {
+    height: 100%;
+    width: 100%;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improve tap targets on mobile */
+  button, a, input, textarea, select {
+    touch-action: manipulation;
+  }
+  
+  /* Better focus states for accessibility */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+  
+  /* Hide scrollbars on mobile but keep functionality */
+  @media (max-width: 768px) {
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  }
+}
+
+/* Fast animations for mobile */
+@media (max-width: 768px) {
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Material ripple effect for touch feedback */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(0);
+  animation: ripple 0.5s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
   }
 }

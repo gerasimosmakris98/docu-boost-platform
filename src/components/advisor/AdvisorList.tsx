@@ -1,6 +1,6 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, FileText, Linkedin, MessageSquare, User, Users } from 'lucide-react';
+import { Briefcase, FileText, Linkedin, MessageSquare, User, Users, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { conversationService, ConversationType } from '@/services/conversationService';
 import { toast } from 'sonner';
@@ -55,6 +55,13 @@ const advisors: Advisor[] = [
     type: 'linkedin',
     icon: <Linkedin className="h-4 w-4" />,
     description: 'LinkedIn profile optimization'
+  },
+  {
+    id: 'assessment',
+    name: 'Assessment Advisor',
+    type: 'assessment',
+    icon: <CheckSquare className="h-4 w-4" />,
+    description: 'Assessment and test preparation'
   }
 ];
 

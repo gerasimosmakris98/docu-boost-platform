@@ -4,66 +4,93 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
+import { HelmetProvider } from 'react-helmet-async';
+import { lazy, Suspense } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import CookieConsent from '@/components/legal/CookieConsent';
 
-// Pages
+// Eager loaded pages
 import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
-import ProfilePage from '@/pages/ProfilePage';
 import NotFound from '@/pages/NotFound';
+
+// Lazy loaded pages for better performance
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
+const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
+const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+  </div>
+);
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark">
-      <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Navigate to="/chat" replace />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route 
-              path="/chat" 
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              } 
+    <HelmetProvider>
+      <ThemeProvider defaultTheme="dark">
+        <AuthProvider>
+          <Router>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/chat" replace />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route 
+                  path="/chat" 
+                  element={
+                    <ProtectedRoute>
+                      <ChatPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/chat/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <ChatPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Legal Pages */}
+                <Route path="/legal/terms" element={<TermsPage />} />
+                <Route path="/legal/privacy" element={<PrivacyPage />} />
+                <Route path="/legal/cookies" element={<CookiePage />} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+            
+            <CookieConsent />
+            <Toaster />
+            <SonnerToaster 
+              position="top-right" 
+              closeButton
+              richColors
+              expand
+              toastOptions={{
+                className: 'bg-gray-900 text-white border border-gray-800 shadow-lg',
+                duration: 4000,
+                style: {
+                  background: 'hsl(var(--background))',
+                  border: 'hsl(var(--border))'
+                }
+              }}
             />
-            <Route 
-              path="/chat/:id" 
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-        <Toaster />
-        <SonnerToaster 
-          position="top-right" 
-          closeButton
-          richColors
-          expand
-          toastOptions={{
-            className: 'bg-gray-900 text-white border border-gray-800 shadow-lg',
-            duration: 4000,
-            style: {
-              background: 'hsl(var(--background))',
-              border: 'hsl(var(--border))'
-            }
-          }}
-        />
-      </AuthProvider>
-    </ThemeProvider>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
