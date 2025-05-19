@@ -61,6 +61,8 @@ serve(async (req) => {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
+          temperature: 0.7,
+          max_tokens: 1000,
         }),
       });
 
@@ -77,9 +79,9 @@ serve(async (req) => {
           return new Response(JSON.stringify({ 
             error: "OpenAI API quota exceeded",
             errorCode: "insufficient_quota",
-            message: errorData.error?.message
+            message: errorData.error?.message || "You've exceeded your current quota. Please check your plan and billing details."
           }), {
-            status: 402,
+            status: 402, // Payment Required is appropriate for quota issues
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
@@ -112,7 +114,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ 
           error: "OpenAI API quota exceeded",
           errorCode: "insufficient_quota",
-          message: openAiError.message
+          message: openAiError.message || "You've exceeded your current quota. Please check your plan and billing details."
         }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

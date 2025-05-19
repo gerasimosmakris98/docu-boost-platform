@@ -60,7 +60,9 @@ export const getAiResponse = async (
       } catch (error: any) {
         console.error('Error generating AI response:', error);
         // Check if it's a quota error
-        if (error.message?.includes('quota') || error.message?.includes('insufficient_quota')) {
+        if (error.message?.includes('quota') || 
+            error.message?.includes('insufficient_quota') || 
+            error.status === 402) {
           console.log('Using fallback template response due to quota issue');
           aiResponseContent = getTemplateFallbackResponse(userMessage, conversationType);
         } else {

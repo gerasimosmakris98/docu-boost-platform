@@ -2,71 +2,50 @@
 import { ConversationType } from "../types/conversationTypes";
 
 /**
- * Generate a template fallback response when API quota is exceeded
+ * Get a template fallback response when OpenAI API is unavailable
  */
-export const getTemplateFallbackResponse = (
-  userMessage: string, 
-  conversationType: ConversationType
-): string => {
-  const message = userMessage.toLowerCase();
+export const getTemplateFallbackResponse = (userMessage: string, type: ConversationType): string => {
+  // Generic fallback message prefix
+  const fallbackPrefix = "I apologize, but I'm currently experiencing some technical limitations due to high usage. Instead of a fully personalized response, here are some general tips that might help:\n\n";
   
-  // Generic helpful response based on conversation type
-  if (conversationType === 'resume') {
-    return `Thank you for your question about resumes. I'm currently experiencing connection issues, but I can offer some general advice:
-
-1. **Tailor your resume to each job application** by matching keywords from the job description
-2. **Quantify your achievements** with metrics and results when possible
-3. **Keep your resume concise** (1-2 pages) and use bullet points for readability
-4. **Include a strong professional summary** at the top that highlights your key qualifications
-5. **Proofread carefully** for grammar and spelling errors
-
-Would you like specific advice on a particular section of your resume? Please try again in a moment when the connection is restored.`;
-  } 
+  // Check message content for keywords to provide more targeted fallback
+  const lowerCaseMessage = userMessage.toLowerCase();
   
-  if (conversationType === 'cover_letter') {
-    return `Thank you for your question about cover letters. I'm currently experiencing connection issues, but I can offer some general advice:
-
-1. **Address the hiring manager by name** if possible
-2. **Open with a compelling introduction** that shows your enthusiasm for the role
-3. **Connect your experience to the job requirements** with specific examples
-4. **Keep it concise** (3-4 paragraphs) and professional in tone
-5. **End with a call to action** expressing interest in an interview
-
-Would you like specific advice on a particular section of your cover letter? Please try again in a moment when the connection is restored.`;
+  // Resume-related fallback
+  if (type === "resume" || 
+      lowerCaseMessage.includes('resume') || 
+      lowerCaseMessage.includes('cv')) {
+    return `${fallbackPrefix}**Resume Tips:**\n\n- Focus on achievements rather than just job duties\n- Quantify your accomplishments when possible (e.g., "Increased sales by 25%")\n- Tailor your resume to each job by including relevant keywords\n- Keep formatting clean and consistent\n- Proofread carefully for errors\n- Include a strong summary/profile section\n- Limit to 1-2 pages depending on experience level`;
   }
   
-  if (conversationType === 'interview_prep') {
-    return `Thank you for your interview preparation question. I'm currently experiencing connection issues, but I can offer some general advice:
-
-1. **Research the company thoroughly** before your interview
-2. **Prepare STAR method examples** (Situation, Task, Action, Result) to showcase your experience
-3. **Practice common questions** like "Tell me about yourself" and "Why do you want this job?"
-4. **Prepare thoughtful questions** to ask the interviewer
-5. **Follow up with a thank-you email** within 24 hours after the interview
-
-Would you like specific advice on answering particular interview questions? Please try again in a moment when the connection is restored.`;
+  // Cover letter fallback
+  if (type === "cover_letter" || 
+      lowerCaseMessage.includes('cover letter') || 
+      lowerCaseMessage.includes('application letter')) {
+    return `${fallbackPrefix}**Cover Letter Tips:**\n\n- Address the letter to a specific person if possible\n- Open with a compelling introduction that shows enthusiasm\n- Highlight 2-3 key achievements relevant to the position\n- Demonstrate knowledge of the company\n- Explain why you're a good fit for the role and culture\n- Close with a clear call to action\n- Keep it under one page`;
   }
   
-  if (conversationType === 'linkedin') {
-    return `Thank you for your LinkedIn profile question. I'm currently experiencing connection issues, but I can offer some general advice:
-
-1. **Use a professional photo** with good lighting and a neutral background
-2. **Create a compelling headline** that's more than just your job title
-3. **Write a detailed summary** highlighting your expertise and career goals
-4. **Add rich media** like presentations or articles to showcase your work
-5. **Request recommendations** from colleagues who can speak to your strengths
-
-Would you like specific advice on optimizing a particular section of your profile? Please try again in a moment when the connection is restored.`;
+  // Interview fallback
+  if (type === "interview_prep" || 
+      lowerCaseMessage.includes('interview') || 
+      lowerCaseMessage.includes('question')) {
+    return `${fallbackPrefix}**Interview Preparation Tips:**\n\n- Research the company thoroughly before the interview\n- Prepare concrete examples using the STAR method (Situation, Task, Action, Result)\n- Practice common questions like "Tell me about yourself" and "Why do you want this job?"\n- Prepare thoughtful questions to ask the interviewer\n- Dress professionally and arrive early\n- Follow up with a thank-you note within 24 hours`;
   }
   
-  // Default general response
-  return `Thank you for your question. I'm currently experiencing connection issues, but I can offer some general career advice:
-
-1. **Regularly update your skills** to stay relevant in your industry
-2. **Network consistently** both online and in-person
-3. **Seek feedback** from mentors and colleagues
-4. **Document your achievements** for performance reviews and job applications
-5. **Create a career development plan** with short and long-term goals
-
-Please try again in a moment when the connection is restored for more specific advice on your question.`;
+  // LinkedIn fallback
+  if (type === "linkedin" || 
+      lowerCaseMessage.includes('linkedin') || 
+      lowerCaseMessage.includes('profile')) {
+    return `${fallbackPrefix}**LinkedIn Profile Tips:**\n\n- Use a professional, high-quality profile photo\n- Write a headline that goes beyond your job title\n- Craft a compelling summary that highlights your unique value\n- Detail your achievements in experience sections, not just responsibilities\n- Include relevant skills and seek endorsements\n- Obtain recommendations from colleagues and supervisors\n- Regularly share and engage with content in your industry`;
+  }
+  
+  // Job search fallback
+  if (lowerCaseMessage.includes('job search') || 
+      lowerCaseMessage.includes('looking for job') || 
+      lowerCaseMessage.includes('find work')) {
+    return `${fallbackPrefix}**Job Search Tips:**\n\n- Define your career goals and target positions\n- Optimize your online presence, especially LinkedIn\n- Use multiple job search channels (job boards, company websites, networking)\n- Tailor applications to each position\n- Follow up on applications after 1-2 weeks\n- Track your applications in a spreadsheet\n- Build and leverage your professional network\n- Consider working with recruiters in your industry`;
+  }
+  
+  // General career advice fallback
+  return `${fallbackPrefix}**Career Development Tips:**\n\n- Set specific, measurable career goals\n- Seek regular feedback on your performance\n- Develop both technical and soft skills\n- Build a strong professional network\n- Find a mentor in your field\n- Stay updated on industry trends\n- Consider additional certifications or education\n- Document your achievements for performance reviews and job applications`;
 };

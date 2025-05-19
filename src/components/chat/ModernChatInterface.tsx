@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -27,9 +27,9 @@ const ModernChatInterface = ({
   const [isSending, setIsSending] = useState(false);
   
   // Update messages when initialMessages changes
-  useState(() => {
+  useEffect(() => {
     setMessages(initialMessages);
-  });
+  }, [initialMessages]);
   
   const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
@@ -77,12 +77,12 @@ const ModernChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
         );
       } else {
-        // If error occurs, replace loading message with error message
+        // If error occurs, replace loading message with friendly error message
         const errorAiMessage: Message = {
           id: `error-${Date.now()}`,
           conversation_id: conversationId,
           role: 'assistant',
-          content: "I apologize, but I'm currently experiencing some technical difficulties. This might be due to high demand or system limitations. Please try again in a few moments.",
+          content: "I apologize, but I'm currently experiencing some technical difficulties. This might be due to high demand or system limitations. Here are some general tips instead:\n\n- Keep your resume concise and focused on achievements\n- Tailor your application materials to each job description\n- Prepare for interviews by researching the company and practicing common questions\n- Follow up after interviews with a thank you note\n\nPlease try again in a few moments.",
           created_at: new Date().toISOString()
         };
         
@@ -94,23 +94,35 @@ const ModernChatInterface = ({
           description: "This might be due to usage limits. Please try again later."
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      
+      // Create a more descriptive error message depending on the error type
+      let errorMessage = "I apologize, but I encountered an error while processing your request. Please try again later.";
+      
+      // Check if it's a quota exceeded error
+      if (error.message?.includes('quota') || error.message?.includes('exceeded') || error.status === 402) {
+        errorMessage = "I apologize, but we've reached our AI usage limit at the moment. This is typically due to high demand or API quota limitations. Here are some general tips related to your request:\n\n- Focus on quantifiable achievements in your career materials\n- Use keywords from job descriptions in your resume and cover letters\n- Prepare specific examples for behavioral interview questions\n- Network actively on LinkedIn by engaging with industry content\n\nPlease try again later when our quota resets.";
+        
+        toast.error("AI usage limit reached", {
+          description: "Our OpenAI API quota has been exceeded. Please try again later or contact support.",
+        });
+      } else {
+        toast.error("Failed to send message");
+      }
       
       // If error occurs, remove loading message and add error message
       const errorAiMessage: Message = {
         id: `error-${Date.now()}`,
         conversation_id: conversationId,
         role: 'assistant',
-        content: "I apologize, but I encountered an error while processing your request. Please try again later.",
+        content: errorMessage,
         created_at: new Date().toISOString()
       };
       
       setMessages(prev => 
         prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
       );
-      
-      toast.error("Failed to send message");
     } finally {
       setIsSending(false);
     }
