@@ -16,7 +16,6 @@ interface ChatResponseBody {
 
 /**
  * Calls an external AI API to generate a chat response
- * In a real implementation, this would call an actual AI API like OpenAI
  */
 export const generateChatResponse = async (
   message: string,
@@ -40,7 +39,7 @@ export const generateChatResponse = async (
       }
     ];
 
-    // Make API call
+    // Make API call to our own backend endpoint
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -53,10 +52,16 @@ export const generateChatResponse = async (
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API request failed with status ${response.status}`);
     }
 
     const data = await response.json() as ChatResponseBody;
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
     return data.content;
   } catch (error) {
     console.error('Error in generateChatResponse:', error);
