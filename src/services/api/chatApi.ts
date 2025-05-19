@@ -1,5 +1,5 @@
 
-import { ConversationMessage, ConversationType } from "../aiService";
+import { ConversationType } from "../types/conversationTypes";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChatRequestBody {
