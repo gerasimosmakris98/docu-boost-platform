@@ -36,9 +36,9 @@ const ModernChatInterface = ({
     setMessages(initialMessages);
   }, [initialMessages]);
   
-  // Reset AI providers when component mounts or conversation changes
+  // Reset AI provider availability when conversation changes
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && aiProviderService.resetProviders) {
       aiProviderService.resetProviders();
     }
   }, [conversationId]);

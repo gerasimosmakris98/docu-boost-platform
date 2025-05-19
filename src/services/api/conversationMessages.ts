@@ -6,8 +6,7 @@ import { aiProviderService } from "../ai/aiProviderService";
 import { 
   getChatPromptForType, 
   formatConversationContext, 
-  extractUrlType, 
-  getSystemPromptForType 
+  extractUrlType
 } from "../utils/conversationUtils";
 import { getModelOptions } from "../ai/providerConfigs";
 
@@ -115,9 +114,6 @@ export const sendMessage = async (
       { brief, depth: brief ? 'low' : 'medium' }
     );
     
-    // Get system prompt based on conversation type
-    const systemPrompt = getSystemPromptForType(conversationType);
-    
     let aiResponseContent = '';
     
     // Handle file attachments if present
@@ -143,9 +139,7 @@ export const sendMessage = async (
         aiResponseContent = await aiProviderService.analyzeFile(
           fileUrl, 
           fileName, 
-          fileType, 
-          systemPrompt,
-          modelOptions
+          fileType
         );
         console.log('File analysis complete');
       } catch (fileError) {
@@ -160,15 +154,8 @@ export const sendMessage = async (
       console.log('Analyzing URL:', urlToAnalyze, 'Type:', urlType);
       
       try {
-        // We'll use the regular text generation for now but inform it about the URL
-        const urlAnalysisPrompt = `The user has shared this URL: ${urlToAnalyze}\n\nBased on my analysis, this appears to be a ${urlType} URL.\n\nPlease analyze this URL and provide insights relevant to their career goals.\n\n${prompt}`;
-        
-        aiResponseContent = await aiProviderService.generateResponse(
-          urlAnalysisPrompt, 
-          conversationType, 
-          systemPrompt,
-          modelOptions
-        );
+        // Use the URL analysis method
+        aiResponseContent = await aiProviderService.analyzeUrl(urlToAnalyze, urlType);
         console.log('URL analysis complete');
       } catch (urlError) {
         console.error('Error analyzing URL:', urlError);
@@ -176,7 +163,6 @@ export const sendMessage = async (
         aiResponseContent = await aiProviderService.generateResponse(
           prompt, 
           conversationType,
-          systemPrompt,
           modelOptions
         );
       }
@@ -186,7 +172,6 @@ export const sendMessage = async (
       aiResponseContent = await aiProviderService.generateResponse(
         prompt, 
         conversationType,
-        systemPrompt,
         modelOptions
       );
       console.log('AI response generated successfully');
