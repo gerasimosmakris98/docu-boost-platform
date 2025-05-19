@@ -30,7 +30,7 @@ const aiProviderService = {
       `;
       
       // Call Supabase Edge Function to generate AI response
-      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType 
@@ -98,7 +98,7 @@ Please try again later for more personalized advice. If this issue persists, you
       `;
       
       // Call Supabase Edge Function to analyze file
-      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: fileAnalysisPrompt,
           type: 'file_analysis' 
@@ -164,7 +164,7 @@ Please try again later for a more detailed analysis. If this issue persists, you
       `;
       
       // Call Supabase Edge Function to analyze URL
-      const { data, error } = await supabase.functions.invoke('generate-ai-response', {
+      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: urlAnalysisPrompt,
           type: 'url_analysis' 
@@ -206,7 +206,7 @@ Please try again later for a more detailed analysis. If this issue persists, you
     }
   },
   
-  // Reset unavailable providers list
+  // Reset providers
   resetProviders: () => {
     console.log('Resetting AI providers');
   }

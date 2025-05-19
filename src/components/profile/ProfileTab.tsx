@@ -1,83 +1,47 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import SocialLinksSection from "./SocialLinksSection";
-import PersonalInfoCard from "./PersonalInfoCard";
-import ProfessionalSummaryCard from "./ProfessionalSummaryCard";
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import PersonalInfoCard from '@/components/profile/PersonalInfoCard';
+import ProfessionalSummaryCard from '@/components/profile/ProfessionalSummaryCard';
+import SocialLinksSection from '@/components/profile/SocialLinksSection';
+import { toast } from '@/components/ui/use-toast';
 
-interface ProfileData {
-  name: string;
-  title: string;
-  email: string;
-  phone: string;
-  location: string;
-  website: string;
-}
-
-interface ProfileTabProps {
-  profileData: ProfileData;
-  resumeData: {
-    summary: string;
-  };
-  onSaveChanges: (updates: any) => void;
-}
-
-const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps) => {
-  const { isAuthenticated, profile, refreshProfile } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    title: profileData.title || '',
-    phone: profileData.phone || '',
-    location: profileData.location || '',
-    website: profileData.website || '',
-    summary: resumeData.summary || ''
-  });
+const ProfileTab = () => {
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Refresh data when component mounts
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshProfile();
-    }
-  }, [isAuthenticated, refreshProfile]);
-  
-  // Update form data when profile changes
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        title: profile.title || '',
-        phone: profile.phone || '',
-        location: profile.location || '',
-        website: profile.website || '',
-        summary: profile.summary || ''
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved.",
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [profile, profileData, resumeData]);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSaveChanges = (updates: any) => {
-    setFormData(prev => ({ ...prev, ...updates }));
-    onSaveChanges(updates);
   };
   
   return (
     <div className="space-y-6">
-      <PersonalInfoCard 
-        profileData={profileData}
-        onSaveChanges={handleSaveChanges}
-      />
+      <Card className="bg-gray-900 border-gray-800">
+        <PersonalInfoCard onSave={handleSave} isLoading={isLoading} />
+      </Card>
       
-      <ProfessionalSummaryCard 
-        summary={formData.summary} 
-        isEditing={isEditing}
-        onChange={handleChange}
-      />
+      <Card className="bg-gray-900 border-gray-800">
+        <ProfessionalSummaryCard onSave={handleSave} isLoading={isLoading} />
+      </Card>
       
-      <SocialLinksSection />
+      <Card className="bg-gray-900 border-gray-800">
+        <SocialLinksSection />
+      </Card>
     </div>
   );
 };

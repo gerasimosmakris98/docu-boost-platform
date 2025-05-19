@@ -42,9 +42,7 @@ export const getUserProfileContext = async (userId: string): Promise<string | nu
       context += `\n- Professional Summary: ${profile.summary}`;
     }
     
-    if (profile.skills && profile.skills.length > 0) {
-      context += `\n- Skills: ${profile.skills.join(', ')}`;
-    }
+    // Remove reference to non-existent skills property
     
     return context;
   } catch (error) {

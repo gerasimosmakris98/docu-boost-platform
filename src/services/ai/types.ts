@@ -1,6 +1,9 @@
 
 import { ConversationType } from '../types/conversationTypes';
 
+// Re-export ConversationType to be used by other modules
+export { ConversationType };
+
 // Available AI providers
 export type AIProvider = 'openai' | 'fallback';
 

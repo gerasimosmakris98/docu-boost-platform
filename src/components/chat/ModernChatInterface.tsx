@@ -79,7 +79,7 @@ const ModernChatInterface = ({
       id: `temp-ai-${Date.now()}`,
       conversation_id: conversationId,
       role: 'assistant',
-      content: "...",
+      content: "Thinking...",
       created_at: new Date().toISOString()
     };
     
@@ -177,7 +177,7 @@ const ModernChatInterface = ({
       <div>
         <ChatInput
           onSendMessage={handleSendMessage}
-          isDisabled={!isAuthenticated}
+          isDisabled={!isAuthenticated || isSending}
           isSending={isSending}
           isModern={true}
         />
