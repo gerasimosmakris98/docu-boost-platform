@@ -36,5 +36,5 @@ export interface ProgressiveResponseOptions {
 }
 
 // Import the ConversationType from the main types file to avoid duplication
-import { ConversationType } from '../types/conversationTypes';
-export { ConversationType };
+import type { ConversationType } from '../types/conversationTypes';
+export type { ConversationType };
