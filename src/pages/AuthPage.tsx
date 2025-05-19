@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -22,7 +21,7 @@ import { Link } from "react-router-dom";
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { loginWithProvider, login, signup, magicLinkLogin } = useAuth();
+  const { loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,13 +52,14 @@ const AuthPage = () => {
     
     try {
       if (authType === "signin") {
-        await login(email, password);
+        await loginWithEmail(email, password);
         navigate("/chat");
       } else if (authType === "signup") {
-        await signup(email, password, { full_name: name });
+        await signUpWithEmail(email, password, name);
         navigate("/chat");
-      } else if (authType === "magic") {
-        await magicLinkLogin(email);
+      } else {
+        // Magic link login - reuse loginWithEmail without password
+        await loginWithEmail(email);
         toast.success(`Magic link sent to ${email}. Please check your inbox.`);
       }
     } catch (error: any) {

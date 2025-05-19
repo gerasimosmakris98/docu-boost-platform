@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -232,7 +231,7 @@ const ModernChatInterface = ({
                 )}>
                   {isUserMessage ? (
                     <>
-                      <AvatarImage src={user?.avatar} />
+                      <AvatarImage src={user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="text-white bg-green-700">
                         <User className="h-4 w-4" />
                       </AvatarFallback>

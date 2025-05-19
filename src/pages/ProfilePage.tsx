@@ -80,7 +80,7 @@ const ProfilePage = () => {
           <CardContent>
             <div className="flex items-center gap-4 mb-6">
               <Avatar className="h-16 w-16 border-2 border-green-500/20">
-                <AvatarImage src={user.avatar_url || user.user_metadata?.avatar_url} />
+                <AvatarImage src={user.user_metadata?.avatar_url} />
                 <AvatarFallback className="bg-green-700 text-xl">
                   {(user.email || 'U').substring(0, 1).toUpperCase()}
                 </AvatarFallback>
