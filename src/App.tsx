@@ -15,8 +15,8 @@ import NotFound from '@/pages/NotFound';
 function App() {
   return (
     <ThemeProvider defaultTheme="dark">
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/auth" element={<AuthPage />} />
@@ -25,16 +25,16 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Router>
-        <Toaster />
-        <SonnerToaster 
-          position="top-right" 
-          toastOptions={{
-            className: 'bg-gray-900 text-white border border-gray-800',
-            duration: 3000
-          }}
-        />
-      </AuthProvider>
+          <Toaster />
+          <SonnerToaster 
+            position="top-right" 
+            toastOptions={{
+              className: 'bg-gray-900 text-white border border-gray-800',
+              duration: 3000
+            }}
+          />
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 }
