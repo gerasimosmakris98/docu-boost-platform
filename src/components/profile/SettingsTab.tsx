@@ -12,7 +12,7 @@ interface SettingsTabProps {
     name: string;
     email: string;
   };
-  onSaveChanges: () => void;
+  onSaveChanges: (updates?: any) => void;
 }
 
 const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {

@@ -174,7 +174,7 @@ const LinkedInPage = () => {
                     <User className="h-10 w-10 text-gray-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">{user?.name}</h3>
+                    <h3 className="text-xl font-semibold">{user?.user_metadata?.full_name}</h3>
                     <p className="text-blue-600">{linkedInProfile.title}</p>
                     <div className="flex items-center gap-1 text-gray-500 mt-1">
                       <Building className="h-3.5 w-3.5" />

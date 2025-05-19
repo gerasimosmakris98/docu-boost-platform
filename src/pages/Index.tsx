@@ -35,7 +35,7 @@ const Index = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <WelcomeSection 
-          username={user?.name || "there"} 
+          username={user?.user_metadata?.full_name || "there"} 
           isAuthenticated={isAuthenticated}
           onLogin={handleLogin}
           onUpload={handleUpload}
