@@ -1,12 +1,11 @@
 
-import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bot, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { conversationService, Conversation, Message } from "@/services/conversationService";
+import { Conversation, Message } from "@/services/conversationService";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
+import { useChat } from "@/hooks/useChat";
 
 interface ChatInterfaceProps {
   conversationId?: string;
@@ -24,84 +23,24 @@ const ChatInterface = ({
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [isSending, setIsSending] = useState(false);
+  const {
+    messages,
+    isSending,
+    messagesEndRef,
+    handleSendMessage
+  } = useChat({
+    conversationId,
+    initialMessages
+  });
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Update messages when initialMessages changes
-  useEffect(() => {
-    setMessages(initialMessages);
-  }, [initialMessages]);
-  
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-  
-  const handleSendMessage = async (
+  const onSendMessage = async (
     messageText: string, 
     attachments: { url: string; type: string; name: string }[]
   ) => {
-    if (!messageText.trim() && attachments.length === 0) return;
     if (!isAuthenticated) {
-      toast.error("Please sign in to send messages");
       navigate("/auth");
-      return;
     }
-    if (!conversationId) {
-      toast.error("Invalid conversation");
-      return;
-    }
-    
-    // Create attachment URLs array
-    const attachmentUrls = attachments.map(a => a.url);
-    
-    // Add user message to UI immediately
-    const optimisticUserMessage: Message = {
-      id: `temp-${Date.now()}`,
-      conversation_id: conversationId,
-      role: 'user',
-      content: messageText,
-      created_at: new Date().toISOString(),
-      attachments: attachmentUrls
-    };
-    
-    setMessages(prev => [...prev, optimisticUserMessage]);
-    
-    // Add AI thinking message
-    const optimisticAiMessage: Message = {
-      id: `temp-ai-${Date.now()}`,
-      conversation_id: conversationId,
-      role: 'assistant',
-      content: "...",
-      created_at: new Date().toISOString()
-    };
-    
-    setIsSending(true);
-    setMessages(prev => [...prev, optimisticAiMessage]);
-    
-    try {
-      // Send the message
-      const response = await conversationService.sendMessage(conversationId, messageText, attachmentUrls);
-      
-      // Update messages with real AI response
-      if (response && response.aiResponse) {
-        setMessages(prev => 
-          prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
-        );
-      } else {
-        // If no AI response, remove the loading message
-        setMessages(prev => prev.filter(msg => msg.id !== optimisticAiMessage.id));
-        toast.error("Failed to get AI response");
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages(prev => prev.filter(msg => msg.id !== optimisticAiMessage.id));
-      toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
-    }
+    return handleSendMessage(messageText, attachments);
   };
   
   return (
@@ -148,7 +87,7 @@ const ChatInterface = ({
       
       {/* Input area */}
       <ChatInput 
-        onSendMessage={handleSendMessage}
+        onSendMessage={onSendMessage}
         isSending={isSending}
         isDisabled={!isAuthenticated}
       />
