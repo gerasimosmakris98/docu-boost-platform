@@ -1,9 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface SettingsTabProps {
   profileData: {
@@ -14,6 +16,27 @@ interface SettingsTabProps {
 }
 
 const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {
+  const { isAuthenticated, logout, updateProfile } = useAuth();
+  const [name, setName] = useState(profileData.name);
+  
+  const handleUpdateProfile = async () => {
+    if (isAuthenticated) {
+      await updateProfile({ full_name: name });
+      onSaveChanges();
+    } else {
+      toast.error("Please log in to update your profile");
+    }
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("You have been logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <Card>
@@ -26,19 +49,53 @@ const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" defaultValue={profileData.name} />
+            <Input 
+              id="name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)}
+              disabled={!isAuthenticated}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue={profileData.email} />
+            <Input 
+              id="email" 
+              type="email" 
+              value={profileData.email} 
+              disabled
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value="************" readOnly />
+            <Input 
+              id="password" 
+              type="password" 
+              value="************" 
+              disabled
+            />
+            {isAuthenticated && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Password changes must be done via email reset
+              </p>
+            )}
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={onSaveChanges}>Save Changes</Button>
+        <CardFooter className="flex justify-between">
+          <Button 
+            onClick={handleUpdateProfile} 
+            disabled={!isAuthenticated}
+          >
+            Save Changes
+          </Button>
+          
+          {isAuthenticated && (
+            <Button 
+              variant="destructive" 
+              onClick={handleLogout}
+            >
+              Sign Out
+            </Button>
+          )}
         </CardFooter>
       </Card>
       

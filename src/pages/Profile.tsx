@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import ProfileTab from "@/components/profile/ProfileTab";
 import ResumeTab from "@/components/profile/ResumeTab";
 import SettingsTab from "@/components/profile/SettingsTab";
 
-// Sample resume data
+// Sample resume data (will use for non-auth users or as fallback)
 const sampleResume = {
   personal: {
     name: "Alex Johnson",
@@ -89,12 +89,26 @@ const sampleResume = {
 };
 
 const Profile = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated, refreshProfile, updateProfile } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("profile");
   
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshProfile();
+    }
+  }, [isAuthenticated, refreshProfile]);
+  
   // Use real user data if logged in, otherwise use sample data
-  const profileData = isAuthenticated && user ? user : sampleResume.personal;
+  const profileData = isAuthenticated && profile ? {
+    name: profile.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+    title: profile.title || 'Professional',
+    email: user?.email || 'email@example.com',
+    phone: profile.phone || '',
+    location: profile.location || '',
+    website: profile.website || '',
+  } : sampleResume.personal;
+  
   const resumeData = sampleResume;
 
   const handleLogin = () => {
@@ -109,8 +123,17 @@ const Profile = () => {
     toast.success("Resume link copied to clipboard!");
   };
   
-  const handleSaveChanges = () => {
-    toast.success("Profile updated successfully!");
+  const handleSaveChanges = async (updates: any) => {
+    if (isAuthenticated) {
+      try {
+        await updateProfile(updates);
+      } catch (error) {
+        console.error('Error updating profile:', error);
+      }
+    } else {
+      toast.error("Please log in to save your changes");
+      setLoginDialogOpen(true);
+    }
   };
 
   return (
@@ -146,7 +169,9 @@ const Profile = () => {
           <TabsContent value="profile" className="space-y-6">
             <ProfileTab 
               profileData={profileData}
-              resumeData={resumeData}
+              resumeData={{
+                summary: profile?.summary || resumeData.summary
+              }}
               onSaveChanges={handleSaveChanges}
             />
           </TabsContent>
@@ -163,8 +188,11 @@ const Profile = () => {
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
             <SettingsTab 
-              profileData={profileData}
-              onSaveChanges={handleSaveChanges}
+              profileData={{
+                name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+                email: user?.email || 'email@example.com'
+              }}
+              onSaveChanges={() => handleSaveChanges({})}
             />
           </TabsContent>
         </Tabs>
