@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Bot, 
   Mail, 
@@ -9,7 +10,8 @@ import {
   UserPlus,
   Loader2,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +25,8 @@ type AuthType = "signin" | "signup" | "magic";
 
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, isLoading, loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,15 +35,24 @@ const AuthPage = () => {
   const [authType, setAuthType] = useState<AuthType>("signin");
   const [error, setError] = useState<string | null>(null);
   
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      const from = location.state?.from || "/chat";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, location.state]);
+
+  const clearError = () => setError(null);
+  
   const handleProviderLogin = async (provider: "google") => {
     setLoading(true);
     setError(null);
     try {
       await loginWithProvider(provider);
-      navigate("/chat");
     } catch (error) {
       console.error("Error logging in:", error);
-      setError("Failed to log in with Google. Please try again.");
+      setError("Failed to log in with Google. Please try again later.");
       toast.error("Failed to log in with Google");
     } finally {
       setLoading(false);
@@ -55,10 +67,12 @@ const AuthPage = () => {
     try {
       if (authType === "signin") {
         await loginWithEmail(email, password);
-        navigate("/chat");
       } else if (authType === "signup") {
+        if (!name.trim()) {
+          throw new Error("Please enter your name");
+        }
         await signUpWithEmail(email, password, name);
-        navigate("/chat");
+        toast.success("Account created! Please check your email to confirm your account.");
       } else if (authType === "magic") {
         // Pass empty string as password for magic link login
         await loginWithEmail(email, "");
@@ -143,7 +157,10 @@ const AuthPage = () => {
             <Tabs 
               defaultValue="signin" 
               value={authType}
-              onValueChange={(value) => setAuthType(value as AuthType)}
+              onValueChange={(value) => {
+                setAuthType(value as AuthType);
+                clearError();
+              }}
               className="w-full"
             >
               <TabsList className="grid grid-cols-3 mb-6">
@@ -168,6 +185,8 @@ const AuthPage = () => {
                         onChange={(e) => setName(e.target.value)}
                         required={authType === "signup"}
                         className="bg-gray-800 border-gray-700"
+                        aria-label="Full name"
+                        onFocus={clearError}
                       />
                     </div>
                   )}
@@ -185,6 +204,8 @@ const AuthPage = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="bg-gray-800 border-gray-700"
+                      aria-label="Email address"
+                      onFocus={clearError}
                     />
                   </div>
                   
@@ -202,14 +223,25 @@ const AuthPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         required={authType !== "magic"}
                         className="bg-gray-800 border-gray-700"
+                        aria-label="Password"
+                        onFocus={clearError}
+                        minLength={6}
                       />
                     </div>
                   )}
                   
                   {error && (
-                    <div className="bg-red-900/30 text-red-300 p-3 rounded border border-red-800/30 text-sm flex gap-2 items-start">
+                    <div className="bg-red-900/30 text-red-300 p-3 rounded border border-red-800/30 text-sm flex gap-2 items-start relative">
                       <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <span>{error}</span>
+                      <button 
+                        type="button"
+                        onClick={clearError}
+                        className="absolute top-2 right-2 text-red-300 hover:text-red-100"
+                        aria-label="Dismiss error"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -239,7 +271,7 @@ const AuthPage = () => {
           
           <CardFooter className="border-t border-gray-800 mt-4 pt-4 flex justify-between items-center">
             <p className="text-sm text-gray-400">
-              Already have an account?
+              {authType === "signin" ? "New user?" : "Already have an account?"}
             </p>
             <Link to="/chat" className="text-sm text-green-500 hover:text-green-400 flex items-center">
               Continue as guest

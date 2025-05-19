@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -82,6 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [linkedInProfile, setLinkedInProfile] = useState<LinkedInProfile | null>(null);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   const refreshProfile = async () => {
     try {
@@ -94,26 +96,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        throw error;
+        console.error('Error fetching profile:', error);
+        return;
       }
 
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in refreshProfile:', error);
     }
   };
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener FIRST to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (event === 'SIGNED_IN' && currentSession?.user) {
           // Defer profile loading to prevent Supabase deadlocks
           setTimeout(() => {
-            refreshProfile();
+            if (mounted) {
+              refreshProfile();
+            }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
@@ -129,20 +139,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Then check for existing session
     const initializeAuth = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
 
-      if (initialSession?.user) {
-        refreshProfile();
+        if (initialSession?.user) {
+          await refreshProfile();
+        }
+        
+        setIsLoading(false);
+        setInitialLoadDone(true);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setIsLoading(false);
+          setInitialLoadDone(true);
+        }
       }
-      
-      setIsLoading(false);
     };
 
     initializeAuth();
 
+    // Cleanup function
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -327,7 +351,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile,
         session,
         isAuthenticated: !!user,
-        isLoading,
+        isLoading: isLoading || !initialLoadDone,
         linkedInProfile,
         loginWithEmail,
         signUpWithEmail,
