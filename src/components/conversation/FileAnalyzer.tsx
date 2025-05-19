@@ -9,7 +9,7 @@ import {
   Check,
   AlertCircle 
 } from 'lucide-react';
-import { aiProviderService } from '@/services/aiProviderService';
+import { aiProviderService } from '@/services/ai/aiProviderService';
 import { toast } from 'sonner';
 import FileUpload from '@/components/common/FileUpload';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';

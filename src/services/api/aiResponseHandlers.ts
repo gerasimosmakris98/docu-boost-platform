@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
-import { aiProviderService } from "../aiProviderService";
+import { aiProviderService } from "../ai/aiProviderService";
 import { getChatPromptForType } from "../utils/conversationUtils";
 import { getTemplateFallbackResponse } from "./messageUtils";
 

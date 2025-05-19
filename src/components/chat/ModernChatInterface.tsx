@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +5,7 @@ import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import MessagesList from "./components/MessagesList";
 import ChatInput from "./components/ChatInput";
-import { aiProviderService } from "@/services/aiProviderService";
+import { aiProviderService } from "@/services/ai/aiProviderService";
 
 interface ModernChatInterfaceProps {
   conversationId?: string;
