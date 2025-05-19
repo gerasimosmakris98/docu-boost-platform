@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,12 @@ type ProviderType = "email" | "magic" | "oauth";
 const AuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, signInWithEmail, signUpWithEmail, signInWithOAuth, signInWithMagicLink } = useAuth();
+  const { isAuthenticated, loginWithEmail, signUpWithEmail, loginWithProvider, profile } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [authType, setAuthType] = useState<AuthType>("signin");
   const [providerType, setProviderType] = useState<ProviderType>("email");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,17 +57,13 @@ const AuthPage = () => {
           return;
         }
         
-        await signUpWithEmail(email, password);
+        await signUpWithEmail(email, password, fullName);
         toast.success("Account created! Please check your email to confirm your account.");
       } else {
         // Sign in with email/password
-        const result = await signInWithEmail(email, password);
-        if (result.success) {
-          toast.success("Signed in successfully");
-          navigate(from, { replace: true });
-        } else {
-          toast.error(result.error || "Failed to sign in");
-        }
+        await loginWithEmail(email, password);
+        toast.success("Signed in successfully");
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -80,7 +78,7 @@ const AuthPage = () => {
     setIsLoading(true);
     
     try {
-      await signInWithMagicLink(email);
+      await loginWithEmail(email, ""); // Pass empty password for magic link
       setMagicLinkSent(true);
       toast.success("Magic link sent! Check your email to sign in.");
     } catch (error: any) {
@@ -95,7 +93,7 @@ const AuthPage = () => {
     setIsLoading(true);
     
     try {
-      await signInWithOAuth(provider);
+      await loginWithProvider(provider as any);
       // The redirect will happen automatically, no need to navigate
     } catch (error: any) {
       console.error("OAuth error:", error);
@@ -117,6 +115,20 @@ const AuthPage = () => {
           required
         />
       </div>
+      
+      {authType === "signup" && (
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input
+            id="fullName"
+            type="text"
+            placeholder="John Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </div>
+      )}
       
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
