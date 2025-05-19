@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import ProfileTab from "@/components/profile/ProfileTab";
 import SettingsTab from "@/components/profile/SettingsTab";
-import { User, UserCircle, Settings, LogOut } from "lucide-react";
+import ProfileChatTab from "@/components/profile/ProfileChatTab";
+import { User, UserCircle, Settings, LogOut, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -96,6 +97,13 @@ const Profile = () => {
             >
               <Settings className="mr-2 h-4 w-4" /> Account Settings
             </Button>
+            <Button 
+              variant="ghost" 
+              className={`w-full justify-start ${currentTab === 'chat' ? 'bg-gray-800' : ''}`}
+              onClick={() => setCurrentTab('chat')}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" /> Chat with AI
+            </Button>
           </nav>
           
           <div className="mt-auto">
@@ -117,9 +125,10 @@ const Profile = () => {
             {/* Mobile Tabs */}
             <div className="md:hidden">
               <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                   <TabsTrigger value="settings">Settings</TabsTrigger>
+                  <TabsTrigger value="chat">Chat</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -142,6 +151,11 @@ const Profile = () => {
                 }}
                 onSaveChanges={handleSaveChanges}
               />
+            )}
+            
+            {/* Chat Content */}
+            {currentTab === "chat" && (
+              <ProfileChatTab />
             )}
           </div>
         </div>

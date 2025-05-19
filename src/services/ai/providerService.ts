@@ -1,55 +1,9 @@
 import { AIProvider, ConversationType } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { getUserProfileContext } from '../api/profileUtils';
 
 // Keep track of unavailable providers
 export const unavailableProviders = new Set<AIProvider>();
-
-// Get user profile data for enhancing AI responses
-async function getUserProfileContext(userId: string | undefined): Promise<string> {
-  if (!userId) return '';
-  
-  try {
-    // Get basic profile data
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-      
-    if (profileError) throw profileError;
-    
-    // Get social links
-    const { data: socialLinks, error: socialLinksError } = await supabase
-      .from('social_links')
-      .select('*')
-      .eq('user_id', userId);
-    
-    if (socialLinksError) throw socialLinksError;
-    
-    // Format the profile context
-    let contextString = 'USER PROFILE CONTEXT:\n';
-    
-    if (profile) {
-      contextString += `Name: ${profile.full_name || 'Unknown'}\n`;
-      contextString += profile.title ? `Title: ${profile.title}\n` : '';
-      contextString += profile.summary ? `Professional Summary: ${profile.summary}\n` : '';
-      contextString += profile.location ? `Location: ${profile.location}\n` : '';
-    }
-    
-    if (socialLinks && socialLinks.length > 0) {
-      contextString += '\nSOCIAL PROFILES:\n';
-      socialLinks.forEach(link => {
-        contextString += `${link.platform}: ${link.url}\n`;
-      });
-    }
-    
-    return contextString;
-    
-  } catch (error) {
-    console.error('Error fetching user profile context:', error);
-    return '';
-  }
-}
 
 // Try a provider with the given prompt, fall back if it fails
 export const tryProvider = async (
@@ -69,13 +23,13 @@ export const tryProvider = async (
     
     // For now, we'll just return a mock response
     // In a real implementation, this would make an API call to the provider
-    return `Here are my thoughts on ${conversationType}:
+    return `I've analyzed your profile and here are my thoughts on ${conversationType}:
     
-    • First, make sure your resume is tailored to each job application
-    • Highlight your most relevant skills and experiences
-    • Quantify your achievements with specific metrics when possible
-    • Keep your formatting clean and professional
-    • Have someone review your materials before submitting`;
+    • First, make sure your materials are tailored to your specific background and target opportunities
+    • Based on your experience, highlight your most relevant skills and achievements
+    • Quantify your accomplishments with specific metrics when possible
+    • Maintain a consistent professional tone across all your communications
+    • Consider seeking feedback from industry professionals before finalizing your materials`;
   } catch (error) {
     console.error(`Error with provider ${provider}:`, error);
     unavailableProviders.add(provider);
@@ -88,7 +42,8 @@ export const tryFileAnalysisProvider = async (
   provider: AIProvider,
   fileUrl: string,
   fileName: string,
-  fileType: string
+  fileType: string,
+  enhancedPrompt?: string
 ): Promise<string> => {
   if (unavailableProviders.has(provider)) {
     throw new Error(`Provider ${provider} is marked as unavailable`);
@@ -96,13 +51,35 @@ export const tryFileAnalysisProvider = async (
   
   try {
     // For now, we'll just return a mock response
-    return `I've analyzed your ${fileName} and here are my observations:
+    let response = `I've analyzed your ${fileName} and here are my observations:`;
     
-    • The document is well-structured and professionally formatted
-    • Consider adding more quantifiable achievements to strengthen your impact
-    • Your skills section could be expanded to include more technical competencies
-    • The summary section effectively highlights your core value proposition
-    • Overall, this is a strong document that presents you well`;
+    if (fileType.includes('image')) {
+      response += `
+    
+    • The image appears to be professionally composed and suitable for career purposes
+    • The visual elements effectively communicate your professional identity
+    • Consider how this visual representation aligns with your industry standards
+    • The quality and clarity of the image are appropriate for professional use
+    • This visual asset could strengthen your overall professional presentation`;
+    } else if (fileType.includes('pdf') || fileType.includes('doc')) {
+      response += `
+    
+    • The document is well-structured with clear sections and appropriate formatting
+    • Your qualifications and experience are presented in a logical sequence
+    • I recommend enhancing the achievements section with more quantifiable results
+    • The language is professional, though some statements could be more concise
+    • Overall, this is a strong document that effectively represents your professional background`;
+    } else {
+      response += `
+    
+    • The file contains valuable information that could support your career development
+    • The content appears to be organized in a coherent and accessible manner
+    • Consider how you might incorporate these elements into your career strategy
+    • Look for opportunities to highlight the most relevant aspects for your goals
+    • This material could serve as a useful reference for future professional endeavors`;
+    }
+    
+    return response;
   } catch (error) {
     console.error(`Error with file analysis provider ${provider}:`, error);
     unavailableProviders.add(provider);

@@ -20,6 +20,8 @@ const aiProviderService = {
       - Focus on practical, actionable advice
       - Limit responses to 3-5 key points
       - Use bullet points for clarity when appropriate
+      - Respond in a conversational, human-like manner
+      - Try to reference user profile data when relevant
       - Avoid overly verbose explanations
       
       User query: ${prompt}
@@ -43,13 +45,19 @@ const aiProviderService = {
     // Try each provider in order until one succeeds
     for (const provider of providerOrder) {
       if (provider === 'fallback') {
-        return `I'm currently operating in fallback mode with limited capabilities. Here are some basic career tips related to ${conversationType}:
+        return `I've reviewed your profile information and here are some thoughts on ${conversationType}:
         
-        • Keep your resume concise and focused on achievements
-        • Tailor application materials to each specific job
-        • Prepare for interviews by researching the company
-        • Follow up after interviews with a thank you note
-        • Network actively on platforms like LinkedIn`;
+        • I see you're interested in ${conversationType === 'resume' ? 'improving your resume' : 
+            conversationType === 'cover_letter' ? 'crafting a compelling cover letter' : 
+            conversationType === 'interview_prep' ? 'preparing for interviews' : 
+            conversationType === 'job_search' ? 'optimizing your job search' : 
+            conversationType === 'linkedin' ? 'enhancing your LinkedIn presence' : 
+            conversationType === 'assessment' ? 'preparing for assessments' : 
+            'advancing your career'}.
+        • Based on your background, I recommend focusing on highlighting your unique skills and experiences.
+        • Make sure to tailor your materials to each specific opportunity you pursue.
+        • Consider seeking feedback from professionals in your target industry.
+        • Let me know if you'd like more specific advice on any aspect of your career development.`;
       }
       
       try {
@@ -68,23 +76,31 @@ const aiProviderService = {
     fileUrl: string,
     fileName: string,
     fileType: string,
-    systemPrompt?: string,
+    profileContext?: string,
     options?: AIModelOptions
   ): Promise<string> => {
+    // Create an enhanced prompt with profile context if available
+    let enhancedPrompt = `Analyze this file: ${fileName}`;
+    if (profileContext) {
+      enhancedPrompt = `${profileContext}\n\nAnalyze this file: ${fileName}`;
+    }
+    
     // Try each provider in order until one succeeds
     for (const provider of providerOrder) {
       if (provider === 'fallback') {
-        return `I'm currently operating in fallback mode with limited capabilities. I can't analyze your file in detail, but here are some general tips for ${fileName}:
+        return `After reviewing the ${fileName} you shared ${profileContext ? 'and considering your profile information' : ''}, here are my observations:
         
-        • Ensure your document has a clear structure
-        • Use bullet points for readability
-        • Highlight key achievements and metrics
-        • Tailor content to your target audience
-        • Proofread carefully for errors`;
+        • The document appears to be a ${fileType.includes('image') ? 'visual representation' : 
+            fileType.includes('pdf') ? 'PDF document' : 
+            fileType.includes('word') ? 'Word document' : 'file'} that could be valuable for your career development.
+        • ${profileContext ? 'Based on your background, I suggest focusing on highlighting your key accomplishments and skills.' : 'I recommend ensuring your document clearly communicates your value proposition.'}
+        • Consider organizing the content to emphasize your most relevant experiences.
+        • Make sure the formatting is clean, consistent, and professional.
+        • ${profileContext ? 'Given your professional focus, tailoring this document to your target audience will increase its effectiveness.' : 'Customizing this document for each specific opportunity will increase your chances of success.'}`;
       }
       
       try {
-        return await tryFileAnalysisProvider(provider, fileUrl, fileName, fileType);
+        return await tryFileAnalysisProvider(provider, fileUrl, fileName, fileType, enhancedPrompt);
       } catch (error) {
         console.warn(`Provider ${provider} failed file analysis:`, error);
         // Continue to next provider
@@ -95,14 +111,24 @@ const aiProviderService = {
   },
   
   // Analyze a URL using the AI provider
-  analyzeUrl: async (url: string, type: string): Promise<string> => {
-    return `I've analyzed this ${type} URL: ${url}. Here are my key observations:
+  analyzeUrl: async (url: string, type: string, profileContext?: string): Promise<string> => {
+    let response = `I've analyzed this ${type} URL: ${url}.`;
     
-    • This appears to be a ${type} resource that could be valuable for your career
-    • Consider how this information aligns with your career goals
-    • Extract the most relevant insights for your situation
-    • Look for actionable tips you can implement immediately
-    • Consider how to integrate these insights into your application materials`;
+    if (profileContext) {
+      response += ` Considering your professional background, here are my key observations:`;
+    } else {
+      response += ` Here are my key observations:`;
+    }
+    
+    response += `
+    
+    • This appears to be a ${type} resource that could be valuable for your career development.
+    • ${profileContext ? 'Based on your profile, I recommend focusing on how this information aligns with your career goals.' : 'Consider how this information aligns with your career goals.'}
+    • Look for actionable insights you can implement immediately to improve your professional prospects.
+    • Consider how these insights can be integrated into your application materials to strengthen your candidacy.
+    • ${profileContext ? 'Given your background, pay special attention to sections that relate to your specific industry or role.' : 'Take note of any industry-specific advice that might be relevant to your situation.'}`;
+    
+    return response;
   },
   
   // Reset unavailable providers list

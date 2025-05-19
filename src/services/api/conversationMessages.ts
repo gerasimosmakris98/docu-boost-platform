@@ -9,6 +9,7 @@ import {
   extractUrlType
 } from "../utils/conversationUtils";
 import { getModelOptions } from "../ai/providerConfigs";
+import { getProfileDataForAdvisor } from "./profileUtils";
 
 /**
  * Extract URLs from a message
@@ -58,6 +59,7 @@ export const sendMessage = async (
     
     // Parse conversation type
     const conversationType = asConversationType(conversationData.type);
+    const userId = conversationData.user_id;
     
     console.log(`Sending message for conversation type: ${conversationType}`);
     
@@ -93,6 +95,10 @@ export const sendMessage = async (
     
     console.log('Context built with message count:', previousMessages?.length);
     
+    // Get profile data for this advisor type to enhance context
+    const profileContext = await getProfileDataForAdvisor(userId, conversationType);
+    console.log('Profile context retrieved for advisor type:', conversationType);
+    
     // Determine if response should be brief based on message content
     const brief = shouldBeBrief(content);
     console.log('Response should be brief:', brief);
@@ -114,13 +120,18 @@ export const sendMessage = async (
     
     console.log('Using model options:', options);
     
-    // Create prompt based on conversation type and include context
-    const prompt = getChatPromptForType(
+    // Create prompt based on conversation type and include context and profile data
+    let prompt = getChatPromptForType(
       conversationType, 
       content, 
       contextMessages, 
       { brief, depth: brief ? 'low' : 'medium' }
     );
+    
+    // Add profile context to prompt if available
+    if (profileContext) {
+      prompt = `${profileContext}\n\n${prompt}`;
+    }
     
     let aiResponseContent = '';
     
@@ -147,7 +158,8 @@ export const sendMessage = async (
         aiResponseContent = await aiProviderService.analyzeFile(
           fileUrl, 
           fileName, 
-          fileType
+          fileType,
+          profileContext // Pass profile context for better file analysis
         );
         console.log('File analysis complete');
       } catch (fileError) {
@@ -163,7 +175,7 @@ export const sendMessage = async (
       
       try {
         // Use the URL analysis method
-        aiResponseContent = await aiProviderService.analyzeUrl(urlToAnalyze, urlType);
+        aiResponseContent = await aiProviderService.analyzeUrl(urlToAnalyze, urlType, profileContext);
         console.log('URL analysis complete');
       } catch (urlError) {
         console.error('Error analyzing URL:', urlError);
