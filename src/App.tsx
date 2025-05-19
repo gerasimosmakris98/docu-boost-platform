@@ -50,9 +50,16 @@ function App() {
         <Toaster />
         <SonnerToaster 
           position="top-right" 
+          closeButton
+          richColors
+          expand
           toastOptions={{
-            className: 'bg-gray-900 text-white border border-gray-800',
-            duration: 3000
+            className: 'bg-gray-900 text-white border border-gray-800 shadow-lg',
+            duration: 4000,
+            style: {
+              '--toast-bg': 'hsl(var(--background))',
+              '--toast-border': 'hsl(var(--border))'
+            }
           }}
         />
       </AuthProvider>

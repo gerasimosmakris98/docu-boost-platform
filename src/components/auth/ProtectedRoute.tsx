@@ -2,7 +2,8 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
+import { Bot } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -20,8 +21,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-black">
+        <div className="rounded-full bg-green-500/10 p-4 border border-green-500/20 mb-6">
+          <Bot className="h-12 w-12 text-green-500" />
+        </div>
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500 mb-4"></div>
+        <p className="text-gray-400 animate-pulse">Loading your profile...</p>
       </div>
     );
   }
@@ -31,7 +36,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  return <>{children}</>;
+  return <div className="animate-fadeIn">{children}</div>;
 };
 
 export default ProtectedRoute;

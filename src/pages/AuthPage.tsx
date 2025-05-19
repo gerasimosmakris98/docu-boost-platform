@@ -88,11 +88,11 @@ const AuthPage = () => {
   };
   
   return (
-    <div className="min-h-screen bg-black text-white flex justify-center items-center p-4">
+    <div className="min-h-screen bg-black text-white flex justify-center items-center p-4 animate-fadeIn">
       <div className="max-w-md w-full mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-green-500/10 p-3 border border-green-500/20">
+            <div className="rounded-full bg-green-500/10 p-3 border border-green-500/20 hover:bg-green-500/20 transition-colors">
               <Bot className="h-8 w-8 text-green-500" />
             </div>
           </div>
@@ -104,7 +104,7 @@ const AuthPage = () => {
           </p>
         </div>
         
-        <Card className="bg-gray-900 border-gray-800">
+        <Card className="bg-gray-900 border-gray-800 shadow-lg hover:shadow-green-900/10 transition-shadow">
           <CardHeader>
             <CardTitle>Welcome</CardTitle>
             <CardDescription>
@@ -114,7 +114,7 @@ const AuthPage = () => {
           
           <CardContent>
             <Button 
-              className="w-full mb-4 bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2"
+              className="w-full mb-4 bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-md"
               onClick={() => handleProviderLogin("google")}
               disabled={loading}
             >
@@ -184,7 +184,7 @@ const AuthPage = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required={authType === "signup"}
-                        className="bg-gray-800 border-gray-700"
+                        className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
                         aria-label="Full name"
                         onFocus={clearError}
                       />
@@ -203,7 +203,7 @@ const AuthPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-gray-800 border-gray-700"
+                      className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
                       aria-label="Email address"
                       onFocus={clearError}
                     />
@@ -222,7 +222,7 @@ const AuthPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required={authType !== "magic"}
-                        className="bg-gray-800 border-gray-700"
+                        className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
                         aria-label="Password"
                         onFocus={clearError}
                         minLength={6}
@@ -231,7 +231,7 @@ const AuthPage = () => {
                   )}
                   
                   {error && (
-                    <div className="bg-red-900/30 text-red-300 p-3 rounded border border-red-800/30 text-sm flex gap-2 items-start relative">
+                    <div className="bg-red-900/30 text-red-300 p-3 rounded border border-red-800/30 text-sm flex gap-2 items-start relative animate-fadeIn">
                       <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <span>{error}</span>
                       <button 
@@ -248,7 +248,7 @@ const AuthPage = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full mt-6 bg-green-600 hover:bg-green-700"
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 transition-colors"
                   disabled={loading}
                 >
                   {loading ? (
@@ -273,7 +273,7 @@ const AuthPage = () => {
             <p className="text-sm text-gray-400">
               {authType === "signin" ? "New user?" : "Already have an account?"}
             </p>
-            <Link to="/chat" className="text-sm text-green-500 hover:text-green-400 flex items-center">
+            <Link to="/chat" className="text-sm text-green-500 hover:text-green-400 flex items-center transition-colors">
               Continue as guest
               <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
