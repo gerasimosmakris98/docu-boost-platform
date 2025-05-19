@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import LoginDialog from "@/components/auth/LoginDialog";
 import ProfileTab from "@/components/profile/ProfileTab";
 import SettingsTab from "@/components/profile/SettingsTab";
 import { User, UserCircle, Settings, LogOut } from "lucide-react";
@@ -13,14 +12,16 @@ import { useNavigate } from "react-router-dom";
 const Profile = () => {
   const navigate = useNavigate();
   const { user, profile, isAuthenticated, refreshProfile, updateProfile, logout } = useAuth();
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("profile");
   
   useEffect(() => {
     if (isAuthenticated) {
       refreshProfile();
+    } else {
+      // Redirect to auth page if not authenticated
+      navigate("/auth", { state: { from: "/profile" } });
     }
-  }, [isAuthenticated, refreshProfile]);
+  }, [isAuthenticated, refreshProfile, navigate]);
   
   // Use real user data if logged in, otherwise use placeholder data
   const profileData = isAuthenticated && profile ? {
@@ -39,10 +40,6 @@ const Profile = () => {
     website: '',
   };
   
-  const handleLogin = () => {
-    setLoginDialogOpen(true);
-  };
-  
   const handleSaveChanges = async (updates: any) => {
     if (isAuthenticated) {
       try {
@@ -54,7 +51,7 @@ const Profile = () => {
       }
     } else {
       toast.error("Please log in to save your changes");
-      setLoginDialogOpen(true);
+      navigate("/auth", { state: { from: "/profile" } });
     }
   };
 
@@ -68,6 +65,11 @@ const Profile = () => {
       toast.error("Failed to sign out");
     }
   };
+
+  // If not authenticated, don't render the profile page at all
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
@@ -111,26 +113,6 @@ const Profile = () => {
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          {!isAuthenticated ? (
-            <div className="mb-6 p-6 bg-gray-900/50 rounded-lg text-center border border-gray-800">
-              <UserCircle className="mx-auto h-16 w-16 text-gray-500 mb-2" />
-              <h2 className="text-xl font-semibold mb-2">Sign in to view your profile</h2>
-              <p className="text-gray-400 mb-4">
-                Create an account or sign in to view and manage your profile
-              </p>
-              <Button 
-                onClick={handleLogin}
-              >
-                Sign In
-              </Button>
-              
-              <LoginDialog
-                isOpen={loginDialogOpen}
-                onClose={() => setLoginDialogOpen(false)}
-              />
-            </div>
-          ) : null}
-
           <div className="space-y-6">
             {/* Mobile Tabs */}
             <div className="md:hidden">
