@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 import { Conversation, ConversationMetadata, Message, ConversationType } from "../types/conversationTypes";
+import { openaiService } from "../openaiService";
+import { getChatPromptForType } from "../utils/conversationUtils";
 
 // Helper function to safely convert string to ConversationType
 const asConversationType = (type: string): ConversationType => {
@@ -195,22 +197,83 @@ export const sendMessage = async (
   attachments: string[] = []
 ): Promise<{ aiResponse: Message } | null> => {
   try {
+    // Get conversation data to determine the type
+    const { data: conversationData, error: convError } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .single();
+    
+    if (convError) throw convError;
+    
+    // Parse conversation type
+    const conversationType = asConversationType(conversationData.type);
+    
     // Insert user message
     const { error: userMessageError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
         role: 'user',
-        content
+        content,
+        attachments
       });
 
     if (userMessageError) throw userMessageError;
-
-    // Simulate AI response (this will be replaced with actual AI integration)
-    const aiResponseContent = `I'm your AI career assistant. You said: "${content}"${
-      attachments.length > 0 ? ` and shared ${attachments.length} attachment(s)` : ''
-    }. How can I help you further with your career questions?`;
-
+    
+    // Get previous messages to provide context (limit to last 5 for simplicity)
+    const { data: previousMessages, error: prevMsgError } = await supabase
+      .from('messages')
+      .select('role, content')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    if (prevMsgError) throw prevMsgError;
+    
+    // Build context from previous messages
+    let contextMessages = '';
+    if (previousMessages && previousMessages.length > 0) {
+      contextMessages = previousMessages
+        .reverse()
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n');
+    }
+    
+    // Create prompt based on conversation type and include context
+    const prompt = getChatPromptForType(conversationType, content, contextMessages);
+    
+    // Handle file attachments if present
+    let aiResponseContent = '';
+    
+    if (attachments && attachments.length > 0) {
+      // For simplicity, we'll just analyze the first attachment
+      const fileUrl = attachments[0];
+      const fileName = fileUrl.split('/').pop() || 'file';
+      // Determine file type from URL/name
+      const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+      let fileType = 'application/octet-stream';
+      
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
+        fileType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
+      } else if (fileExtension === 'pdf') {
+        fileType = 'application/pdf';
+      } else if (['doc', 'docx'].includes(fileExtension)) {
+        fileType = 'application/msword';
+      }
+      
+      try {
+        // Analyze file with OpenAI
+        aiResponseContent = await openaiService.analyzeFile(fileUrl, fileName, fileType);
+      } catch (fileError) {
+        console.error('Error analyzing file:', fileError);
+        aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
+      }
+    } else {
+      // Generate AI response based on text prompt
+      aiResponseContent = await openaiService.generateResponse(prompt, conversationType);
+    }
+    
     // Insert AI response
     const { data: aiMessageData, error: aiMessageError } = await supabase
       .from('messages')
@@ -223,6 +286,12 @@ export const sendMessage = async (
       .single();
 
     if (aiMessageError) throw aiMessageError;
+
+    // Update conversation timestamp
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
 
     const aiResponse: Message = {
       id: aiMessageData.id,

@@ -1,286 +1,301 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Bot, 
-  Mail, 
-  Lock, 
-  User,
-  LogIn, 
-  UserPlus,
-  Loader2,
-  ArrowRight,
-  AlertCircle,
-  X
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FaGoogle, FaGithub, FaLinkedin } from "react-icons/fa";
+import { MdEmail } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
-type AuthType = "signin" | "signup" | "magic";
+type AuthType = "signin" | "signup";
+type ProviderType = "email" | "magic" | "oauth";
 
 const AuthPage = () => {
-  
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
+  const { isAuthenticated, signInWithEmail, signUpWithEmail, signInWithOAuth, signInWithMagicLink } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [authType, setAuthType] = useState<AuthType>("signin");
-  const [error, setError] = useState<string | null>(null);
+  const [providerType, setProviderType] = useState<ProviderType>("email");
+  const [isLoading, setIsLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   
-  
+  // Get the return URL from location state or default to dashboard
+  const from = location.state?.from?.pathname || "/dashboard";
   
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      const from = location.state?.from || "/chat";
+    // If user is already authenticated, redirect to the return URL
+    if (isAuthenticated) {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, location.state]);
-
-  const clearError = () => setError(null);
+  }, [isAuthenticated, navigate, from]);
   
-  
-  
-  const handleProviderLogin = async (provider: "google") => {
-    setLoading(true);
-    setError(null);
-    try {
-      await loginWithProvider(provider);
-    } catch (error) {
-      console.error("Error logging in:", error);
-      setError("Failed to log in with Google. Please try again later.");
-      toast.error("Failed to log in with Google");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setIsLoading(true);
     
     try {
-      if (authType === "signin") {
-        await loginWithEmail(email, password);
-      } else if (authType === "signup") {
-        if (!name.trim()) {
-          throw new Error("Please enter your name");
+      if (authType === "signup") {
+        // Validate passwords match for signup
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
         }
-        await signUpWithEmail(email, password, name);
+        
+        // Validate password strength
+        if (password.length < 8) {
+          toast.error("Password must be at least 8 characters");
+          return;
+        }
+        
+        await signUpWithEmail(email, password);
         toast.success("Account created! Please check your email to confirm your account.");
-      } else if (authType === "magic") {
-        // Pass empty string as password for magic link login
-        await loginWithEmail(email, "");
-        toast.success(`Magic link sent to ${email}. Please check your inbox.`);
+      } else {
+        // Sign in with email/password
+        const result = await signInWithEmail(email, password);
+        if (result.success) {
+          toast.success("Signed in successfully");
+          navigate(from, { replace: true });
+        } else {
+          toast.error(result.error || "Failed to sign in");
+        }
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      setError(error?.message || "Authentication failed. Please try again.");
-      toast.error("Authentication failed");
+      toast.error(error.message || "Authentication failed");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
+  const handleMagicLinkAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      await signInWithMagicLink(email);
+      setMagicLinkSent(true);
+      toast.success("Magic link sent! Check your email to sign in.");
+    } catch (error: any) {
+      console.error("Magic link error:", error);
+      toast.error(error.message || "Failed to send magic link");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleOAuthSignIn = async (provider: 'google' | 'github' | 'linkedin') => {
+    setIsLoading(true);
+    
+    try {
+      await signInWithOAuth(provider);
+      // The redirect will happen automatically, no need to navigate
+    } catch (error: any) {
+      console.error("OAuth error:", error);
+      toast.error(error.message || `Failed to sign in with ${provider}`);
+      setIsLoading(false);
+    }
+  };
+  
+  const renderEmailForm = () => (
+    <form onSubmit={handleEmailAuth} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="name@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      
+      {authType === "signup" && (
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+      )}
+      
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {authType === "signin" ? "Signing in..." : "Signing up..."}
+          </>
+        ) : (
+          authType === "signin" ? "Sign In" : "Sign Up"
+        )}
+      </Button>
+    </form>
+  );
+  
+  const renderMagicLinkForm = () => (
+    <form onSubmit={handleMagicLinkAuth} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="magic-email">Email</Label>
+        <Input
+          id="magic-email"
+          type="email"
+          placeholder="name@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      
+      {magicLinkSent ? (
+        <div className="p-4 bg-green-50 text-green-700 rounded-md">
+          <p className="text-sm">Magic link sent! Check your email to sign in.</p>
+        </div>
+      ) : (
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending magic link...
+            </>
+          ) : (
+            "Send Magic Link"
+          )}
+        </Button>
+      )}
+    </form>
+  );
+  
+  const renderOAuthButtons = () => (
+    <div className="space-y-2">
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => handleOAuthSignIn('google')}
+        disabled={isLoading}
+      >
+        <FaGoogle className="mr-2 h-4 w-4" />
+        Continue with Google
+      </Button>
+      
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => handleOAuthSignIn('github')}
+        disabled={isLoading}
+      >
+        <FaGithub className="mr-2 h-4 w-4" />
+        Continue with GitHub
+      </Button>
+      
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={() => handleOAuthSignIn('linkedin')}
+        disabled={isLoading}
+      >
+        <FaLinkedin className="mr-2 h-4 w-4" />
+        Continue with LinkedIn
+      </Button>
+    </div>
+  );
   
   return (
-    <div className="min-h-screen bg-black text-white flex justify-center items-center p-4 animate-fadeIn">
-      <div className="max-w-md w-full mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-green-500/10 p-3 border border-green-500/20 hover:bg-green-500/20 transition-colors">
-              <Bot className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
-            AI Career Advisor
-          </h1>
-          <p className="text-gray-400">
-            Your personal AI assistant for career guidance
-          </p>
-        </div>
-        
-        <Card className="bg-gray-900 border-gray-800 shadow-lg hover:shadow-green-900/10 transition-shadow">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+      <div className="w-full max-w-md">
+        <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>
-              Sign in to continue to AI Career Advisor
+            <CardTitle className="text-2xl text-center">
+              {authType === "signin" ? "Sign In" : "Create Account"}
+            </CardTitle>
+            <CardDescription className="text-center">
+              {authType === "signin"
+                ? "Enter your credentials to access your account"
+                : "Create a new account to get started"}
             </CardDescription>
           </CardHeader>
           
           <CardContent>
-            <Button 
-              className="w-full mb-4 bg-white text-black hover:bg-gray-100 flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-md"
-              onClick={() => handleProviderLogin("google")}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <svg className="h-4 w-4" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Continue with Google
-                </>
-              )}
-            </Button>
-            
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-gray-900 px-2 text-gray-400">Or continue with</span>
-              </div>
-            </div>
-            
-            <Tabs 
-              defaultValue="signin" 
-              value={authType}
-              onValueChange={(value) => {
-                setAuthType(value as AuthType);
-                clearError();
-              }}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                <TabsTrigger value="magic">Magic Link</TabsTrigger>
+            <Tabs defaultValue="email" className="w-full" onValueChange={(value) => setProviderType(value as ProviderType)}>
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="email" className="flex items-center gap-1">
+                  <MdEmail className="h-4 w-4" />
+                  <span className="hidden sm:inline">Email</span>
+                </TabsTrigger>
+                <TabsTrigger value="magic" className="flex items-center gap-1">
+                  <span className="text-lg">✨</span>
+                  <span className="hidden sm:inline">Magic Link</span>
+                </TabsTrigger>
+                <TabsTrigger value="oauth" className="flex items-center gap-1">
+                  <FaGoogle className="h-3 w-3" />
+                  <span className="hidden sm:inline">OAuth</span>
+                </TabsTrigger>
               </TabsList>
               
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  {authType === "signup" && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <label className="text-sm" htmlFor="name">Name</label>
-                      </div>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Enter your name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required={authType === "signup"}
-                        className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
-                        aria-label="Full name"
-                        onFocus={clearError}
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <label className="text-sm" htmlFor="email">Email</label>
-                    </div>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="name@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
-                      aria-label="Email address"
-                      onFocus={clearError}
-                    />
-                  </div>
-                  
-                  {authType !== "magic" && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-gray-400" />
-                        <label className="text-sm" htmlFor="password">Password</label>
-                      </div>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required={authType !== "magic"}
-                        className="bg-gray-800 border-gray-700 focus:border-green-500 transition-colors"
-                        aria-label="Password"
-                        onFocus={clearError}
-                        minLength={6}
-                      />
-                    </div>
-                  )}
-                  
-                  {error && (
-                    <div className="bg-red-900/30 text-red-300 p-3 rounded border border-red-800/30 text-sm flex gap-2 items-start relative animate-fadeIn">
-                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>{error}</span>
-                      <button 
-                        type="button"
-                        onClick={clearError}
-                        className="absolute top-2 right-2 text-red-300 hover:text-red-100"
-                        aria-label="Dismiss error"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full mt-6 bg-green-600 hover:bg-green-700 transition-colors"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : authType === "signin" ? (
-                    <LogIn className="h-4 w-4 mr-2" />
-                  ) : authType === "signup" ? (
-                    <UserPlus className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Mail className="h-4 w-4 mr-2" />
-                  )}
-                  
-                  {authType === "signin" ? "Sign In" : 
-                   authType === "signup" ? "Sign Up" : 
-                   "Send Magic Link"}
-                </Button>
-              </form>
+              <TabsContent value="email">
+                {renderEmailForm()}
+              </TabsContent>
+              
+              <TabsContent value="magic">
+                {renderMagicLinkForm()}
+              </TabsContent>
+              
+              <TabsContent value="oauth">
+                {renderOAuthButtons()}
+              </TabsContent>
             </Tabs>
           </CardContent>
           
-          <CardFooter className="border-t border-gray-800 mt-4 pt-4 flex justify-between items-center">
-            <p className="text-sm text-gray-400">
-              {authType === "signin" ? "New user?" : "Already have an account?"}
-            </p>
-            <Link to="/chat" className="text-sm text-green-500 hover:text-green-400 flex items-center transition-colors">
-              Continue as guest
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
+          <CardFooter className="flex flex-col">
+            <div className="text-center text-sm mt-2">
+              {authType === "signin" ? (
+                <p>
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline font-medium"
+                    onClick={() => setAuthType("signup")}
+                  >
+                    Sign up
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline font-medium"
+                    onClick={() => setAuthType("signin")}
+                  >
+                    Sign in
+                  </button>
+                </p>
+              )}
+            </div>
           </CardFooter>
         </Card>
       </div>

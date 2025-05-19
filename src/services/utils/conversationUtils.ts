@@ -1,40 +1,67 @@
 
 import { ConversationType } from "../types/conversationTypes";
 
+/**
+ * Get a welcome message for a conversation type
+ * @param type Conversation type
+ * @returns Welcome message text
+ */
 export const getWelcomeMessageForType = (type: ConversationType): string => {
   switch (type) {
     case 'resume':
-      return "Welcome to the Resume Advisor! I'll help you create, improve, and optimize your resume for job applications. Upload your current resume or share a job posting to get started.";
+      return "Welcome to the Resume Builder! I'm here to help you create a professional, effective resume. To get started, you can:\n\n• Tell me about your work experience\n• Upload an existing resume for me to improve\n• Share a job description to target your resume\n• Ask for specific resume advice\n\nHow would you like to begin?";
     case 'interview_prep':
-      return "Welcome to the Interview Advisor! I'll help you prepare for interviews with practice questions, feedback on your answers, and tips for success. What kind of interview are you preparing for?";
+      return "Welcome to Interview Preparation! I'll help you prepare for your upcoming interviews. To get started, you can:\n\n• Tell me what position you're interviewing for\n• Practice answering common interview questions\n• Get feedback on your responses\n• Ask for tips on specific interview scenarios\n\nHow would you like to begin your preparation?";
     case 'cover_letter':
-      return "Welcome to the Cover Letter Advisor! I'll help you craft compelling cover letters tailored to specific job positions. Share the job posting or tell me about the role you're applying for.";
+      return "Welcome to the Cover Letter Assistant! I'll help you craft a compelling cover letter that stands out. To get started, you can:\n\n• Share the job posting you're applying for\n• Tell me about your key qualifications\n• Ask for help with specific sections\n• Get feedback on an existing cover letter\n\nWhat would you like help with today?";
     case 'job_search':
-      return "Welcome to the Job Search Advisor! I'll help you develop strategies for finding and applying to jobs that match your skills and goals. What stage of your job search are you in?";
+      return "Welcome to Job Search Strategy! I'm here to help you find and apply for the right jobs. Let's work on your job search approach, application strategy, or discuss specific opportunities you're interested in.";
     case 'linkedin':
-      return "Welcome to the LinkedIn Advisor! I'll help you optimize your LinkedIn profile to attract recruiters and showcase your professional brand. Share your profile URL or let's discuss specific sections you want to improve.";
+      return "Welcome to LinkedIn Profile Optimization! I'll help you improve your LinkedIn presence to attract recruiters and opportunities. Upload your current profile or share specific sections you'd like to enhance.";
     case 'assessment':
-      return "Welcome to the Assessment Advisor! I'll help you prepare for job assessments, tests, and coding challenges. What type of assessment are you facing?";
+      return "Welcome to Assessment Preparation! I'll help you prepare for job assessments, coding challenges, or other pre-employment tests. What type of assessment are you preparing for?";
     default:
-      return "Hello! I'm your AI Career Advisor. I can help with resumes, cover letters, interview preparation, job searching, LinkedIn optimization, and more. What would you like assistance with today?";
+      return "Hello! I'm your career AI assistant. I can help with resumes, cover letters, interview preparation, and general career advice. What would you like assistance with today?";
   }
 };
 
-export const getChatPromptForType = (type: ConversationType): string => {
+/**
+ * Generate a chat prompt based on conversation type
+ * @param type Conversation type
+ * @param userMessage The current user message
+ * @param context Previous messages for context
+ * @returns Formatted prompt for the AI
+ */
+export const getChatPromptForType = (
+  type: ConversationType, 
+  userMessage: string,
+  context?: string
+): string => {
+  // Base prompt with context if available
+  const contextPrefix = context ? `Previous conversation:\n${context}\n\nCurrent message: ` : '';
+  const basePrompt = `${contextPrefix}${userMessage}`;
+  
+  // Specialized prompts for different conversation types
   switch (type) {
     case 'resume':
-      return "I'll help you with your resume. You can ask me to review your existing resume, help you create a new one, or optimize it for a specific job. Upload your resume or job description to get started.";
+      return `${basePrompt}\n\nPlease provide resume advice, focusing on optimizing the resume for ATS systems, highlighting relevant experience, and using industry-specific keywords.`;
+    
     case 'interview_prep':
-      return "I'll help you prepare for interviews. I can provide practice questions, feedback on your answers, or tips for specific interview types (behavioral, technical, etc.).";
+      return `${basePrompt}\n\nProvide interview preparation advice, including specific examples, common questions in this field, and strategies for addressing challenging questions.`;
+    
     case 'cover_letter':
-      return "I'll help you craft a compelling cover letter. Share details about the job you're applying for, and I'll help you highlight relevant skills and experiences.";
+      return `${basePrompt}\n\nHelp draft or improve a cover letter that showcases relevant skills and experience while demonstrating enthusiasm for the role and company.`;
+    
     case 'job_search':
-      return "I'll help you with your job search strategy. I can provide tips on finding opportunities, networking, application tracking, and more.";
+      return `${basePrompt}\n\nProvide job search strategy advice, including where to find opportunities, how to network effectively, and tips for standing out in the application process.`;
+    
     case 'linkedin':
-      return "I'll help you optimize your LinkedIn profile. I can provide feedback on your headline, summary, experience, and other sections to increase visibility to recruiters.";
+      return `${basePrompt}\n\nOffer LinkedIn profile optimization advice, focusing on creating an impactful headline, summary, and experience sections that attract recruiters.`;
+    
     case 'assessment':
-      return "I'll help you prepare for job assessments and tests. Let me know what type of assessment you're facing, and I'll provide guidance on how to approach it.";
+      return `${basePrompt}\n\nProvide guidance on preparing for job assessments, including practice questions, strategies for different assessment types, and tips for demonstrating skills effectively.`;
+    
     default:
-      return "How can I assist with your career today? I can help with resumes, cover letters, interview preparation, job searching, and more.";
+      return basePrompt;
   }
 };
