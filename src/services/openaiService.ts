@@ -5,14 +5,13 @@ import { toast } from "sonner";
 export const openaiService = {
   generateResponse: async (prompt: string, type: string = "general"): Promise<string> => {
     try {
-      const { data, error, status } = await supabase.functions.invoke("generate-ai-response", {
+      const { data, error } = await supabase.functions.invoke("generate-ai-response", {
         body: { prompt, type },
       });
 
       if (error) {
-        // Check for quota error - should be status 402 from our edge function
-        if (status === 402 || 
-            error.message?.includes('quota') || 
+        // Check for quota error message pattern since we can't rely on status
+        if (error.message?.includes('quota') || 
             error.message?.includes('insufficient_quota')) {
           console.warn('OpenAI API quota exceeded, returning fallback response');
           throw { 
@@ -26,7 +25,7 @@ export const openaiService = {
       return data.generatedText || 'Sorry, I could not generate a response at this time.';
     } catch (error: any) {
       console.error('Error generating AI response:', error);
-      // Re-throw with the status code to handle it appropriately upsteam
+      // Re-throw with the status code to handle it appropriately upstream
       if (error.status === 402) {
         throw error; 
       }
@@ -38,7 +37,7 @@ export const openaiService = {
     try {
       console.log('Analyzing file:', { fileUrl, fileName, fileType });
       
-      const { data, error, status } = await supabase.functions.invoke("analyze-file", {
+      const { data, error } = await supabase.functions.invoke("analyze-file", {
         body: { 
           fileUrl,
           fileName,
@@ -48,9 +47,8 @@ export const openaiService = {
 
       if (error) {
         console.error('Supabase function error:', error);
-        // Check for quota error
-        if (status === 402 || 
-            error.message?.includes('quota') || 
+        // Check for quota error message pattern
+        if (error.message?.includes('quota') || 
             error.message?.includes('insufficient_quota')) {
           console.warn('OpenAI API quota exceeded, returning fallback response');
           throw { 
@@ -74,7 +72,7 @@ export const openaiService = {
   
   analyzeLinkedInProfile: async (profileData: any): Promise<string> => {
     try {
-      const { data, error, status } = await supabase.functions.invoke("generate-ai-response", {
+      const { data, error } = await supabase.functions.invoke("generate-ai-response", {
         body: { 
           prompt: `Analyze this LinkedIn profile and provide optimization suggestions: ${JSON.stringify(profileData)}`,
           type: "linkedin_analysis"
@@ -82,9 +80,8 @@ export const openaiService = {
       });
 
       if (error) {
-        // Check for quota error
-        if (status === 402 || 
-            error.message?.includes('quota') || 
+        // Check for quota error message pattern
+        if (error.message?.includes('quota') || 
             error.message?.includes('insufficient_quota')) {
           console.warn('OpenAI API quota exceeded, returning fallback response');
           throw { 
