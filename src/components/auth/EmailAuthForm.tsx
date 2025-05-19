@@ -5,18 +5,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EmailAuthFormProps {
   authType: "signin" | "signup";
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   onSuccess?: (redirectPath: string) => void;
+  onForgotPassword?: () => void;
 }
 
-const EmailAuthForm = ({ authType, isLoading, setIsLoading, onSuccess }: EmailAuthFormProps) => {
+const EmailAuthForm = ({ 
+  authType, 
+  isLoading, 
+  setIsLoading, 
+  onSuccess, 
+  onForgotPassword 
+}: EmailAuthFormProps) => {
+  const { loginWithEmail, signUpWithEmail } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,21 +37,32 @@ const EmailAuthForm = ({ authType, isLoading, setIsLoading, onSuccess }: EmailAu
         // Validate passwords match for signup
         if (password !== confirmPassword) {
           toast.error("Passwords do not match");
+          setIsLoading(false);
           return;
         }
         
         // Validate password strength
         if (password.length < 8) {
           toast.error("Password must be at least 8 characters");
+          setIsLoading(false);
           return;
         }
         
-        // Handle signup logic - would typically call a context method
+        // Validate full name is provided
+        if (!fullName.trim()) {
+          toast.error("Please provide your full name");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Handle signup with Supabase
+        await signUpWithEmail(email, password, fullName);
         toast.success("Account created! Please check your email to confirm your account.");
       } else {
-        // Handle signin logic - would typically call a context method
+        // Handle signin with Supabase
+        await loginWithEmail(email, password);
         toast.success("Signed in successfully");
-        onSuccess?.("/dashboard");
+        onSuccess?.("/");
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -53,6 +74,20 @@ const EmailAuthForm = ({ authType, isLoading, setIsLoading, onSuccess }: EmailAu
 
   return (
     <form onSubmit={handleEmailAuth} className="space-y-4">
+      {authType === "signup" && (
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input
+            id="fullName"
+            type="text"
+            placeholder="John Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required={authType === "signup"}
+          />
+        </div>
+      )}
+      
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -66,7 +101,22 @@ const EmailAuthForm = ({ authType, isLoading, setIsLoading, onSuccess }: EmailAu
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="password">Password</Label>
+          {authType === "signin" && onForgotPassword && (
+            <Button 
+              type="button" 
+              variant="link" 
+              className="p-0 h-auto text-xs"
+              onClick={(e) => {
+                e.preventDefault();
+                onForgotPassword();
+              }}
+            >
+              Forgot password?
+            </Button>
+          )}
+        </div>
         <Input
           id="password"
           type="password"
@@ -86,7 +136,7 @@ const EmailAuthForm = ({ authType, isLoading, setIsLoading, onSuccess }: EmailAu
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            required
+            required={authType === "signup"}
           />
         </div>
       )}

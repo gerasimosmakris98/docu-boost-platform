@@ -13,6 +13,8 @@ import CookieConsent from '@/components/legal/CookieConsent';
 import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
 import NotFound from '@/pages/NotFound';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import Profile from '@/pages/Profile';
 
 // Lazy loaded pages for better performance
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
@@ -37,6 +39,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/chat" replace />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
                 <Route 
                   path="/chat" 
                   element={
@@ -57,7 +60,7 @@ function App() {
                   path="/profile" 
                   element={
                     <ProtectedRoute>
-                      <ProfilePage />
+                      <Profile />
                     </ProtectedRoute>
                   } 
                 />

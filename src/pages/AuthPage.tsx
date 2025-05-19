@@ -10,9 +10,10 @@ import AuthTypeToggle from "@/components/auth/AuthTypeToggle";
 import EmailAuthForm from "@/components/auth/EmailAuthForm";
 import MagicLinkForm from "@/components/auth/MagicLinkForm";
 import OAuthButtons from "@/components/auth/OAuthButtons";
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 type AuthType = "signin" | "signup";
-type ProviderType = "email" | "magic" | "oauth";
+type ProviderType = "email" | "magic" | "oauth" | "forgot";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -23,8 +24,8 @@ const AuthPage = () => {
   const [providerType, setProviderType] = useState<ProviderType>("email");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get the return URL from location state or default to dashboard
-  const from = location.state?.from?.pathname || "/dashboard";
+  // Get the return URL from location state or default to app home
+  const from = location.state?.from?.pathname || "/";
   
   useEffect(() => {
     // If user is already authenticated, redirect to the return URL
@@ -33,7 +34,7 @@ const AuthPage = () => {
     }
   }, [isAuthenticated, navigate, from]);
   
-  const handleOAuthSignIn = async (provider: 'google' | 'github' | 'linkedin') => {
+  const handleOAuthSignIn = async (provider: 'google') => {
     setIsLoading(true);
     
     try {
@@ -65,7 +66,7 @@ const AuthPage = () => {
         </TabsTrigger>
         <TabsTrigger value="oauth" className="flex items-center gap-1">
           <LogIn className="h-3 w-3" />
-          <span className="hidden sm:inline">OAuth</span>
+          <span className="hidden sm:inline">Google</span>
         </TabsTrigger>
       </TabsList>
       
@@ -75,6 +76,7 @@ const AuthPage = () => {
           isLoading={isLoading} 
           setIsLoading={setIsLoading}
           onSuccess={(path) => navigate(path, { replace: true })}
+          onForgotPassword={() => setProviderType("forgot")}
         />
       </TabsContent>
       
@@ -89,6 +91,14 @@ const AuthPage = () => {
         <OAuthButtons 
           isLoading={isLoading}
           onProviderSelect={handleOAuthSignIn}
+        />
+      </TabsContent>
+
+      <TabsContent value="forgot">
+        <ForgotPasswordForm 
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          onBackToLogin={() => setProviderType("email")}
         />
       </TabsContent>
     </Tabs>

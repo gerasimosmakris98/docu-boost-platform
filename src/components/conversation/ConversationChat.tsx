@@ -1,29 +1,17 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SendHorizontal, Loader2, Paperclip, FileText } from "lucide-react";
-import { toast } from "sonner";
 import { 
   conversationService, 
   Conversation, 
   Message,
   ConversationType
 } from "@/services/conversationService";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatMessage from "./ChatMessage";
-import FileAnalyzer from "./FileAnalyzer";
-import ChatAttachments from "./ChatAttachments";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import ChatConversationHeader from "./chat/ChatConversationHeader";
+import ChatMessagesList from "./chat/ChatMessagesList";
+import ChatInputArea from "./chat/ChatInputArea";
+import { toast } from "sonner";
 
 interface ConversationChatProps {
   conversationId: string;
@@ -33,10 +21,8 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
   const { isAuthenticated } = useAuth();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [showFileAnalyzer, setShowFileAnalyzer] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,17 +70,12 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!input.trim()) return;
+  const handleSubmit = async (userMessage: string, attachments: Array<{ url: string; type: string; name: string }> = []) => {
+    if (!userMessage.trim()) return;
     if (!isAuthenticated) {
       toast.error("Please sign in to send messages");
       return;
     }
-    
-    const userMessage = input.trim();
-    setInput("");
     
     // Optimistically add user message to UI
     const tempUserMessage: Message = {
@@ -162,29 +143,6 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     };
     
     setMessages(prev => [...prev, userMessage, aiResponse]);
-    setShowFileAnalyzer(false);
-  };
-
-  const handleAttachments = (attachments: { url: string; type: string; name: string }[]) => {
-    // Handle attachments
-    if (attachments.length > 0) {
-      // Just add a message with the attachments for now
-      const userMessage: Message = {
-        id: `attachment-${Date.now()}`,
-        conversation_id: conversationId,
-        role: 'user',
-        content: `I've attached ${attachments.length} file(s): ${attachments.map(a => a.name).join(', ')}`,
-        created_at: new Date().toISOString()
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-    }
-  };
-
-  const getConversationTitle = () => {
-    if (loading) return "Loading...";
-    if (!conversation) return "Chat";
-    return conversation.title;
   };
 
   const getWelcomeMessage = (type: ConversationType): string => {
@@ -203,71 +161,27 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
   return (
     <div className="flex flex-col h-[calc(100vh-220px)]">
       <Card className="flex-1 flex flex-col overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{getConversationTitle()}</CardTitle>
-          <div className="flex items-center gap-2">
-            <Dialog open={showFileAnalyzer} onOpenChange={setShowFileAnalyzer}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <FileText className="h-5 w-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Analyze a File</DialogTitle>
-                  <DialogDescription>
-                    Upload a file to get AI analysis and feedback
-                  </DialogDescription>
-                </DialogHeader>
-                <FileAnalyzer onAnalysisComplete={handleFileAnalysis} />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
+        <ChatConversationHeader 
+          conversation={conversation} 
+          loading={loading}
+          onAnalyzerOpen={() => {}}
+          onFileAnalysis={handleFileAnalysis}
+        />
         
         <CardContent className="flex-1 overflow-y-auto pb-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <ChatMessage 
-                  key={message.id || index}
-                  message={message}
-                  isLoading={message.id === undefined}
-                />
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
+          <ChatMessagesList 
+            messages={messages} 
+            loading={loading} 
+            messagesEndRef={messagesEndRef} 
+          />
         </CardContent>
       </Card>
       
-      <div className="mt-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <div className="flex-1 flex flex-col">
-            <Textarea
-              placeholder="Type your message here..."
-              className="min-h-[80px]"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={sending || !isAuthenticated}
-            />
-            <div className="flex justify-start mt-1">
-              <ChatAttachments onAttach={handleAttachments} />
-            </div>
-          </div>
-          <Button type="submit" size="icon" disabled={!input.trim() || sending || !isAuthenticated}>
-            {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <SendHorizontal className="h-4 w-4" />
-            )}
-          </Button>
-        </form>
-      </div>
+      <ChatInputArea 
+        onSubmit={handleSubmit} 
+        sending={sending} 
+        isAuthenticated={isAuthenticated} 
+      />
     </div>
   );
 };

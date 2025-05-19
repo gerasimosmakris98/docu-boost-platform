@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ChatMessage from "@/components/conversation/ChatMessage";
@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { conversationService, Message, Conversation } from "@/services/conversationService";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatAttachments from "@/components/conversation/ChatAttachments";
+import ConversationHeader from "@/components/conversation/ConversationHeader";
+import MessagesList from "@/components/conversation/MessagesList";
+import ChatInputForm from "@/components/conversation/ChatInputForm";
 
 const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,15 +21,12 @@ const ConversationDetail = () => {
   
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [attachments, setAttachments] = useState<Array<{ url: string; type: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Function to load conversation and messages
-  const loadConversation = async (conversationId: string) => {
+  // Load conversation and messages
+  const loadConversation = useCallback(async (conversationId: string) => {
     try {
       setIsLoading(true);
       const { conversation: loadedConversation, messages: loadedMessages } = 
@@ -46,7 +46,7 @@ const ConversationDetail = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
   
   // Create or load conversation on component mount
   useEffect(() => {
@@ -57,7 +57,6 @@ const ConversationDetail = () => {
     }
     
     const initializeConversation = async () => {
-      setIsLoading(true);
       try {
         // If ID is provided, load that conversation
         if (id) {
@@ -75,26 +74,22 @@ const ConversationDetail = () => {
       } catch (error) {
         console.error("Error initializing conversation:", error);
         toast.error("Failed to initialize conversation");
-      } finally {
-        setIsLoading(false);
       }
     };
     
     initializeConversation();
-  }, [id, isAuthenticated, navigate]);
+  }, [id, isAuthenticated, loadConversation, navigate]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
-  // Handle sending a new message
-  const handleSendMessage = async () => {
+  // Handle sending a new message - moved to ChatInputForm
+  const handleSendMessage = async (newMessage: string, attachments: Array<{ url: string; type: string; name: string }>) => {
     if (!id || !newMessage.trim()) return;
     
     try {
-      setIsSending(true);
-      
       // Create an array of attachment URLs
       const attachmentUrls = attachments.map(a => a.url);
       
@@ -110,10 +105,6 @@ const ConversationDetail = () => {
       
       // Update UI with the new message
       setMessages(prev => [...prev, optimisticUserMessage]);
-      
-      // Clear input fields
-      setNewMessage("");
-      setAttachments([]);
       
       // Show loading message for better UX
       const optimisticAIMessage: Message = {
@@ -132,114 +123,34 @@ const ConversationDetail = () => {
       // Update the UI with the real response, replacing the temporary AI message
       if (response) {
         setMessages(prev => prev.filter(msg => msg.id !== optimisticAIMessage.id));
-        // Append real AI response
-        await loadConversation(id); // Reload all messages to ensure consistency
+        // Reload all messages to ensure consistency
+        await loadConversation(id);
       }
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
     }
-  };
-  
-  // Handle attachments
-  const handleAttach = (newAttachments: Array<{ url: string; type: string; name: string }>) => {
-    setAttachments(newAttachments);
-    toast.success(`${newAttachments.length} attachment(s) added`);
   };
   
   return (
     <DashboardLayout>
       <div className="h-[calc(100vh-4rem)] flex flex-col">
         {/* Conversation Header */}
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold">{conversation?.title || "Conversation"}</h1>
-              <p className="text-sm text-gray-500">
-                {conversation?.type === 'resume' ? 'Resume Review Assistant' :
-                 conversation?.type === 'interview_prep' ? 'Interview Preparation Coach' :
-                 conversation?.type === 'cover_letter' ? 'Cover Letter Assistant' :
-                 conversation?.type === 'job_search' ? 'Job Search Strategist' :
-                 conversation?.type === 'linkedin' ? 'LinkedIn Optimization Expert' :
-                 'AI Career Assistant'}
-              </p>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => id && loadConversation(id)}
-              disabled={isLoading}
-            >
-              <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-        </div>
+        <ConversationHeader 
+          conversation={conversation} 
+          isLoading={isLoading}
+          onRefresh={() => id && loadConversation(id)}
+        />
         
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && !isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <p className="text-muted-foreground">No messages yet.</p>
-              <p className="text-sm text-muted-foreground">
-                Start the conversation by sending a message below.
-              </p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              <ChatMessage
-                key={message.id || `msg-${message.created_at}`}
-                message={message}
-                isLoading={!message.id || message.id.startsWith('temp')}
-              />
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+        <MessagesList 
+          messages={messages} 
+          isLoading={isLoading}
+          messagesEndRef={messagesEndRef}
+        />
         
         {/* Input Area */}
-        <div className="border-t p-4">
-          {attachments.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-2">
-              {attachments.map((attachment, index) => (
-                <div 
-                  key={index}
-                  className="bg-blue-50 text-blue-600 text-xs rounded-full px-2 py-1 flex items-center gap-1"
-                >
-                  <Paperclip className="h-3 w-3" />
-                  <span className="truncate max-w-[150px]">{attachment.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="flex items-end gap-2">
-            <Textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message here..."
-              className="flex-1 resize-none"
-              rows={3}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <div className="flex flex-col gap-2">
-              <ChatAttachments onAttach={handleAttach} />
-              <Button 
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || isSending}
-                size="icon"
-              >
-                <Send className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ChatInputForm onSend={handleSendMessage} />
       </div>
     </DashboardLayout>
   );

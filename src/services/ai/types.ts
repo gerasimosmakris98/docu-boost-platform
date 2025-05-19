@@ -34,3 +34,5 @@ export interface ProgressiveResponseOptions {
   depth: 'low' | 'medium' | 'high';
   format?: 'steps' | 'bullets' | 'paragraphs';
 }
+
+export type ConversationType = 'resume' | 'cover_letter' | 'interview_prep' | 'job_search' | 'linkedin' | 'assessment' | 'general' | 'linkedin_analysis';
