@@ -133,8 +133,8 @@ const AuthPage = () => {
                 </CardContent>
                 
                 <CardFooter className="flex flex-col space-y-3">
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Login'}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing in...' : 'Login'}
                   </Button>
                   
                   <div className="relative w-full">
@@ -151,7 +151,7 @@ const AuthPage = () => {
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleLogin}
-                    disabled={loading}
+                    disabled={isLoading}
                   >
                     <svg
                       className="mr-2 h-4 w-4"
@@ -215,8 +215,8 @@ const AuthPage = () => {
                 </CardContent>
                 
                 <CardFooter className="flex flex-col space-y-3">
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating account...' : 'Create Account'}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Creating account...' : 'Create Account'}
                   </Button>
                   
                   <div className="relative w-full">
@@ -233,7 +233,7 @@ const AuthPage = () => {
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleLogin}
-                    disabled={loading}
+                    disabled={isLoading}
                   >
                     <svg
                       className="mr-2 h-4 w-4"

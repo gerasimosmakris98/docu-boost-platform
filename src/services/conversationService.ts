@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -45,6 +46,7 @@ export const conversationService = {
       return (data || []).map(item => ({
         ...item,
         type: item.type as ConversationType,
+        // Add empty metadata if it doesn't exist
         metadata: item.metadata || {}
       }));
     } catch (error) {
@@ -79,6 +81,7 @@ export const conversationService = {
         conversation: conversation ? {
           ...conversation,
           type: conversation.type as ConversationType,
+          // Add empty metadata if it doesn't exist
           metadata: conversation.metadata || {}
         } : null, 
         messages: messages?.map(msg => ({
@@ -126,6 +129,7 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
+        // Add empty metadata if it doesn't exist
         metadata: data.metadata || {}
       };
     } catch (error) {
@@ -150,6 +154,7 @@ export const conversationService = {
       return {
         ...data,
         type: data.type as ConversationType,
+        // Add empty metadata if it doesn't exist
         metadata: data.metadata || {}
       };
     } catch (error) {
