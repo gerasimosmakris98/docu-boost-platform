@@ -1,6 +1,6 @@
 
 import { useRef, useEffect } from "react";
-import { Message } from "@/services/conversationTypes";
+import { Message } from "@/services/types/conversationTypes";
 import { Loader2, Bot } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 

@@ -4,7 +4,7 @@ import {
   User as UserIcon, 
   Loader2 
 } from "lucide-react";
-import { Message } from "@/services/conversationTypes";
+import { Message } from "@/services/types/conversationTypes";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
