@@ -1,14 +1,17 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LinkedInProfile } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import LinkedInImport from "../linkedin/LinkedInImport";
+import SocialLinksSection from "./SocialLinksSection";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { EditIcon, Save } from "lucide-react";
+import { EditIcon, Save, Loader2 } from "lucide-react";
 
 interface ProfileData {
   name: string;
@@ -28,7 +31,9 @@ interface ProfileTabProps {
 }
 
 const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps) => {
+  const { user, isAuthenticated, profile, refreshProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: profileData.title || '',
     phone: profileData.phone || '',
@@ -37,43 +42,96 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
     summary: resumeData.summary || ''
   });
   
+  // Refresh data when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshProfile();
+    }
+  }, [isAuthenticated, refreshProfile]);
+  
+  // Update form data when profile changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        title: profile.title || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        website: profile.website || '',
+        summary: profile.summary || ''
+      });
+    }
+  }, [profile, profileData, resumeData]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveChanges(formData);
-    setIsEditing(false);
+    setIsSaving(true);
+    try {
+      if (!isAuthenticated || !user) {
+        toast.error("Please sign in to save your changes");
+        return;
+      }
+      
+      // Update profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          title: formData.title,
+          phone: formData.phone,
+          location: formData.location,
+          website: formData.website,
+          summary: formData.summary,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Refresh profile data
+      await refreshProfile();
+      
+      // Notify parent component
+      onSaveChanges(formData);
+      
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const handleCancel = () => {
-    setFormData({
-      title: profileData.title || '',
-      phone: profileData.phone || '',
-      location: profileData.location || '',
-      website: profileData.website || '',
-      summary: resumeData.summary || ''
-    });
+    if (profile) {
+      setFormData({
+        title: profile.title || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        website: profile.website || '',
+        summary: profile.summary || ''
+      });
+    }
     setIsEditing(false);
   };
   
-  const handleLinkedInProfileImported = (profile: LinkedInProfile) => {
-    // Update the profile with LinkedIn data
-    const updates = {
-      title: profile.title,
-      summary: profile.summary,
-      // You could map more fields here
-    };
-    
+  const handleLinkedInProfileImported = (linkedInProfile: LinkedInProfile) => {
+    // Update form data with LinkedIn data
     setFormData(prev => ({
       ...prev,
-      ...updates
+      title: linkedInProfile.title || prev.title,
+      summary: linkedInProfile.summary || prev.summary
     }));
     
+    // Refresh profile data
+    refreshProfile();
+    
     toast.success("LinkedIn profile imported successfully");
-    onSaveChanges(updates);
   };
   
   return (
@@ -202,11 +260,25 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
               </div>
               
               <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={handleCancel}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  <Save className="h-4 w-4 mr-2" /> Save Changes
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" /> Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
@@ -241,6 +313,8 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
           )}
         </CardContent>
       </Card>
+      
+      <SocialLinksSection />
       
       <Card className="bg-gray-900/50 border-gray-800">
         <CardHeader className="pb-2">

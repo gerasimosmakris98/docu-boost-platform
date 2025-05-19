@@ -104,7 +104,15 @@ export const sendMessage = async (
     
     // Get model options based on conversation type
     const modelOptions = getModelOptions(conversationType);
-    console.log('Using model options:', modelOptions);
+    
+    // Add required properties for ProgressiveResponseOptions
+    const options = {
+      ...modelOptions,
+      brief: brief,
+      depth: brief ? 'low' : 'medium' as 'low' | 'medium' | 'high'
+    };
+    
+    console.log('Using model options:', options);
     
     // Create prompt based on conversation type and include context
     const prompt = getChatPromptForType(
@@ -163,7 +171,7 @@ export const sendMessage = async (
         aiResponseContent = await aiProviderService.generateResponse(
           prompt, 
           conversationType,
-          modelOptions
+          options
         );
       }
     } else {
@@ -172,7 +180,7 @@ export const sendMessage = async (
       aiResponseContent = await aiProviderService.generateResponse(
         prompt, 
         conversationType,
-        modelOptions
+        options
       );
       console.log('AI response generated successfully');
     }

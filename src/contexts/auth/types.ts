@@ -16,6 +16,11 @@ export interface Profile {
   summary?: string;
 }
 
+interface SocialLinkType {
+  platform: string;
+  url: string;
+}
+
 export interface LinkedInProfile {
   title: string;
   company: string;
@@ -36,6 +41,7 @@ export interface LinkedInProfile {
   profileUrl?: string;
   profileScore?: number;
   recommendations?: string[];
+  socialLinks?: SocialLinkType[];
 }
 
 export interface AuthContextType {

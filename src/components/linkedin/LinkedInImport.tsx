@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkedInProfile, useAuth } from "@/contexts/AuthContext";
-import { Linkedin, Loader, FileCheck, FileText } from "lucide-react";
+import { Linkedin, Loader, FileCheck, FileText, Github, Globe } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface LinkedInImportProps {
   onProfileImported?: (profile: LinkedInProfile) => void;
@@ -60,7 +61,31 @@ const LinkedInImport = ({ onProfileImported }: LinkedInImportProps) => {
             <div className="text-sm">
               <p className="font-medium">{linkedInProfile.title}</p>
               <p className="text-muted-foreground">{linkedInProfile.company}</p>
-              <p className="mt-2">{linkedInProfile.skills.slice(0, 5).join(', ')}{linkedInProfile.skills.length > 5 ? '...' : ''}</p>
+              
+              <div className="mt-3 space-y-2">
+                <p className="text-sm text-gray-400">Imported social profiles:</p>
+                <div className="flex flex-wrap gap-2">
+                  {linkedInProfile.socialLinks?.map((link, index) => (
+                    <Badge key={index} variant="outline" className="bg-gray-800 flex items-center gap-1">
+                      {link.platform.toLowerCase().includes('linkedin') && (
+                        <Linkedin className="h-3 w-3" />
+                      )}
+                      {link.platform.toLowerCase().includes('github') && (
+                        <Github className="h-3 w-3" />
+                      )}
+                      {link.platform.toLowerCase().includes('portfolio') && (
+                        <Globe className="h-3 w-3" />
+                      )}
+                      {link.platform}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="mt-3">
+                <p className="text-sm text-gray-400">Skills:</p>
+                <p className="mt-1">{linkedInProfile.skills.slice(0, 5).join(', ')}{linkedInProfile.skills.length > 5 ? '...' : ''}</p>
+              </div>
             </div>
           </div>
         ) : (

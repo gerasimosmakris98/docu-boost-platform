@@ -1,60 +1,41 @@
 
-import { toast } from 'sonner';
-import { supabase, cleanupAuthState } from '@/integrations/supabase/client';
-import { AuthProviderType, Profile, LinkedInProfile } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { cleanupAuthState } from '@/integrations/supabase/client';
+import { AuthProviderType, LinkedInProfile } from './types';
+import { fetchUserProfile } from './authUtils';
 
-/**
- * Login with email and password
- */
+// Login with email and password
 export const loginWithEmail = async (email: string, password: string) => {
   try {
-    // Clean up existing state to prevent limbo
+    // Clean up existing auth state
     cleanupAuthState();
-
+    
+    // Attempt global sign out
     try {
-      // Attempt global sign out first
       await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
       // Continue even if this fails
     }
-
-    // If password is empty, it's a magic link login
-    if (!password) {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-      });
-      
-      if (error) throw error;
-      
-      toast.success(`Magic link sent to ${email}. Please check your inbox.`);
-      return;
-    }
-
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-
+    
     if (error) throw error;
-    
-    toast.success('Signed in successfully!');
-    
-    // Force page reload for a clean state
-    window.location.href = '/';
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to sign in');
+    return data;
+  } catch (error) {
+    console.error('Error in loginWithEmail:', error);
     throw error;
   }
 };
 
-/**
- * Sign up with email, password and full name
- */
+// Sign up with email and password
 export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
   try {
-    // Clean up existing state
+    // Clean up existing auth state
     cleanupAuthState();
-
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -64,131 +45,169 @@ export const signUpWithEmail = async (email: string, password: string, fullName:
         }
       }
     });
-
-    if (error) throw error;
     
-    toast.success('Account created successfully! Please check your email to confirm your account.');
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to create account');
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error in signUpWithEmail:', error);
     throw error;
   }
 };
 
-/**
- * Login with a third-party provider
- */
+// Login with third-party provider
 export const loginWithProvider = async (provider: AuthProviderType) => {
   try {
-    // Clean up existing state
+    // Clean up existing auth state
     cleanupAuthState();
     
+    // Attempt global sign out
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch (err) {
+      // Continue even if this fails
+    }
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
+      provider,
       options: {
-        redirectTo: window.location.origin
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     });
-
+    
     if (error) throw error;
-  } catch (error: any) {
-    toast.error(error.message || `Failed to sign in with ${provider}`);
+    return data;
+  } catch (error) {
+    console.error('Error in loginWithProvider:', error);
     throw error;
   }
 };
 
-/**
- * Logout the current user
- */
+// Logout user
 export const logout = async () => {
   try {
     // Clean up auth state
     cleanupAuthState();
     
-    // Sign out
+    // Attempt global sign out
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     if (error) throw error;
-    
-    toast.info('Signed out successfully');
-    
-    // Force page reload for a clean state
-    window.location.href = '/auth';
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to sign out');
+  } catch (error) {
+    console.error('Error in logout:', error);
     throw error;
   }
 };
 
-/**
- * Update a user's profile
- */
-export const updateProfile = async (updates: Partial<Profile>, userId: string) => {
+// Update user profile
+export const updateProfile = async (updates: any, userId: string) => {
   try {
-    if (!userId) throw new Error('User not authenticated');
-
     const { error } = await supabase
       .from('profiles')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .update(updates)
       .eq('id', userId);
-
-    if (error) throw error;
     
-    toast.success('Profile updated successfully');
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to update profile');
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error in updateProfile:', error);
     throw error;
   }
 };
 
-/**
- * Mock LinkedIn profile import (would be replaced with actual API integration)
- */
+// Mock LinkedIn import (in a real app, this would integrate with LinkedIn's API)
 export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
+  // In a real implementation, this would use OAuth to pull real LinkedIn data
+  const mockLinkedInProfile: LinkedInProfile = {
+    title: 'Senior Software Engineer',
+    company: 'Tech Innovations Inc.',
+    headline: 'Building the future of web technologies',
+    summary: 'Experienced software engineer with 7+ years of expertise in React, Node.js, and cloud solutions. Passionate about creating scalable applications and mentoring junior developers.',
+    experience: [
+      {
+        title: 'Senior Software Engineer',
+        company: 'Tech Innovations Inc.',
+        duration: '2020 - Present',
+        description: 'Leading development of enterprise SaaS solutions, managing a team of 5 engineers.'
+      },
+      {
+        title: 'Software Developer',
+        company: 'WebSoft Solutions',
+        duration: '2017 - 2020',
+        description: 'Developed and maintained client-facing web applications using React and Node.js.'
+      }
+    ],
+    education: [
+      {
+        school: 'University of Technology',
+        degree: 'Master of Computer Science',
+        year: '2017'
+      },
+      {
+        school: 'State University',
+        degree: 'Bachelor of Science in Software Engineering',
+        year: '2015'
+      }
+    ],
+    skills: ['JavaScript', 'React', 'Node.js', 'TypeScript', 'AWS', 'Docker', 'GraphQL', 'MongoDB'],
+    profileUrl: 'https://linkedin.com/in/johndoe',
+    socialLinks: [
+      { platform: 'LinkedIn', url: 'https://linkedin.com/in/johndoe' },
+      { platform: 'GitHub', url: 'https://github.com/johndoe' },
+      { platform: 'Portfolio', url: 'https://johndoe.dev' }
+    ]
+  };
+  
   try {
-    // For now, we'll just return a mock profile until we implement actual LinkedIn API integration
-    const mockProfile: LinkedInProfile = {
-      title: 'Senior Software Engineer',
-      company: 'Tech Company Inc.',
-      headline: 'Innovative software engineer with a passion for creating elegant solutions',
-      summary: 'Experienced software professional with a track record of delivering high-quality products in agile environments.',
-      experience: [
-        { 
-          title: 'Senior Software Engineer', 
-          company: 'Tech Company Inc.', 
-          duration: '2020-Present',
-          description: 'Leading development of cloud-based solutions using React, TypeScript, and AWS.' 
-        },
-        { 
-          title: 'Software Engineer', 
-          company: 'Previous Company', 
-          duration: '2018-2020',
-          description: 'Worked on frontend applications using React and TypeScript.' 
-        },
-        { 
-          title: 'Junior Developer', 
-          company: 'First Company', 
-          duration: '2016-2018',
-          description: 'Developed web applications using JavaScript and PHP.' 
+    // Save profile data
+    const user = (await supabase.auth.getUser()).data.user;
+    
+    if (!user) throw new Error('No user found');
+    
+    // Update profile data
+    await supabase
+      .from('profiles')
+      .update({
+        title: mockLinkedInProfile.title,
+        headline: mockLinkedInProfile.headline,
+        summary: mockLinkedInProfile.summary,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+    
+    // Save social links
+    if (mockLinkedInProfile.socialLinks && mockLinkedInProfile.socialLinks.length > 0) {
+      for (const link of mockLinkedInProfile.socialLinks) {
+        // Check if link already exists
+        const { data: existingLink } = await supabase
+          .from('social_links')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('platform', link.platform)
+          .single();
+        
+        if (existingLink) {
+          // Update existing link
+          await supabase
+            .from('social_links')
+            .update({
+              url: link.url,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingLink.id);
+        } else {
+          // Insert new link
+          await supabase
+            .from('social_links')
+            .insert({
+              user_id: user.id,
+              platform: link.platform,
+              url: link.url
+            });
         }
-      ],
-      education: [
-        {
-          school: 'University of Technology',
-          degree: 'Bachelor of Computer Science',
-          year: '2016'
-        }
-      ],
-      skills: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'HTML/CSS', 'AWS', 'Git', 'Agile'],
-      profileUrl: 'https://linkedin.com/in/janesmith',
-      profileScore: 85
-    };
-
-    toast.success('LinkedIn profile imported successfully!');
-    return mockProfile;
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to import LinkedIn profile');
-    throw error;
+      }
+    }
+    
+    return mockLinkedInProfile;
+  } catch (error) {
+    console.error('Error saving LinkedIn profile:', error);
+    return mockLinkedInProfile; // Return the data even if save fails
   }
 };
