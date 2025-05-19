@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface FileUploadProps {
-  onFileUploaded: (url: string, fileName: string) => void;
+  onFileUploaded: (url: string, fileName: string, fileType: string) => void;
   maxSizeMB?: number;
   allowedFileTypes?: string[];
 }
@@ -96,7 +96,7 @@ const FileUpload = ({
         .from('attachments')
         .getPublicUrl(filePath);
       
-      onFileUploaded(publicUrlData.publicUrl, file.name);
+      onFileUploaded(publicUrlData.publicUrl, file.name, file.type);
     } catch (error) {
       console.error("Error uploading file:", error);
       toast.error("Failed to upload file");

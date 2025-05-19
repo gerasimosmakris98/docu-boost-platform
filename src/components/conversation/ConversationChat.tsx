@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SendHorizontal, Loader2 } from "lucide-react";
+import { SendHorizontal, Loader2, Paperclip, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { 
   conversationService, 
@@ -14,6 +14,16 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import ChatMessage from "./ChatMessage";
+import FileAnalyzer from "./FileAnalyzer";
+import ChatAttachments from "./ChatAttachments";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ConversationChatProps {
   conversationId: string;
@@ -26,6 +36,7 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showFileAnalyzer, setShowFileAnalyzer] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,6 +143,44 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
     }
   };
 
+  const handleFileAnalysis = (analysis: string) => {
+    // Add file analysis as a message pair
+    const userMessage: Message = {
+      id: `file-upload-${Date.now()}`,
+      conversation_id: conversationId,
+      role: 'user',
+      content: 'I uploaded a file for analysis.',
+      created_at: new Date().toISOString()
+    };
+    
+    const aiResponse: Message = {
+      id: `file-analysis-${Date.now()}`,
+      conversation_id: conversationId,
+      role: 'assistant',
+      content: analysis,
+      created_at: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, userMessage, aiResponse]);
+    setShowFileAnalyzer(false);
+  };
+
+  const handleAttachments = (attachments: { url: string; type: string; name: string }[]) => {
+    // Handle attachments
+    if (attachments.length > 0) {
+      // Just add a message with the attachments for now
+      const userMessage: Message = {
+        id: `attachment-${Date.now()}`,
+        conversation_id: conversationId,
+        role: 'user',
+        content: `I've attached ${attachments.length} file(s): ${attachments.map(a => a.name).join(', ')}`,
+        created_at: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+    }
+  };
+
   const getConversationTitle = () => {
     if (loading) return "Loading...";
     if (!conversation) return "Chat";
@@ -154,8 +203,26 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
   return (
     <div className="flex flex-col h-[calc(100vh-220px)]">
       <Card className="flex-1 flex flex-col overflow-hidden">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{getConversationTitle()}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Dialog open={showFileAnalyzer} onOpenChange={setShowFileAnalyzer}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <FileText className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Analyze a File</DialogTitle>
+                  <DialogDescription>
+                    Upload a file to get AI analysis and feedback
+                  </DialogDescription>
+                </DialogHeader>
+                <FileAnalyzer onAnalysisComplete={handleFileAnalysis} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto pb-4">
@@ -180,13 +247,18 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
       
       <div className="mt-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <Textarea
-            placeholder="Type your message here..."
-            className="min-h-[80px]"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={sending || !isAuthenticated}
-          />
+          <div className="flex-1 flex flex-col">
+            <Textarea
+              placeholder="Type your message here..."
+              className="min-h-[80px]"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={sending || !isAuthenticated}
+            />
+            <div className="flex justify-start mt-1">
+              <ChatAttachments onAttach={handleAttachments} />
+            </div>
+          </div>
           <Button type="submit" size="icon" disabled={!input.trim() || sending || !isAuthenticated}>
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
