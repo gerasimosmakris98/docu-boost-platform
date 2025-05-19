@@ -46,14 +46,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const UserProfile = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   
   const [isUpdating, setIsUpdating] = useState(false);
   
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate('/auth');
   };
   
@@ -72,14 +72,14 @@ const UserProfile = () => {
   
   // Mock user data - would normally come from a profile service
   const userData = {
-    name: user?.name || 'AI Career User',
+    name: user?.user_metadata?.full_name || 'AI Career User',
     email: user?.email || 'user@example.com',
     title: 'Software Engineer',
     location: 'San Francisco, CA',
     joinDate: '2023-05-19',
     phone: '+1 (555) 123-4567',
     website: 'www.example.com',
-    avatar: user?.avatar || '',
+    avatar: user?.user_metadata?.avatar_url || '',
   };
   
   const initials = userData.name

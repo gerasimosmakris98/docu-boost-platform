@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -116,7 +115,7 @@ const LinkedInPage = () => {
     }
   };
 
-  const handleStartConversation = async (type: 'resume_feedback' | 'interview_prep') => {
+  const handleStartConversation = async (type: 'interview_prep' | 'resume') => {
     if (!isAuthenticated) {
       toast.error("Please sign in to continue");
       return;
@@ -228,7 +227,7 @@ const LinkedInPage = () => {
                 <CardFooter>
                   <Button 
                     className="w-full flex items-center justify-center gap-1" 
-                    onClick={() => handleStartConversation('resume_feedback')}
+                    onClick={() => handleStartConversation('resume')}
                   >
                     Start Review <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>

@@ -13,13 +13,13 @@ import ConversationList from '@/components/conversation/ConversationList';
 import AdvisorList from '@/components/advisor/AdvisorList';
 
 const MainLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate('/auth');
   };
   
@@ -72,12 +72,12 @@ const MainLayout = () => {
       <div className="mt-auto border-t p-4">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={user?.avatar} />
+            <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           
           <div className="flex-1 truncate">
-            <p className="text-sm font-medium leading-none">{user?.name || user?.email}</p>
+            <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name || user?.email}</p>
             {user?.email && (
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             )}

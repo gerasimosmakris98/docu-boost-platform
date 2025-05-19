@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AuthPage = () => {
-  const { isAuthenticated, signIn, signUp, signInWithGoogle, loading } = useAuth();
+  const { isAuthenticated, loginWithEmail, signUpWithEmail, loginWithProvider, isLoading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +32,7 @@ const AuthPage = () => {
     }
     
     try {
-      await signIn(email, password);
+      await loginWithEmail(email, password);
       toast.success('Signed in successfully');
       navigate('/chat');
     } catch (error: any) {
@@ -54,7 +54,7 @@ const AuthPage = () => {
     }
     
     try {
-      await signUp(email, password);
+      await signUpWithEmail(email, password, email.split('@')[0]);
       toast.success('Account created successfully! Please check your email for verification.');
       setCurrentTab('login');
     } catch (error: any) {
@@ -64,7 +64,7 @@ const AuthPage = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      await signInWithGoogle();
+      await loginWithProvider('google');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in with Google');
     }
