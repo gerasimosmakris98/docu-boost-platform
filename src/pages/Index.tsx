@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
@@ -18,6 +18,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [documents, setDocuments] = useState([]);
 
   const handleLogin = () => {
     setLoginDialogOpen(true);
@@ -44,6 +45,18 @@ const Index = () => {
     }
     navigate(`/conversations?type=${type}`);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Fetch documents
+      const fetchDocuments = async () => {
+        const docs = await documentService.getDocuments();
+        setDocuments(docs);
+      };
+      
+      fetchDocuments();
+    }
+  }, [isAuthenticated]);
 
   return (
     <DashboardLayout>

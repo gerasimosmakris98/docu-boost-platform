@@ -69,9 +69,22 @@ export const documentService = {
     job_description?: string
   ): Promise<Document | null> {
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('documents')
-        .insert([{ title, type, content, job_description }])
+        .insert({
+          title, 
+          type, 
+          content, 
+          job_description,
+          user_id: user.id
+        })
         .select()
         .single();
 

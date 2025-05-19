@@ -22,6 +22,11 @@ export interface Message {
   created_at?: string;
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export const conversationService = {
   // Fetch user's conversations
   async getConversations(): Promise<Conversation[]> {
@@ -93,9 +98,20 @@ export const conversationService = {
   // Create a new conversation
   async createConversation(title: string, type: ConversationType): Promise<Conversation | null> {
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('conversations')
-        .insert([{ title, type }])
+        .insert({
+          title, 
+          type,
+          user_id: user.id
+        })
         .select()
         .single();
 
