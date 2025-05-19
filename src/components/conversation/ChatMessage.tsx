@@ -40,9 +40,9 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
         ) : isUser ? (
           <p>{message.content}</p>
         ) : (
-          <ReactMarkdown className="prose dark:prose-invert max-w-none text-sm">
-            {message.content}
-          </ReactMarkdown>
+          <div className="prose dark:prose-invert max-w-none text-sm">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
         )}
       </div>
       

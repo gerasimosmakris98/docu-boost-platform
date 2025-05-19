@@ -32,7 +32,10 @@ export const conversationService = {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        type: item.type as ConversationType
+      }));
     } catch (error) {
       console.error('Error fetching conversations:', error);
       toast.error('Failed to load conversations');
@@ -65,9 +68,20 @@ export const conversationService = {
 
       if (messagesError) throw messagesError;
 
+      // Properly type cast the conversation and messages
+      const typedConversation: Conversation = {
+        ...conversation,
+        type: conversation.type as ConversationType
+      };
+
+      const typedMessages: Message[] = (messages || []).map(message => ({
+        ...message,
+        role: message.role as 'user' | 'assistant'
+      }));
+
       return { 
-        conversation, 
-        messages: messages || []
+        conversation: typedConversation, 
+        messages: typedMessages
       };
     } catch (error) {
       console.error('Error fetching conversation:', error);
@@ -86,7 +100,12 @@ export const conversationService = {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Type cast the returned data
+      return {
+        ...data,
+        type: data.type as ConversationType
+      };
     } catch (error) {
       console.error('Error creating conversation:', error);
       toast.error('Failed to create conversation');
@@ -126,8 +145,11 @@ export const conversationService = {
       if (previousMessagesError) throw previousMessagesError;
 
       // Create context for the AI based on conversation type and history
-      const conversationType = conversation.type;
-      const messageHistory = previousMessages?.reverse() || [];
+      const conversationType = conversation.type as ConversationType;
+      const messageHistory = previousMessages?.reverse().map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      })) || [];
       
       // Get AI response
       const aiContent = await aiService.generateChatResponse(content, messageHistory, conversationType);
@@ -147,7 +169,18 @@ export const conversationService = {
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversation_id);
 
-      return { userMessage, aiResponse: aiMessage };
+      // Type cast the returned messages
+      const typedUserMessage: Message = {
+        ...userMessage,
+        role: userMessage.role as 'user' | 'assistant'
+      };
+
+      const typedAiMessage: Message = {
+        ...aiMessage,
+        role: aiMessage.role as 'user' | 'assistant'
+      };
+
+      return { userMessage: typedUserMessage, aiResponse: typedAiMessage };
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

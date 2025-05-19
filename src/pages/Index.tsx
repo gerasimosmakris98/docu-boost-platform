@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -24,16 +23,18 @@ const Index = () => {
     setLoginDialogOpen(true);
   };
 
-  const handleUpload = async (file: File) => {
-    try {
-      const parsedDocument = await documentService.parseDocument(file);
-      console.log("Parsed document:", parsedDocument);
-      // In a real app, you would update state and use this data
-      toast.success(`Document "${parsedDocument.title}" parsed successfully!`);
-    } catch (error) {
-      console.error("Error parsing document:", error);
-      toast.error("Failed to parse document. Please try again.");
-    }
+  const handleDocumentUpload = async (file: File) => {
+    // Instead of parsing directly, read the file and create a document
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const content = event.target?.result as string || "";
+      await documentService.createDocument(
+        file.name || "Uploaded Document",
+        "resume", // or determine from file type
+        content
+      );
+    };
+    reader.readAsText(file);
   };
 
   const handleNavigateToConversationType = (type: string) => {
@@ -51,7 +52,7 @@ const Index = () => {
           username={user?.user_metadata?.full_name || "there"} 
           isAuthenticated={isAuthenticated}
           onLogin={handleLogin}
-          onUpload={handleUpload}
+          onUpload={handleDocumentUpload}
         />
         
         <StatsSection />

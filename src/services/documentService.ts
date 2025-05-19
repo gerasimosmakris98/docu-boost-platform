@@ -26,7 +26,10 @@ export const documentService = {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        type: item.type as DocumentType
+      }));
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast.error('Failed to load documents');
@@ -44,7 +47,13 @@ export const documentService = {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      
+      if (!data) return null;
+      
+      return {
+        ...data,
+        type: data.type as DocumentType
+      };
     } catch (error) {
       console.error('Error fetching document:', error);
       toast.error('Failed to load document');
@@ -67,7 +76,10 @@ export const documentService = {
         .single();
 
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        type: data.type as DocumentType
+      };
     } catch (error) {
       console.error('Error creating document:', error);
       toast.error('Failed to create document');
@@ -89,7 +101,10 @@ export const documentService = {
         .single();
 
       if (error) throw error;
-      return data;
+      return {
+        ...data,
+        type: data.type as DocumentType
+      };
     } catch (error) {
       console.error('Error updating document:', error);
       toast.error('Failed to update document');
