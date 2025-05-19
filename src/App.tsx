@@ -12,17 +12,11 @@ import ChatPage from '@/pages/ChatPage';
 import ProfilePage from '@/pages/ProfilePage';
 import NotFound from '@/pages/NotFound';
 
-// Auth state cleanup utility
-import { cleanupAuthState } from '@/services/authService';
-
 function App() {
-  // Clean up any existing auth state on app initialization
-  cleanupAuthState();
-  
   return (
     <ThemeProvider defaultTheme="dark">
-      <Router>
-        <AuthProvider>
+      <AuthProvider>
+        <Router>
           <Routes>
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/auth" element={<AuthPage />} />
@@ -31,16 +25,16 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <Toaster />
-          <SonnerToaster 
-            position="top-right" 
-            toastOptions={{
-              className: 'bg-gray-900 text-white border border-gray-800',
-              duration: 3000
-            }}
-          />
-        </AuthProvider>
-      </Router>
+        </Router>
+        <Toaster />
+        <SonnerToaster 
+          position="top-right" 
+          toastOptions={{
+            className: 'bg-gray-900 text-white border border-gray-800',
+            duration: 3000
+          }}
+        />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
