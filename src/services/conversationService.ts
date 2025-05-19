@@ -24,7 +24,7 @@ import {
 } from "./utils/conversationUtils";
 
 // Re-export types
-export { 
+export type { 
   ConversationType, 
   Conversation, 
   Message, 
