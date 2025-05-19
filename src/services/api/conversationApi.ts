@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
-import { Conversation, ConversationMetadata, Message, ConversationType } from "../types/conversationTypes";
+import { Conversation, ConversationMetadata, Message, ConversationType, ConversationMessage } from "../types/conversationTypes";
 import { generateChatResponse } from "./chatApi";
 
 // Helper function to safely convert string to ConversationType
@@ -227,17 +227,20 @@ export const sendMessage = async (
     // Get conversation history for context
     const { data: historyData, error: historyError } = await supabase
       .from('messages')
-      .select('role, content')
+      .select('id, conversation_id, role, content, created_at')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true })
       .limit(10); // Limit to avoid token limits
 
     if (historyError) throw historyError;
 
-    // Format message history for AI
-    const messageHistory = historyData.map(msg => ({
+    // Format message history to ConversationMessage array
+    const messageHistory: ConversationMessage[] = historyData.map(msg => ({
+      id: msg.id,
+      conversation_id: msg.conversation_id,
       role: msg.role as 'user' | 'assistant',
-      content: msg.content
+      content: msg.content,
+      created_at: msg.created_at
     }));
 
     // Get AI response via chatApi
