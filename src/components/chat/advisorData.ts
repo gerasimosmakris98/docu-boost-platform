@@ -11,7 +11,7 @@ export interface Advisor {
   profileFocus: string[];
 }
 
-export const advisors = [
+export const advisors: Advisor[] = [
   {
     id: 'general',
     name: 'Career Advisor',
@@ -67,5 +67,5 @@ export const advisors = [
     icon: <CheckSquare className="h-4 w-4 text-red-400" />,
     description: 'Assessment preparation',
     profileFocus: ['summary', 'skills', 'experience']
-  },
+  }
 ];
