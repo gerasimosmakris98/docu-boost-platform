@@ -8,12 +8,19 @@ export const openaiService = {
         body: { prompt, type },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Check for quota error
+        if (error.message?.includes('quota') || error.message?.includes('insufficient_quota')) {
+          console.warn('OpenAI API quota exceeded, returning fallback response');
+          throw new Error('You exceeded your current quota, please check your plan and billing details.');
+        }
+        throw new Error(error.message);
+      }
       
       return data.generatedText || 'Sorry, I could not generate a response at this time.';
     } catch (error: any) {
       console.error('Error generating AI response:', error);
-      throw new Error(error.message || 'Failed to generate AI response');
+      throw error;
     }
   },
   
@@ -31,6 +38,11 @@ export const openaiService = {
 
       if (error) {
         console.error('Supabase function error:', error);
+        // Check for quota error
+        if (error.message?.includes('quota') || error.message?.includes('insufficient_quota')) {
+          console.warn('OpenAI API quota exceeded, returning fallback response');
+          throw new Error('You exceeded your current quota, please check your plan and billing details.');
+        }
         throw new Error(error.message);
       }
       
@@ -41,7 +53,7 @@ export const openaiService = {
       return data.analysis || 'Sorry, I could not analyze this file at this time.';
     } catch (error: any) {
       console.error('Error analyzing file:', error);
-      throw new Error(error.message || 'Failed to analyze file');
+      throw error;
     }
   },
   
@@ -54,12 +66,19 @@ export const openaiService = {
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        // Check for quota error
+        if (error.message?.includes('quota') || error.message?.includes('insufficient_quota')) {
+          console.warn('OpenAI API quota exceeded, returning fallback response');
+          throw new Error('You exceeded your current quota, please check your plan and billing details.');
+        }
+        throw new Error(error.message);
+      }
       
       return data.generatedText || 'Sorry, I could not analyze this LinkedIn profile at this time.';
     } catch (error: any) {
       console.error('Error analyzing LinkedIn profile:', error);
-      throw new Error(error.message || 'Failed to analyze LinkedIn profile');
+      throw error;
     }
   }
 };

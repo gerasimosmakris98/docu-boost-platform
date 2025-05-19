@@ -7,15 +7,21 @@ import {
 
 import {
   createConversation,
-  updateConversation,
-  deleteConversation,
   createSpecializedConversation,
   createDefaultConversation
-} from './conversationWriters';
+} from './conversationCreators';
+
+import {
+  updateConversation
+} from './conversationUpdaters';
+
+import {
+  deleteConversation
+} from './conversationDeletes';
 
 import { 
   sendMessage 
-} from './conversationMessages';
+} from './messageService';
 
 import { 
   asConversationType, 

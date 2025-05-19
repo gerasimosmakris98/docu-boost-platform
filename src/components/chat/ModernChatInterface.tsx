@@ -120,13 +120,39 @@ const ModernChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
         );
       } else {
-        // If no AI response, remove the loading message
-        setMessages(prev => prev.filter(msg => msg.id !== optimisticAiMessage.id));
-        toast.error("Failed to get AI response");
+        // If no AI response, remove the loading message and show a quota error message
+        const errorAiMessage: Message = {
+          id: `error-${Date.now()}`,
+          conversation_id: conversationId,
+          role: 'assistant',
+          content: "I apologize, but I'm currently experiencing some technical difficulties. This might be due to high demand or system limitations. Please try again in a few moments.",
+          created_at: new Date().toISOString()
+        };
+        
+        setMessages(prev => 
+          prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
+        );
+        
+        toast.error("AI service is currently unavailable", {
+          description: "This might be due to usage limits. Please try again later."
+        });
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages(prev => prev.filter(msg => msg.id !== optimisticAiMessage.id));
+      
+      // If error occurs, remove loading message and add error message
+      const errorAiMessage: Message = {
+        id: `error-${Date.now()}`,
+        conversation_id: conversationId,
+        role: 'assistant',
+        content: "I apologize, but I encountered an error while processing your request. Please try again later.",
+        created_at: new Date().toISOString()
+      };
+      
+      setMessages(prev => 
+        prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
+      );
+      
       toast.error("Failed to send message");
     } finally {
       setIsSending(false);

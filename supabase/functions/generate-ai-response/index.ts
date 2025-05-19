@@ -42,40 +42,69 @@ serve(async (req) => {
       throw new Error('OpenAI API key is not configured');
     }
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-      }),
-    });
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
-    }
-    
-    const data = await response.json();
-    console.log('OpenAI response received');
-    
-    if (!data.choices || !data.choices[0]) {
-      console.error('Unexpected OpenAI response format:', data);
-      throw new Error('Invalid response from OpenAI');
-    }
-    
-    const generatedText = data.choices[0].message.content;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('OpenAI API error:', errorData);
+        
+        // Check for quota exceeded error
+        if (errorData.error?.code === 'insufficient_quota') {
+          return new Response(JSON.stringify({ 
+            error: "OpenAI API quota exceeded",
+            errorCode: "insufficient_quota"
+          }), {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
+      }
+      
+      const data = await response.json();
+      console.log('OpenAI response received');
+      
+      if (!data.choices || !data.choices[0]) {
+        console.error('Unexpected OpenAI response format:', data);
+        throw new Error('Invalid response from OpenAI');
+      }
+      
+      const generatedText = data.choices[0].message.content;
 
-    return new Response(JSON.stringify({ generatedText }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify({ generatedText }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (openAiError) {
+      console.error('OpenAI API request error:', openAiError);
+      
+      // Check if it's a quota error
+      if (openAiError.message?.includes('quota') || openAiError.message?.includes('insufficient_quota')) {
+        return new Response(JSON.stringify({ 
+          error: "OpenAI API quota exceeded",
+          errorCode: "insufficient_quota"
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw openAiError;
+    }
   } catch (error) {
     console.error('Error in generate-ai-response function:', error);
     return new Response(JSON.stringify({ error: error.message || 'Failed to generate AI response' }), {
