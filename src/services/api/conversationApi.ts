@@ -1,7 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 import { Conversation, ConversationMetadata, Message, ConversationType } from "../types/conversationTypes";
-import { getChatPromptForType, getWelcomeMessageForType } from "../utils/conversationUtils";
+
+// Helper function to safely convert string to ConversationType
+const asConversationType = (type: string): ConversationType => {
+  const validTypes: ConversationType[] = ['general', 'resume', 'interview_prep', 'cover_letter', 'job_search', 'linkedin'];
+  return validTypes.includes(type as ConversationType) 
+    ? (type as ConversationType) 
+    : 'general';
+};
+
+// Helper function to safely parse metadata from Supabase response
+const parseMetadata = (metadataRaw: any): ConversationMetadata => {
+  if (!metadataRaw) return {};
+  
+  if (typeof metadataRaw !== 'object') return {};
+  
+  // Handle object case
+  return {
+    linkedDocumentId: typeof metadataRaw.linkedDocumentId === 'string' ? metadataRaw.linkedDocumentId : undefined,
+    jobDescription: typeof metadataRaw.jobDescription === 'string' ? metadataRaw.jobDescription : undefined,
+    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined
+  };
+};
 
 // Fetch all conversations for the current user
 export const fetchConversations = async (): Promise<Conversation[]> => {
@@ -12,7 +33,12 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(item => ({
+      ...item,
+      type: asConversationType(item.type),
+      metadata: parseMetadata(item.metadata)
+    }));
   } catch (error) {
     console.error('Error fetching conversations:', error);
     return [];
@@ -32,7 +58,7 @@ export const fetchConversation = async (id: string): Promise<{ conversation: Con
     if (conversationError) throw conversationError;
 
     // Get messages for this conversation
-    const { data: messages, error: messagesError } = await supabase
+    const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select('*')
       .eq('conversation_id', id)
@@ -40,9 +66,20 @@ export const fetchConversation = async (id: string): Promise<{ conversation: Con
 
     if (messagesError) throw messagesError;
 
+    const parsedConversation = conversation ? {
+      ...conversation,
+      type: asConversationType(conversation.type),
+      metadata: parseMetadata(conversation.metadata)
+    } : null;
+
+    const parsedMessages = (messagesData || []).map(msg => ({
+      ...msg,
+      role: (msg.role === 'user' || msg.role === 'assistant') ? msg.role : 'assistant'
+    } as Message));
+
     return { 
-      conversation: conversation || null, 
-      messages: messages || [] 
+      conversation: parsedConversation, 
+      messages: parsedMessages
     };
   } catch (error) {
     console.error('Error fetching conversation:', error);
@@ -63,20 +100,27 @@ export const createConversation = async (
       throw new Error('User not authenticated');
     }
     
-    // Use type assertion to convert metadata to Json
+    // Convert ConversationMetadata to Json type for Supabase
+    const metadataJson = metadata as unknown as Json;
+    
     const { data, error } = await supabase
       .from('conversations')
       .insert({
-        title,
+        title, 
         type,
         user_id: user.id,
-        metadata: metadata as unknown as Json
+        metadata: metadataJson
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return data ? {
+      ...data,
+      type: asConversationType(data.type),
+      metadata: parseMetadata(data.metadata)
+    } : null;
   } catch (error) {
     console.error('Error creating conversation:', error);
     return null;
@@ -89,21 +133,36 @@ export const updateConversation = async (
   updates: Partial<Conversation>
 ): Promise<Conversation | null> => {
   try {
-    // If metadata is being updated, properly type it
-    const updatedData: any = { ...updates };
-    if (updates.metadata) {
-      updatedData.metadata = updates.metadata as unknown as Json;
+    // Prepare the updates for Supabase
+    const updateData: any = { ...updates };
+    
+    // If type is provided, ensure it's a string for Supabase
+    if (updates.type) {
+      updateData.type = updates.type.toString();
     }
+    
+    // If metadata is provided, convert to Json
+    if (updates.metadata) {
+      updateData.metadata = updates.metadata as unknown as Json;
+    }
+    
+    // Always update the timestamp
+    updateData.updated_at = new Date().toISOString();
     
     const { data, error } = await supabase
       .from('conversations')
-      .update(updatedData)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return data ? {
+      ...data,
+      type: asConversationType(data.type),
+      metadata: parseMetadata(data.metadata)
+    } : null;
   } catch (error) {
     console.error('Error updating conversation:', error);
     return null;
@@ -134,27 +193,15 @@ export const sendMessage = async (
 ): Promise<{ aiResponse: Message } | null> => {
   try {
     // Insert user message
-    const { data: userMessage, error: userMessageError } = await supabase
+    const { error: userMessageError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
         role: 'user',
-        content,
-        attachments
-      })
-      .select()
-      .single();
+        content
+      });
 
     if (userMessageError) throw userMessageError;
-
-    // Get conversation details for context
-    const { data: conversation, error: conversationError } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('id', conversationId)
-      .single();
-
-    if (conversationError) throw conversationError;
 
     // Simulate AI response (this will be replaced with actual AI integration)
     const aiResponseContent = `I'm your AI assistant. You said: "${content}"${
@@ -162,7 +209,7 @@ export const sendMessage = async (
     }. How can I help you further?`;
 
     // Insert AI response
-    const { data: aiMessage, error: aiMessageError } = await supabase
+    const { data: aiMessageData, error: aiMessageError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
@@ -174,9 +221,15 @@ export const sendMessage = async (
 
     if (aiMessageError) throw aiMessageError;
 
-    return {
-      aiResponse: aiMessage
+    const aiResponse: Message = {
+      id: aiMessageData.id,
+      conversation_id: aiMessageData.conversation_id,
+      role: 'assistant',
+      content: aiMessageData.content,
+      created_at: aiMessageData.created_at
     };
+
+    return { aiResponse };
   } catch (error) {
     console.error('Error sending message:', error);
     return null;
@@ -264,7 +317,11 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
         .limit(1)
         .single();
       
-      return recent;
+      return recent ? {
+        ...recent,
+        type: asConversationType(recent.type),
+        metadata: parseMetadata(recent.metadata)
+      } : null;
     }
     
     // Otherwise create a new general conversation
@@ -275,3 +332,6 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
     return createSpecializedConversation('general');
   }
 };
+
+// Import getWelcomeMessageForType from utils
+import { getWelcomeMessageForType } from "../utils/conversationUtils";
