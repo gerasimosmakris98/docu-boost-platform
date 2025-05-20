@@ -5,6 +5,8 @@ import PersonalInfoCard from '@/components/profile/PersonalInfoCard';
 import ProfessionalSummaryCard from '@/components/profile/ProfessionalSummaryCard';
 import SocialLinksSection from '@/components/profile/SocialLinksSection';
 import { toast } from "sonner";
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProfileData {
   name: string;
@@ -50,15 +52,19 @@ const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps)
       <Card className="bg-gray-900 border-gray-800">
         <PersonalInfoCard 
           profileData={profileData} 
-          onSaveChanges={onSaveChanges} 
+          isLoading={isLoading}
+          onSaveChanges={onSaveChanges}
         />
       </Card>
       
       <Card className="bg-gray-900 border-gray-800">
         <ProfessionalSummaryCard 
           summary={summary} 
-          isEditing={isEditing} 
-          onChange={handleSummaryChange} 
+          isEditing={isEditing}
+          isLoading={isLoading}
+          onChange={handleSummaryChange}
+          setIsEditing={setIsEditing}
+          onSave={handleSave}
         />
       </Card>
       

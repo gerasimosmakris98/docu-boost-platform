@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -9,21 +8,29 @@ import { Save, EditIcon, Loader2 } from "lucide-react";
 interface ProfessionalSummaryCardProps {
   summary: string;
   isEditing: boolean;
+  isLoading?: boolean;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  setIsEditing: (editing: boolean) => void;
+  onSave: () => void;
 }
 
-const ProfessionalSummaryCard = ({ summary, isEditing, onChange }: ProfessionalSummaryCardProps) => {
-  const [isEditMode, setIsEditMode] = useState(isEditing);
-  
+const ProfessionalSummaryCard = ({ 
+  summary, 
+  isEditing, 
+  isLoading = false,
+  onChange,
+  setIsEditing,
+  onSave
+}: ProfessionalSummaryCardProps) => {
   return (
     <Card className="bg-gray-900/50 border-gray-800">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-semibold">Professional Summary</CardTitle>
-        {!isEditMode && (
+        {!isEditing && (
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => setIsEditMode(true)}
+            onClick={() => setIsEditing(true)}
             className="text-gray-400 hover:text-white"
           >
             <EditIcon className="h-4 w-4 mr-2" />
@@ -32,7 +39,7 @@ const ProfessionalSummaryCard = ({ summary, isEditing, onChange }: ProfessionalS
         )}
       </CardHeader>
       <CardContent>
-        {!isEditMode ? (
+        {!isEditing ? (
           <div>
             <p className="text-gray-300 whitespace-pre-line">
               {summary || 'No professional summary specified.'}
@@ -57,18 +64,26 @@ const ProfessionalSummaryCard = ({ summary, isEditing, onChange }: ProfessionalS
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => setIsEditMode(false)}
+                onClick={() => setIsEditing(false)}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
               <Button 
                 type="button" 
-                onClick={() => {
-                  // Handle save functionality here
-                  setIsEditMode(false);
-                }}
+                onClick={onSave}
+                disabled={isLoading}
               >
-                <Save className="h-4 w-4 mr-2" /> Save
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" /> Save
+                  </>
+                )}
               </Button>
             </div>
           </div>

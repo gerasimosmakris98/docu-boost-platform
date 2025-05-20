@@ -20,7 +20,7 @@ export interface AIModelOptions {
 export interface ProgressiveResponseOptions {
   brief?: boolean;
   depth?: 'low' | 'medium' | 'high';
-  format?: 'paragraph' | 'bullets' | 'markdown' | 'code' | 'steps';
+  format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
 }
 
 // Complete AI Provider Service interface

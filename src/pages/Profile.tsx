@@ -5,9 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import ProfileTab from "@/components/profile/ProfileTab";
 import SettingsTab from "@/components/profile/SettingsTab";
-import { User, UserCircle, Settings, LogOut, ArrowLeft, X } from "lucide-react";
+import { UserCircle, Settings, LogOut, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import logo from "@/assets/logo.svg";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -81,6 +83,9 @@ const Profile = () => {
       <div className="w-64 border-r border-gray-800 p-4 hidden md:block">
         <div className="flex flex-col h-full">
           <div className="mb-6">
+            <div className="flex items-center mb-4">
+              <img src={logo} alt="AI Career Advisor" className="h-8 mr-2" />
+            </div>
             <h2 className="text-xl font-bold">Your Profile</h2>
             <p className="text-sm text-gray-400">Manage your account</p>
           </div>
@@ -91,7 +96,7 @@ const Profile = () => {
               className={`w-full justify-start ${currentTab === 'profile' ? 'bg-gray-800' : ''}`}
               onClick={() => setCurrentTab('profile')}
             >
-              <User className="mr-2 h-4 w-4" /> Personal Info
+              <UserCircle className="mr-2 h-4 w-4" /> Personal Info
             </Button>
             <Button 
               variant="ghost" 
@@ -127,7 +132,7 @@ const Profile = () => {
           <div className="space-y-6">
             {/* Header with back button for mobile */}
             <div className="flex items-center justify-between md:hidden mb-6">
-              <h2 className="text-xl font-bold">Your Profile</h2>
+              <img src={logo} alt="AI Career Advisor" className="h-8" />
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -137,6 +142,9 @@ const Profile = () => {
                 <X className="h-5 w-5" />
               </Button>
             </div>
+            
+            {/* Profile Header */}
+            <ProfileHeader profileData={profileData} />
             
             {/* Mobile Tabs */}
             <div className="md:hidden">

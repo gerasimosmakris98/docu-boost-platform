@@ -1,0 +1,7 @@
+
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 8C14.4183 8 18 11.5817 18 16C18 20.4183 14.4183 24 10 24C5.58172 24 2 20.4183 2 16C2 11.5817 5.58172 8 10 8Z" fill="#9b87f5"/>
+  <path d="M30 8C34.4183 8 38 11.5817 38 16C38 20.4183 34.4183 24 30 24C25.5817 24 22 20.4183 22 16C22 11.5817 25.5817 8 30 8Z" fill="#7E69AB"/>
+  <path d="M20 24C24.4183 24 28 27.5817 28 32C28 36.4183 24.4183 40 20 40C15.5817 40 12 36.4183 12 32C12 27.5817 15.5817 24 20 24Z" fill="#9b87f5"/>
+  <text x="45" y="24" font-family="Arial, sans-serif" font-weight="bold" font-size="14" fill="white">AI Advisor</text>
+</svg>

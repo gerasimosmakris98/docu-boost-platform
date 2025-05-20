@@ -1,133 +1,116 @@
 
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 
 interface SettingsTabProps {
   profileData: {
     name: string;
     email: string;
   };
-  onSaveChanges: (updates?: any) => void;
+  onSaveChanges: (updates: any) => void;
 }
 
 const SettingsTab = ({ profileData, onSaveChanges }: SettingsTabProps) => {
-  const navigate = useNavigate();
-  const { isAuthenticated, logout, updateProfile } = useAuth();
-  const [name, setName] = useState(profileData.name);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [weeklyDigest, setWeeklyDigest] = useState(false);
+  const [saveReminders, setSaveReminders] = useState(true);
+  const [darkMode, setDarkMode] = useState(true);
   
-  const handleUpdateProfile = async () => {
-    if (isAuthenticated) {
-      await updateProfile({ full_name: name });
-      onSaveChanges();
-    } else {
-      toast.error("Please log in to update your profile");
-    }
-  };
-  
-  const handleLogout = async () => {
+  const handleSavePreferences = () => {
     try {
-      await logout();
-      navigate("/");
-      toast.success("You have been logged out successfully");
+      // Save preference changes
+      onSaveChanges({
+        preferences: {
+          emailNotifications,
+          weeklyDigest,
+          saveReminders,
+          darkMode
+        }
+      });
+      toast.success("Preferences updated successfully");
     } catch (error) {
-      console.error("Logout error:", error);
+      toast.error("Failed to update preferences");
     }
-  };
-  
-  const handleBackToChat = () => {
-    navigate("/chat");
   };
   
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between">
-          <div>
-            <CardTitle>Account Settings</CardTitle>
-            <CardDescription>
-              Manage your account settings and preferences
-            </CardDescription>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="text-gray-400 hover:text-white md:hidden"
-            onClick={handleBackToChat}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader>
+          <CardTitle>Account Information</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input 
-              id="name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)}
-              disabled={!isAuthenticated}
-            />
+        <CardContent className="space-y-2">
+          <div>
+            <p className="text-sm text-gray-500">Name</p>
+            <p className="text-gray-200">{profileData.name}</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={profileData.email} 
-              disabled
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              value="************" 
-              disabled
-            />
-            {isAuthenticated && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Password changes must be done via email reset
-              </p>
-            )}
+          <div>
+            <p className="text-sm text-gray-500">Email</p>
+            <p className="text-gray-200">{profileData.email}</p>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button 
-            onClick={handleUpdateProfile} 
-            disabled={!isAuthenticated}
-          >
-            Save Changes
-          </Button>
-          
-          {isAuthenticated && (
-            <Button 
-              variant="destructive" 
-              onClick={handleLogout}
-            >
-              Sign Out
-            </Button>
-          )}
-        </CardFooter>
       </Card>
       
-      <Card>
+      <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
           <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>
-            Manage how you receive notifications
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Notification settings would go here */}
-          <p className="text-muted-foreground">Notification settings coming soon</p>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="emailNotifications">Email Notifications</Label>
+              <p className="text-sm text-gray-500">Receive important updates via email</p>
+            </div>
+            <Switch 
+              id="emailNotifications" 
+              checked={emailNotifications} 
+              onCheckedChange={setEmailNotifications} 
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="weeklyDigest">Weekly Digest</Label>
+              <p className="text-sm text-gray-500">Get a weekly summary of your activities</p>
+            </div>
+            <Switch 
+              id="weeklyDigest" 
+              checked={weeklyDigest} 
+              onCheckedChange={setWeeklyDigest} 
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="saveReminders">Save Reminders</Label>
+              <p className="text-sm text-gray-500">Get reminded to save your progress</p>
+            </div>
+            <Switch 
+              id="saveReminders" 
+              checked={saveReminders} 
+              onCheckedChange={setSaveReminders} 
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="darkMode">Dark Mode</Label>
+              <p className="text-sm text-gray-500">Use dark theme for the application</p>
+            </div>
+            <Switch 
+              id="darkMode" 
+              checked={darkMode} 
+              onCheckedChange={setDarkMode} 
+            />
+          </div>
+          
+          <div className="pt-4">
+            <Button onClick={handleSavePreferences}>Save Preferences</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -14,13 +14,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import logo from '@/assets/logo.svg';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  // Create a dummy profile data object for the components
+  // Create a profile data object for the components
   const profileData = {
     name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
     title: profile?.title || 'Professional',
@@ -44,6 +45,19 @@ const ProfilePage = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-950 text-white">
         <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <img src={logo} alt="AI Career Advisor" className="h-10" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackToChat}
+              className="text-gray-400 hover:text-white"
+              title="Back to Chat"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
           {user && <ProfileHeader profileData={profileData} />}
           
           <div className="flex justify-between items-center mb-4">
@@ -58,15 +72,6 @@ const ProfilePage = () => {
                   <TabsTrigger value="profile">Personal Info</TabsTrigger>
                   <TabsTrigger value="settings">Account Settings</TabsTrigger>
                 </TabsList>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleBackToChat}
-                  className="ml-2"
-                  title="Back to Chat"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
               </div>
 
               <TabsContent value="profile">
