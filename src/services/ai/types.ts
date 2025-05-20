@@ -2,7 +2,7 @@
 import { ConversationType } from '../types/conversationTypes';
 
 // Re-export ConversationType to be used by other modules
-export { ConversationType };
+export type { ConversationType };
 
 // Available AI providers
 export type AIProvider = 'openai' | 'fallback';
@@ -20,7 +20,7 @@ export interface AIModelOptions {
 export interface ProgressiveResponseOptions {
   brief?: boolean;
   depth?: 'low' | 'medium' | 'high';
-  format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
+  format?: 'paragraph' | 'bullets' | 'markdown' | 'code' | 'steps';
 }
 
 // Complete AI Provider Service interface

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
 
@@ -41,8 +40,6 @@ export const getUserProfileContext = async (userId: string): Promise<string | nu
     if (profile.summary) {
       context += `\n- Professional Summary: ${profile.summary}`;
     }
-    
-    // Remove reference to non-existent skills property
     
     return context;
   } catch (error) {

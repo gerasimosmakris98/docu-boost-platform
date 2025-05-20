@@ -4,39 +4,62 @@ import { Card } from '@/components/ui/card';
 import PersonalInfoCard from '@/components/profile/PersonalInfoCard';
 import ProfessionalSummaryCard from '@/components/profile/ProfessionalSummaryCard';
 import SocialLinksSection from '@/components/profile/SocialLinksSection';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from "sonner";
 
-const ProfileTab = () => {
+interface ProfileData {
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  location: string;
+  website: string;
+}
+
+interface ProfileTabProps {
+  profileData: ProfileData;
+  resumeData: { summary: string };
+  onSaveChanges: (updates: any) => void;
+}
+
+const ProfileTab = ({ profileData, resumeData, onSaveChanges }: ProfileTabProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState(resumeData?.summary || '');
   
   const handleSave = async () => {
     try {
       setIsLoading(true);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been saved.",
-      });
+      toast.success("Profile updated");
+      onSaveChanges({ summary });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not update profile. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Could not update profile. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsEditing(false);
     }
+  };
+
+  const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSummary(e.target.value);
   };
   
   return (
     <div className="space-y-6">
       <Card className="bg-gray-900 border-gray-800">
-        <PersonalInfoCard onSave={handleSave} isLoading={isLoading} />
+        <PersonalInfoCard 
+          profileData={profileData} 
+          onSaveChanges={onSaveChanges} 
+        />
       </Card>
       
       <Card className="bg-gray-900 border-gray-800">
-        <ProfessionalSummaryCard onSave={handleSave} isLoading={isLoading} />
+        <ProfessionalSummaryCard 
+          summary={summary} 
+          isEditing={isEditing} 
+          onChange={handleSummaryChange} 
+        />
       </Card>
       
       <Card className="bg-gray-900 border-gray-800">

@@ -48,7 +48,7 @@ export const getChatPromptForType = (
   const responseOptions: ProgressiveResponseOptions = {
     brief: options?.brief ?? true,
     depth: options?.depth ?? 'medium',
-    format: options?.format ?? 'steps',
+    format: options?.format ?? 'paragraph',
     ...options
   };
   
@@ -57,10 +57,12 @@ export const getChatPromptForType = (
     "Keep your initial response concise (under 250 words). Offer to provide more details if the user wants to explore further." : 
     "Provide a comprehensive response that thoroughly addresses the user's needs.";
   
-  const responseFormatGuidance = responseOptions.format === 'steps' ?
-    "Structure your response as clear, numbered steps when providing instructions or processes." :
+  const responseFormatGuidance = responseOptions.format === 'paragraph' ?
+    "Use concise paragraphs to explain concepts clearly." :
     responseOptions.format === 'bullets' ?
     "Use bullet points to organize your response for clarity and readability." :
+    responseOptions.format === 'steps' ?
+    "Structure your response as clear, numbered steps when providing instructions or processes." :
     "Use concise paragraphs to explain concepts clearly.";
   
   // Common instructions for all advisor types

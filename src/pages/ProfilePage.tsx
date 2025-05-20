@@ -17,18 +17,34 @@ import { Button } from '@/components/ui/button';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+
+  // Create a dummy profile data object for the components
+  const profileData = {
+    name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
+    title: profile?.title || 'Professional',
+    email: user?.email || 'email@example.com',
+    phone: profile?.phone || '',
+    location: profile?.location || '',
+    website: profile?.website || '',
+  };
 
   const handleBackToChat = () => {
     navigate('/chat');
+  };
+
+  const handleSaveChanges = async (updates: any) => {
+    // Handle saving profile changes
+    console.log('Saving changes:', updates);
+    // Add actual implementation here
   };
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-950 text-white">
         <div className="container mx-auto px-4 py-8">
-          {user && <ProfileHeader user={user} />}
+          {user && <ProfileHeader profileData={profileData} />}
           
           <div className="flex justify-between items-center mb-4">
             <Tabs
@@ -54,11 +70,21 @@ const ProfilePage = () => {
               </div>
 
               <TabsContent value="profile">
-                <ProfileTab />
+                <ProfileTab 
+                  profileData={profileData}
+                  resumeData={{ summary: profile?.summary || '' }}
+                  onSaveChanges={handleSaveChanges}
+                />
               </TabsContent>
               
               <TabsContent value="settings">
-                <SettingsTab />
+                <SettingsTab 
+                  profileData={{
+                    name: profileData.name,
+                    email: profileData.email,
+                  }}
+                  onSaveChanges={handleSaveChanges}
+                />
               </TabsContent>
             </Tabs>
           </div>
