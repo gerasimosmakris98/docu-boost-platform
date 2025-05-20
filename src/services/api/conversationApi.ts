@@ -28,7 +28,7 @@ import {
   parseMetadata 
 } from './conversationApiUtils';
 
-// Re-export utils from conversationUtils
+// Import utils from conversationUtils
 import { getWelcomeMessageForType } from "../utils/conversationUtils";
 
 // Export everything

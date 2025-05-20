@@ -8,6 +8,7 @@ export interface ProfileHeaderProps {
     name: string;
     title?: string;
     email?: string;
+    avatarUrl?: string;
   };
 }
 

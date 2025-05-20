@@ -24,7 +24,12 @@ export const getAiResponse = async (
     const profileContext = userId ? await getUserProfileContext(userId) : null;
     
     // Create prompt based on conversation type and include context
-    const prompt = getChatPromptForType(conversationType, userMessage, contextMessages);
+    const prompt = getChatPromptForType(
+      conversationType, 
+      userMessage, 
+      contextMessages,
+      { brief: false, depth: 'medium', format: 'paragraph' }
+    );
     const enhancedPrompt = profileContext 
       ? `${profileContext}\n\n${prompt}` 
       : prompt;

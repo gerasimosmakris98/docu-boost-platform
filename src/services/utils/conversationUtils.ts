@@ -110,3 +110,31 @@ export const getChatPromptForType = (
   
   return prompt;
 };
+
+/**
+ * Get welcome message for different conversation types
+ */
+export const getWelcomeMessageForType = (type: ConversationType): string => {
+  switch (type) {
+    case 'resume':
+      return "Welcome to Resume Review! I'm here to help optimize your resume. You can upload your resume for review, or we can start working on it from scratch. What would you like to do today?";
+    
+    case 'cover_letter':
+      return "Welcome to Cover Letter Assistant! I'll help you craft a compelling cover letter that showcases your qualifications and personality. Would you like to start with a template or create a custom cover letter for a specific position?";
+    
+    case 'interview_prep':
+      return "Welcome to Interview Preparation! I'll help you prepare for your upcoming interviews with practice questions, tips, and strategies. What type of role are you interviewing for?";
+    
+    case 'job_search':
+      return "Welcome to Job Search Strategy! I'll help you develop an effective job search plan, find relevant opportunities, and stand out from other candidates. Where are you in your job search journey?";
+    
+    case 'linkedin':
+      return "Welcome to LinkedIn Profile Optimization! I'll help you enhance your LinkedIn presence to attract recruiters and showcase your professional brand. Would you like to share your current profile for review?";
+    
+    case 'assessment':
+      return "Welcome to Assessment Preparation! I'll help you prepare for job assessments and tests with practice questions and strategies. What type of assessment are you preparing for?";
+    
+    default:
+      return "Hello! I'm your AI Career Assistant. I can help with resume reviews, cover letters, interview preparation, job search strategies, and more. How can I assist you today?";
+  }
+};
