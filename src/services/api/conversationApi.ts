@@ -28,9 +28,6 @@ import {
   parseMetadata 
 } from './conversationApiUtils';
 
-// Import utils from conversationUtils
-import { getWelcomeMessageForType } from "../utils/conversationUtils";
-
 // Export everything
 export {
   fetchConversations,
@@ -41,7 +38,6 @@ export {
   sendMessage,
   createSpecializedConversation,
   createDefaultConversation,
-  getWelcomeMessageForType,
   asConversationType,
   parseMetadata
 };

@@ -3,17 +3,21 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   FileText, 
-  Upload, 
   Loader2, 
   FileUp,
   Check,
   AlertCircle,
-  Info
+  Info,
+  FileImage,
+  FilePlus,
+  FileX
 } from 'lucide-react';
 import { aiProviderService } from '@/services/ai/aiProviderService';
 import { toast } from 'sonner';
 import FileUpload from '@/components/common/FileUpload';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileAnalyzerProps {
   onAnalysisComplete: (analysis: string) => void;
@@ -24,6 +28,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{url: string; name: string; type: string} | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const handleFileUploaded = (url: string, fileName: string, fileType: string) => {
     console.log('File uploaded:', { url, fileName, fileType });
@@ -33,10 +38,18 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
       type: fileType
     });
     setError(null);
+    
+    // Auto-analyze immediately on successful upload for better UX
+    if (conversationType === 'resume' || conversationType === 'cover_letter') {
+      handleAnalyze(url, fileName, fileType);
+    }
   };
 
-  const handleAnalyze = async () => {
-    if (!uploadedFile) {
+  const handleAnalyze = async (fileUrl?: string, fileName?: string, fileType?: string) => {
+    const fileToAnalyze = uploadedFile || 
+      (fileUrl && fileName && fileType ? { url: fileUrl, name: fileName, type: fileType } : null);
+      
+    if (!fileToAnalyze) {
       setError("Please upload a file first");
       return;
     }
@@ -45,28 +58,29 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
     setError(null);
 
     try {
-      console.log('Analyzing file:', uploadedFile, 'for conversation type:', conversationType);
+      console.log('Analyzing file:', fileToAnalyze, 'for conversation type:', conversationType);
       
       // Get appropriate system prompt based on file type and conversation type
       let systemPrompt = "Analyze this file and provide helpful feedback.";
       
-      if (uploadedFile.type.includes('pdf') || uploadedFile.type.includes('doc')) {
+      if (fileToAnalyze.type.includes('pdf') || fileToAnalyze.type.includes('doc')) {
         if (conversationType === 'resume') {
-          systemPrompt = "You are analyzing a resume. Provide specific, actionable feedback on its content, structure, and effectiveness. Focus on strengths and areas for improvement.";
+          systemPrompt = "You are analyzing a resume. Provide specific, actionable feedback on its content, structure, and effectiveness. Focus on strengths and areas for improvement. Include section-by-section analysis and suggestions for improvement.";
         } else if (conversationType === 'cover_letter') {
-          systemPrompt = "You are analyzing a cover letter. Provide specific, actionable feedback on its persuasiveness, relevance, and structure. Suggest improvements to better target the position.";
+          systemPrompt = "You are analyzing a cover letter. Provide specific, actionable feedback on its persuasiveness, relevance, and structure. Suggest improvements to better target the position. Analyze the opening, body, and closing sections separately.";
         } else {
-          systemPrompt = "Analyze this document and provide helpful insights about its content and structure. Suggest improvements that would make it more effective.";
+          systemPrompt = "Analyze this document and provide helpful insights about its content and structure. Suggest improvements that would make it more effective. Consider formatting, clarity, organization, and messaging.";
         }
-      } else if (uploadedFile.type.includes('image')) {
-        systemPrompt = "Analyze this image and describe its content. If it contains text, extract and analyze it. If it appears to be a document, profile, or other career-related content, provide relevant feedback.";
+      } else if (fileToAnalyze.type.includes('image')) {
+        systemPrompt = "Analyze this image and describe its content. If it contains text, extract and analyze it. If it appears to be a document, profile, or other career-related content, provide relevant feedback. Be as specific as possible in your analysis.";
       }
       
       const analysis = await aiProviderService.analyzeFile(
-        uploadedFile.url,
-        uploadedFile.name,
-        uploadedFile.type,
-        systemPrompt
+        fileToAnalyze.url, 
+        fileToAnalyze.name, 
+        fileToAnalyze.type,
+        systemPrompt,
+        { model: 'gpt-4o-mini', temperature: 0.3 }
       );
       
       if (!analysis) {
@@ -76,6 +90,12 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
       console.log('Analysis received:', analysis.substring(0, 100) + '...');
       onAnalysisComplete(analysis);
       toast.success("File analysis complete");
+      
+      // Clear the file after successful analysis for a cleaner UX
+      setTimeout(() => {
+        setUploadedFile(null);
+      }, 1500);
+      
     } catch (error: any) {
       console.error("Error analyzing file:", error);
       setError(error.message || "Failed to analyze file");
@@ -102,12 +122,28 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
     '.jpg', '.jpeg', '.png', '.gif', // Images
     '.txt' // Text files
   ];
+  
+  const getFileIcon = () => {
+    if (!uploadedFile) return <FilePlus className="h-8 w-8 text-gray-400" />;
+    
+    if (uploadedFile.type.includes('pdf')) {
+      return <FileText className="h-8 w-8 text-blue-500" />;
+    } else if (uploadedFile.type.includes('doc')) {
+      return <FileText className="h-8 w-8 text-blue-600" />;
+    } else if (uploadedFile.type.includes('image')) {
+      return <FileImage className="h-8 w-8 text-green-500" />;
+    } else if (uploadedFile.type.includes('text')) {
+      return <FileText className="h-8 w-8 text-amber-500" />;
+    } else {
+      return <FilePlus className="h-8 w-8 text-purple-500" />;
+    }
+  };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className={cn("w-full", isMobile ? "max-w-[95vw]" : "max-w-md")}>
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-blue-500" />
+          {getFileIcon()}
           {conversationType === 'resume' ? 'Resume Analysis' : 
            conversationType === 'cover_letter' ? 'Cover Letter Analysis' :
            conversationType === 'linkedin' ? 'LinkedIn Profile Analysis' :
@@ -134,11 +170,28 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
           </div>
         ) : (
           <div className="p-3 border rounded-md flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-blue-500" />
-              <span className="font-medium truncate max-w-xs">{uploadedFile.name}</span>
+            <div className="flex items-center gap-2 overflow-hidden">
+              {uploadedFile.type.includes('pdf') ? (
+                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              ) : uploadedFile.type.includes('image') ? (
+                <FileImage className="h-5 w-5 text-green-500 flex-shrink-0" />
+              ) : (
+                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              )}
+              <span className="font-medium truncate">{uploadedFile.name}</span>
             </div>
-            <Check className="h-4 w-4 text-green-500" />
+            
+            <div className="flex items-center gap-1">
+              <Check className="h-4 w-4 text-green-500" />
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-6 w-6 rounded-full text-gray-400 hover:text-gray-100"
+                onClick={() => setUploadedFile(null)}
+              >
+                <FileX className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
         
@@ -152,7 +205,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
       
       <CardFooter>
         <Button 
-          onClick={handleAnalyze}
+          onClick={() => handleAnalyze()}
           disabled={!uploadedFile || isAnalyzing}
           className="w-full"
         >

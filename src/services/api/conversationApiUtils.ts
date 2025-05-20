@@ -1,47 +1,43 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { ConversationType } from "../types/conversationTypes";
 import { Json } from "@/integrations/supabase/types";
-import { ConversationMetadata, ConversationType } from "../types/conversationTypes";
 
 /**
- * Helper function to safely convert string to ConversationType
+ * Convert a string to the appropriate ConversationType
  */
-export const asConversationType = (type: string): ConversationType => {
-  const validTypes: ConversationType[] = [
-    'general', 'resume', 'interview_prep', 'cover_letter', 
-    'job_search', 'linkedin', 'assessment'
-  ];
-  return validTypes.includes(type as ConversationType) 
-    ? (type as ConversationType) 
-    : 'general';
+export const asConversationType = (typeString: string): ConversationType => {
+  if (
+    typeString === 'resume' ||
+    typeString === 'cover_letter' ||
+    typeString === 'interview_prep' ||
+    typeString === 'linkedin' ||
+    typeString === 'job_search' ||
+    typeString === 'assessment'
+  ) {
+    return typeString as ConversationType;
+  }
+  
+  // Default to general if the type is not recognized
+  return 'general';
 };
 
 /**
- * Helper function to safely parse metadata from Supabase response
+ * Parse metadata from JSON to a strongly typed object
  */
-export const parseMetadata = (metadataRaw: any): ConversationMetadata => {
-  if (!metadataRaw) return {};
+export const parseMetadata = (metadata: Json | null): Record<string, any> => {
+  if (!metadata) return {};
   
-  if (typeof metadataRaw !== 'object') return {};
+  if (typeof metadata === 'object') {
+    return metadata as Record<string, any>;
+  }
   
-  // Handle object case
-  return {
-    linkedDocumentId: typeof metadataRaw.linkedDocumentId === 'string' ? metadataRaw.linkedDocumentId : undefined,
-    jobDescription: typeof metadataRaw.jobDescription === 'string' ? metadataRaw.jobDescription : undefined,
-    attachments: Array.isArray(metadataRaw.attachments) ? metadataRaw.attachments : undefined,
-    linkedinProfile: typeof metadataRaw.linkedinProfile === 'string' ? metadataRaw.linkedinProfile : undefined,
-    assessmentUrl: typeof metadataRaw.assessmentUrl === 'string' ? metadataRaw.assessmentUrl : undefined,
-    companyUrl: typeof metadataRaw.companyUrl === 'string' ? metadataRaw.companyUrl : undefined
-  };
-};
-
-/**
- * Format conversation context from previous messages for AI prompt
- */
-export const formatConversationContext = (messages: { role: string; content: string }[]): string => {
-  if (!messages || messages.length === 0) return '';
+  try {
+    if (typeof metadata === 'string') {
+      return JSON.parse(metadata);
+    }
+  } catch (error) {
+    console.error('Error parsing metadata:', error);
+  }
   
-  return messages
-    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-    .join('\n\n');
+  return {};
 };

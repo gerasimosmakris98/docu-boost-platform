@@ -53,38 +53,6 @@ const OAuthButtons = ({ isLoading, onProviderSelect }: OAuthButtonsProps) => {
         )}
         Continue with Google
       </Button>
-
-      <Button
-        variant="outline"
-        className="w-full bg-transparent border-gray-700 text-gray-200 hover:bg-gray-800 hover:text-white"
-        onClick={() => handleProviderLogin('linkedin_oidc')}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <svg className="mr-2 h-4 w-4 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-          </svg>
-        )}
-        Continue with LinkedIn
-      </Button>
-      
-      <Button
-        variant="outline"
-        className="w-full bg-transparent border-gray-700 text-gray-200 hover:bg-gray-800 hover:text-white"
-        onClick={() => handleProviderLogin('twitter')}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13.3174 10.7749L19.1457 4H17.7646L12.7039 9.88256L8.66193 4H4L10.1122 13.0774L4 20.1176H5.38114L10.7247 13.9698L14.994 20.1176H19.6559L13.3171 10.7749H13.3174ZM11.3958 13.1676L10.8023 12.2795L5.9391 5.16544H7.91054L11.7704 10.9303L12.3639 11.8184L17.4616 19.2822H15.4902L11.3958 13.168V13.1676Z" />
-          </svg>
-        )}
-        Continue with X
-      </Button>
     </div>
   );
 };
