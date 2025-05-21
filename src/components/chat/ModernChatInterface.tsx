@@ -8,7 +8,6 @@ import MessagesList from "./components/MessagesList";
 import ChatInput from "./components/ChatInput";
 import { aiProviderService } from "@/services/ai/aiProviderService";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Footer from "@/components/layout/Footer";
 
 interface ModernChatInterfaceProps {
   conversationId?: string;
@@ -52,8 +51,7 @@ const ModernChatInterface = ({
   
   const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
-      toast.error("Please sign in to send messages");
-      navigate("/auth");
+      navigate("/auth", { state: { from: location.pathname } });
       return;
     }
     
@@ -101,7 +99,7 @@ const ModernChatInterface = ({
           id: `error-${Date.now()}`,
           conversation_id: conversationId,
           role: 'assistant',
-          content: "I apologize, but I'm currently experiencing some technical difficulties. I've switched to a basic guidance mode to help you. Here are some general tips:\n\n- Keep your resume concise and focused on achievements\n- Tailor your application materials to each job description\n- Prepare for interviews by researching the company and practicing common questions\n- Follow up after interviews with a thank you note\n\nPlease try again in a few moments.",
+          content: "I apologize, but I'm currently experiencing some technical difficulties. Please try again in a moment.",
           created_at: new Date().toISOString()
         };
         
@@ -109,30 +107,13 @@ const ModernChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
         );
         
-        toast.error("AI service is currently unavailable", {
-          description: "Using fallback mode with simplified responses"
-        });
+        toast.error("AI service is currently unavailable");
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
       
       // Create a more descriptive error message depending on the error type
-      let errorMessage = "I apologize, but I encountered an error while processing your request. I've switched to a simplified response mode to continue helping you.";
-      
-      // Check if it's a quota exceeded or rate limit error
-      if (error.message?.includes('quota') || 
-          error.message?.includes('exceeded') || 
-          error.message?.includes('rate limit') || 
-          error.status === 429 || 
-          error.status === 402) {
-        errorMessage = "I apologize, but we've reached our AI usage limit with our current provider. I've switched to a simplified guidance mode to continue helping you. Here are some general tips related to your request:\n\n- Focus on quantifiable achievements in your career materials\n- Use keywords from job descriptions in your resume and cover letters\n- Prepare specific examples for behavioral interview questions\n- Network actively on LinkedIn by engaging with industry content";
-        
-        toast.error("AI service limit reached", {
-          description: "Using fallback mode with simplified responses",
-        });
-      } else {
-        toast.error("Failed to send message");
-      }
+      let errorMessage = "Sorry, I encountered an issue processing your request. Let's try again in a moment.";
       
       // If error occurs, remove loading message and add error message
       const errorAiMessage: Message = {
@@ -181,19 +162,9 @@ const ModernChatInterface = ({
           isSending={isSending}
           isModern={true}
         />
-        {/* Mini footer only visible on desktop */}
-        {!isMobile && <div className="px-4 py-2">
-          <div className="flex justify-end space-x-3 text-xs text-gray-500">
-            <Link to="/legal/terms" className="hover:text-gray-300">Terms</Link>
-            <Link to="/legal/privacy" className="hover:text-gray-300">Privacy</Link>
-          </div>
-        </div>}
       </div>
     </div>
   );
 };
-
-// We need to add the Link component import at the top
-import { Link } from "react-router-dom";
 
 export default ModernChatInterface;

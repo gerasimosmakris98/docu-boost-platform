@@ -73,7 +73,7 @@ export const fetchConversation = async (id: string): Promise<{ conversation: Con
       metadata: parseMetadata(conversationData.metadata)
     } as Conversation : null;
     
-    // Ensure message roles are properly typed
+    // Transform and ensure message roles are properly typed
     const messages = messagesData ? messagesData.map(msg => ({
       ...msg,
       role: msg.role === 'user' ? 'user' : 'assistant' // Ensure role is either 'user' or 'assistant'

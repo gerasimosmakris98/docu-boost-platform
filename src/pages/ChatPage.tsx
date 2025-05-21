@@ -1,21 +1,31 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import ModernChatSidebar from "@/components/chat/ModernChatSidebar";
 import ModernChatInterface from "@/components/chat/ModernChatInterface";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = useIsMobile();
   
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isMobile);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Auto-collapse sidebar on mobile
+    setSidebarCollapsed(isMobile);
+  }, [isMobile]);
   
   useEffect(() => {
     // Always start by attempting to load or create a conversation
@@ -30,7 +40,7 @@ const ChatPage = () => {
             id: "preview-1",
             conversation_id: "preview",
             role: 'assistant',
-            content: "Hello! I'm your AI career assistant. Sign in to get personalized help with your resume, interview preparation, and job search strategies.",
+            content: "Hello! I'm your AI career assistant. Sign in to get personalized help with your career journey.",
             created_at: new Date().toISOString()
           }
         ]);
@@ -52,14 +62,14 @@ const ChatPage = () => {
             toast.error("Conversation not found");
             const defaultConversation = await conversationService.createDefaultConversation();
             if (defaultConversation) {
-              navigate(`/chat/${defaultConversation.id}`);
+              navigate(`/chat/${defaultConversation.id}`, { replace: true });
             }
           }
         } else {
           // If no ID, create or load a default conversation
           const defaultConversation = await conversationService.createDefaultConversation();
           if (defaultConversation) {
-            navigate(`/chat/${defaultConversation.id}`);
+            navigate(`/chat/${defaultConversation.id}`, { replace: true });
           }
         }
       } catch (error) {
@@ -79,6 +89,20 @@ const ChatPage = () => {
   
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
+      {/* Header for mobile - only visible when sidebar is collapsed */}
+      {isMobile && sidebarCollapsed && (
+        <div className="absolute top-0 left-0 z-10 p-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleSidebar}
+            className="text-white"
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
+      )}
+      
       {/* Modern sidebar with AI Advisors */}
       <ModernChatSidebar 
         activeConversationId={id} 

@@ -1,6 +1,7 @@
 
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { Briefcase } from "lucide-react";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -17,13 +18,11 @@ const Logo = ({ size = "md", withLink = true, className }: LogoProps) => {
       className
     )}>
       <div className="relative">
-        <div className="flex">
-          <div className="h-7 w-7 rounded-full bg-purple-500/80"></div>
-          <div className="h-7 w-7 rounded-full bg-purple-700/80 -ml-3"></div>
-        </div>
-        <div className="h-7 w-7 rounded-full bg-purple-600/80 absolute -bottom-2 left-1"></div>
+        <Briefcase className="h-8 w-8 text-green-500" />
       </div>
-      <span className="font-bold text-white text-xl tracking-tight">AI Career Advisor</span>
+      <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+        AI Career Advisor
+      </span>
     </div>
   );
 

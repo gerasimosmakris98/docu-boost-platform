@@ -3,7 +3,7 @@ import { AIModelOptions, ProgressiveResponseOptions, ConversationType } from './
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Enhanced version of the AI provider service
+// Enhanced version of the AI provider service with more conversational responses
 const aiProviderService = {
   // Generate a response using the AI provider
   generateResponse: async (
@@ -14,26 +14,27 @@ const aiProviderService = {
     console.log('Generating response for:', conversationType);
     
     try {
-      // Enhance the prompt with instructions for better responses
+      // Create a more conversational prompt that encourages brief, natural responses
       const enhancedPrompt = `
-        You are an AI career advisor helping with ${conversationType}.
+        You are a friendly AI career advisor having a casual conversation about ${conversationType}.
         
-        Guidelines for your response:
-        - Be detailed and helpful
-        - Provide personalized advice based on the user's context and background
-        - Use clear formatting with headings, bullet points, and paragraphs
-        - Be conversational and engaging
-        - Provide specific examples when relevant
-        - Avoid generic advice without context
+        Guidelines:
+        - Keep your response brief and conversational
+        - Only answer what was directly asked
+        - Use a friendly, supportive tone
+        - Avoid lengthy introductions or conclusions
+        - Focus on practical, actionable advice
         
-        User query: ${prompt}
+        User message: ${prompt}
       `;
       
       // Call Supabase Edge Function to generate AI response
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: enhancedPrompt,
-          type: conversationType 
+          type: conversationType,
+          maxTokens: 500, // Limit token count for brevity
+          brief: true
         }
       });
       
@@ -55,20 +56,8 @@ const aiProviderService = {
     } catch (error) {
       console.error('Error in generateResponse:', error);
       
-      // Provide a helpful fallback response
-      return `I apologize, but I'm having trouble generating a detailed response at the moment. 
-
-Here are some general tips regarding ${conversationType}:
-
-## General Advice
-
-- Make sure your materials are tailored to your specific background and target opportunities
-- Focus on emphasizing your most relevant skills and achievements for each application
-- Quantify your accomplishments with specific metrics when possible (e.g., "increased sales by 25%")
-- Maintain a consistent professional tone across all communications
-- Seek feedback from industry professionals before finalizing your materials
-
-Please try again later for more personalized advice. If this issue persists, you might want to refresh the page or contact support.`;
+      // Provide a brief, helpful fallback response
+      return `I'm having trouble responding right now. Let me know if you'd like some quick tips on ${conversationType} while I recover.`;
     }
   },
   
@@ -83,25 +72,25 @@ Please try again later for more personalized advice. If this issue persists, you
     console.log('Analyzing file:', fileName, fileType);
     
     try {
-      // Create file analysis prompt
+      // Create concise file analysis prompt
       const fileAnalysisPrompt = `
-        Please analyze this ${fileType} file: ${fileName}
+        Analyze this ${fileType} file: ${fileName}
         
-        ${profileContext ? `User profile context: ${profileContext}` : ''}
+        ${profileContext ? `Context: ${profileContext}` : ''}
         
-        Guidelines for your analysis:
-        - Provide detailed feedback on the content
-        - Suggest specific improvements
-        - Focus on organization, clarity, and impact
-        - Consider industry standards and best practices
-        - Identify strengths and areas for improvement
+        Guidelines:
+        - Keep your response brief and focused
+        - Highlight 2-3 key strengths
+        - Suggest 2-3 specific improvements
+        - Be conversational and supportive
       `;
       
       // Call Supabase Edge Function to analyze file
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: fileAnalysisPrompt,
-          type: 'file_analysis' 
+          type: 'file_analysis',
+          maxTokens: 500
         }
       });
       
@@ -123,20 +112,8 @@ Please try again later for more personalized advice. If this issue persists, you
     } catch (error) {
       console.error('Error in analyzeFile:', error);
       
-      // Provide a helpful fallback response for file analysis
-      return `I apologize, but I'm having trouble analyzing your file at the moment. 
-
-Based on the file type (${fileType}), here are some general considerations:
-
-## File Analysis - ${fileName}
-
-- Ensure your document follows industry standard formatting and organization
-- Check for clarity, conciseness, and proper grammar throughout
-- Make sure key information is prominently highlighted
-- Consider the target audience and tailor the content accordingly
-- Review for consistency in style, tone, and terminology
-
-Please try again later for a more detailed analysis. If this issue persists, you might want to refresh the page or try a different file format.`;
+      // Provide a brief fallback response for file analysis
+      return `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`;
     }
   },
   
@@ -149,25 +126,25 @@ Please try again later for a more detailed analysis. If this issue persists, you
     console.log('Analyzing URL:', url, type);
     
     try {
-      // Create URL analysis prompt
+      // Create concise URL analysis prompt
       const urlAnalysisPrompt = `
-        Please analyze this ${type} URL: ${url}
+        Analyze this ${type} URL: ${url}
         
-        ${profileContext ? `User profile context: ${profileContext}` : ''}
+        ${profileContext ? `Context: ${profileContext}` : ''}
         
-        Guidelines for your analysis:
-        - Provide detailed feedback on the content of the URL
-        - Suggest specific ways the user can use this information
-        - Focus on how this relates to the user's career development
-        - Consider industry standards and best practices
-        - Identify key takeaways from the content
+        Guidelines:
+        - Keep your response conversational and brief
+        - Focus on 2-3 key takeaways
+        - Give specific, actionable advice
+        - Be supportive and helpful
       `;
       
       // Call Supabase Edge Function to analyze URL
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: urlAnalysisPrompt,
-          type: 'url_analysis' 
+          type: 'url_analysis',
+          maxTokens: 500
         }
       });
       
@@ -189,20 +166,8 @@ Please try again later for a more detailed analysis. If this issue persists, you
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
       
-      // Provide a helpful fallback response for URL analysis
-      return `I apologize, but I'm having trouble analyzing this URL at the moment.
-
-Regarding this ${type} resource (${url}), here are some general considerations:
-
-## URL Analysis
-
-- Consider how the information from this resource can be applied to your career development
-- Look for specific insights that relate to your current goals and challenges
-- Compare the advice or information with other industry resources for validation
-- Extract actionable steps you can implement immediately
-- Consider how you might reference or incorporate this information in your professional materials
-
-Please try again later for a more detailed analysis. If this issue persists, you might want to refresh the page or try a different URL.`;
+      // Provide a brief fallback response for URL analysis
+      return `I couldn't analyze that URL in detail. Would you like me to try again?`;
     }
   },
   

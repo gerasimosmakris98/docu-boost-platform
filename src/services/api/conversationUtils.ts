@@ -58,15 +58,16 @@ export const getChatPromptForType = (
   context: string,
   options: { brief?: boolean; depth?: 'low' | 'medium' | 'high'; format?: 'paragraph' | 'bullets' | 'markdown' | 'code' }
 ): string => {
-  const { brief = false, depth = 'medium', format = 'paragraph' } = options;
+  const { brief = true, depth = 'low', format = 'paragraph' } = options;
   
-  // Base prompt that works for all types
+  // Base prompt that works for all types - making it more conversational and brief
   let prompt = `
     User message: ${message}
     
     ${context ? `Previous conversation context:\n${context}\n\n` : ''}
     
     Please provide a ${brief ? 'brief' : 'detailed'} response with ${depth} level of detail.
+    Be conversational, friendly, and direct in your response.
     Format your response as ${format}.
   `;
   
@@ -74,37 +75,32 @@ export const getChatPromptForType = (
   switch (type) {
     case 'resume':
       prompt += `
-        Focus on resume optimization, ATS compatibility, and highlighting relevant experience.
-        Provide specific, actionable feedback and suggestions for improvement.
+        Focus on specific, practical resume tips without being too formal.
       `;
       break;
     case 'cover_letter':
       prompt += `
-        Focus on personalizing the cover letter, connecting the candidate's experience with the job requirements,
-        and creating a compelling narrative. Suggest specific improvements or examples.
+        Offer clear, actionable cover letter advice in a friendly tone.
       `;
       break;
     case 'interview_prep':
       prompt += `
-        Provide interview preparation guidance, example answers to likely questions,
-        and strategies for communicating effectively. Include specific tips for the user's industry or role.
+        Provide concise interview guidance as if we're having a casual conversation.
       `;
       break;
     case 'job_search':
       prompt += `
-        Offer job search strategies, tips for finding opportunities, networking advice,
-        and suggestions for standing out as a candidate. Be specific to the user's field and goals.
+        Share practical job search suggestions in a supportive, friendly way.
       `;
       break;
     case 'linkedin':
       prompt += `
-        Focus on LinkedIn profile optimization, network building, content strategy,
-        and using LinkedIn effectively for job searching. Provide specific, actionable advice.
+        Give straightforward LinkedIn advice without being overly formal.
       `;
       break;
     default:
       prompt += `
-        Provide career guidance and advice based on the user's question. Be helpful, specific, and actionable.
+        Provide helpful career guidance in a friendly, conversational manner.
       `;
   }
   
@@ -117,31 +113,30 @@ export const getChatPromptForType = (
 export const getWelcomeMessageForType = (type: ConversationType): string => {
   switch (type) {
     case 'resume':
-      return "Welcome to Resume Review! I'm here to help optimize your resume. You can upload your resume for review, or we can start working on it from scratch. What would you like to do today?";
+      return "Hi there! I'm your Resume Advisor. How can I help with your resume today?";
     
     case 'cover_letter':
-      return "Welcome to Cover Letter Assistant! I'll help you craft a compelling cover letter that showcases your qualifications and personality. Would you like to start with a template or create a custom cover letter for a specific position?";
+      return "Hi! I'm your Cover Letter Assistant. Need help crafting a compelling cover letter?";
     
     case 'interview_prep':
-      return "Welcome to Interview Preparation! I'll help you prepare for your upcoming interviews with practice questions, tips, and strategies. What type of role are you interviewing for?";
+      return "Hello! I'm your Interview Coach. What type of interview are you preparing for?";
     
     case 'job_search':
-      return "Welcome to Job Search Strategy! I'll help you develop an effective job search plan, find relevant opportunities, and stand out from other candidates. Where are you in your job search journey?";
+      return "Hi there! I'm your Job Search Advisor. How can I help with your job hunt today?";
     
     case 'linkedin':
-      return "Welcome to LinkedIn Profile Optimization! I'll help you enhance your LinkedIn presence to attract recruiters and showcase your professional brand. Would you like to share your current profile for review?";
+      return "Hello! I'm your LinkedIn Profile Coach. How can I help improve your LinkedIn presence?";
     
     case 'assessment':
-      return "Welcome to Assessment Preparation! I'll help you prepare for job assessments and tests with practice questions and strategies. What type of assessment are you preparing for?";
+      return "Hi! I'm your Assessment Coach. What type of assessment are you preparing for?";
     
     default:
-      return "Hello! I'm your AI Career Assistant. I can help with resume reviews, cover letters, interview preparation, job search strategies, and more. How can I assist you today?";
+      return "Hello! I'm your AI Career Assistant. How can I help with your career today?";
   }
 };
 
 /**
  * Validate message content to prevent empty or malformed messages
- * This function was missing and causing an error
  */
 export const validateMessageContent = (content: string): string => {
   if (!content || content.trim() === '') {

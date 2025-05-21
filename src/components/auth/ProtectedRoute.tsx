@@ -2,23 +2,16 @@
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/use-toast';
 import { Bot } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  fallback?: ReactNode; // Added fallback prop
+  fallback?: ReactNode;
 }
 
 const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast.error('Please sign in to access this page');
-    }
-  }, [isLoading, isAuthenticated]);
 
   if (isLoading) {
     return (
