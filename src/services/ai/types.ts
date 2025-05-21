@@ -14,6 +14,7 @@ export interface AIModelOptions {
   topP?: number;
   frequencyPenalty?: number;
   presencePenalty?: number;
+  model?: string; // Add model property to support specifying which model to use
 }
 
 // Options for progressive/streaming responses

@@ -73,7 +73,11 @@ export const fetchConversation = async (id: string): Promise<{ conversation: Con
       metadata: parseMetadata(conversationData.metadata)
     } as Conversation : null;
     
-    const messages = messagesData || [];
+    // Ensure message roles are properly typed
+    const messages = messagesData ? messagesData.map(msg => ({
+      ...msg,
+      role: msg.role === 'user' ? 'user' : 'assistant' // Ensure role is either 'user' or 'assistant'
+    })) as Message[] : [];
     
     return { conversation, messages };
   } catch (error) {
