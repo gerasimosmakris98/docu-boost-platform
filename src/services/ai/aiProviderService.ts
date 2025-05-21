@@ -16,14 +16,16 @@ const aiProviderService = {
     try {
       // Create a more conversational prompt that encourages brief, natural responses
       const enhancedPrompt = `
-        You are a friendly AI career advisor having a casual conversation about ${conversationType}.
+        You are a friendly AI career advisor having a concise conversation. Keep responses under 3 short paragraphs.
         
         Guidelines:
-        - Keep your response brief and conversational
-        - Only answer what was directly asked
+        - Be extremely brief and conversational
+        - Only respond directly to what was asked
         - Use a friendly, supportive tone
-        - Avoid lengthy introductions or conclusions
-        - Focus on practical, actionable advice
+        - Avoid introductions or conclusions
+        - Focus only on what was directly asked
+        - Respond like you're texting a friend
+        - Keep it short even if the question is complex
         
         User message: ${prompt}
       `;
@@ -33,7 +35,7 @@ const aiProviderService = {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
-          maxTokens: 500, // Limit token count for brevity
+          maxTokens: 250, // Limit token count for brevity
           brief: true
         }
       });
@@ -57,7 +59,7 @@ const aiProviderService = {
       console.error('Error in generateResponse:', error);
       
       // Provide a brief, helpful fallback response
-      return `I'm having trouble responding right now. Let me know if you'd like some quick tips on ${conversationType} while I recover.`;
+      return `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`;
     }
   },
   
@@ -90,7 +92,7 @@ const aiProviderService = {
         body: { 
           prompt: fileAnalysisPrompt,
           type: 'file_analysis',
-          maxTokens: 500
+          maxTokens: 300
         }
       });
       
@@ -144,7 +146,7 @@ const aiProviderService = {
         body: { 
           prompt: urlAnalysisPrompt,
           type: 'url_analysis',
-          maxTokens: 500
+          maxTokens: 300
         }
       });
       

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 
 const Footer = () => {
-  const currentYear = 2025;
+  const currentYear = new Date().getFullYear();
   
   return (
     <footer className="bg-black text-gray-400 py-6 border-t border-gray-800">

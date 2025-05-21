@@ -28,7 +28,7 @@ export const getAiResponse = async (
       conversationType, 
       userMessage, 
       contextMessages,
-      { brief: false, depth: 'medium', format: 'paragraph' }
+      { brief: true, depth: 'light', format: 'paragraph' }
     );
     const enhancedPrompt = profileContext 
       ? `${profileContext}\n\n${prompt}` 
@@ -106,7 +106,7 @@ export const getAiResponse = async (
     return aiResponseContent;
   } catch (error) {
     console.error('Error in getAiResponse:', error);
-    return "I apologize, but I encountered an error while processing your request. Please try again later.";
+    return "I apologize, but I encountered an error while processing your request. Please try again.";
   }
 };
 
