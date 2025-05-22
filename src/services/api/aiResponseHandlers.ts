@@ -28,7 +28,7 @@ export const getAiResponse = async (
       conversationType, 
       userMessage, 
       contextMessages,
-      { brief: true, depth: 'light', format: 'paragraph' }
+      { brief: true, depth: 'low', format: 'paragraph' }
     );
     const enhancedPrompt = profileContext 
       ? `${profileContext}\n\n${prompt}` 
