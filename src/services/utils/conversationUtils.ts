@@ -56,7 +56,13 @@ export const getChatPromptForType = (
   type: ConversationType, 
   message: string, 
   context: string,
-  options: { brief?: boolean; depth?: 'low' | 'medium' | 'high'; format?: 'paragraph' | 'bullets' | 'markdown' | 'code' }
+  options: { 
+    brief?: boolean; 
+    depth?: 'low' | 'medium' | 'high'; 
+    format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
+    maxLength?: number;
+    focusedResponse?: boolean;
+  }
 ): string => {
   const { brief = false, depth = 'medium', format = 'paragraph' } = options;
   
@@ -69,6 +75,16 @@ export const getChatPromptForType = (
     Please provide a ${brief ? 'brief' : 'detailed'} response with ${depth} level of detail.
     Format your response as ${format}.
   `;
+  
+  // Add constraints for length if specified
+  if (options.maxLength) {
+    prompt += `\n    Keep your response concise, ideally under ${options.maxLength} characters.`;
+  }
+  
+  // Add focused response instruction if specified
+  if (options.focusedResponse) {
+    prompt += `\n    Focus directly on answering the question without unnecessary elaboration.`;
+  }
   
   // Add type-specific instructions
   switch (type) {
@@ -138,3 +154,4 @@ export const getWelcomeMessageForType = (type: ConversationType): string => {
       return "Hello! I'm your AI Career Assistant. I can help with resume reviews, cover letters, interview preparation, job search strategies, and more. How can I assist you today?";
   }
 };
+

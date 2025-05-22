@@ -56,7 +56,13 @@ export const getChatPromptForType = (
   type: ConversationType, 
   message: string, 
   context: string,
-  options: { brief?: boolean; depth?: 'low' | 'medium' | 'high'; format?: 'paragraph' | 'bullets' | 'markdown' | 'code' }
+  options: { 
+    brief?: boolean; 
+    depth?: 'low' | 'medium' | 'high'; 
+    format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
+    maxLength?: number;
+    focusedResponse?: boolean;
+  }
 ): string => {
   const { brief = true, depth = 'low', format = 'paragraph' } = options;
   
@@ -70,6 +76,16 @@ export const getChatPromptForType = (
     Be conversational, friendly, and direct in your response.
     Format your response as ${format}.
   `;
+  
+  // Add constraints for length if specified
+  if (options.maxLength) {
+    prompt += `\n    Keep your response concise, ideally under ${options.maxLength} characters.`;
+  }
+  
+  // Add focused response instruction if specified
+  if (options.focusedResponse) {
+    prompt += `\n    Focus directly on answering the question without unnecessary elaboration.`;
+  }
   
   // Add type-specific instructions
   switch (type) {
@@ -151,3 +167,4 @@ export const validateMessageContent = (content: string): string => {
   
   return trimmedContent;
 };
+
