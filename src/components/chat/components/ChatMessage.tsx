@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Bot, 
   User as UserIcon, 
@@ -18,6 +18,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import ChatAttachment from "./ChatAttachment";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatMessageProps {
   message: Message;
@@ -30,6 +32,17 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
   const isThinking = message.id?.startsWith('temp-ai');
   const [liked, setLiked] = useState<boolean | null>(null);
   const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isContentLong, setIsContentLong] = useState(false);
+  
+  // Check if content is long and should be truncated
+  useEffect(() => {
+    if (!isUserMessage && message.content.length > 500 && !isExpanded) {
+      setIsContentLong(true);
+    } else {
+      setIsContentLong(false);
+    }
+  }, [message.content, isExpanded, isUserMessage]);
   
   const renderAttachments = () => {
     if (!message.attachments || message.attachments.length === 0) return null;
@@ -58,7 +71,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
       toast.success("Thanks for your feedback. We'll improve our responses.");
     }
     
-    // TODO: Send feedback to backend when implemented
+    // In a real implementation, this would send feedback to the backend
     console.log("Feedback submitted:", isPositive ? "positive" : "negative", "for message:", message.id);
   };
   
@@ -77,24 +90,50 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
     return content;
   };
   
+  const formatDateTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, 'MMM d, h:mm a');
+    } catch (e) {
+      return '';
+    }
+  };
+  
   // Process citations in format [1], [2], etc. and make them clickable
   const processContentWithCitations = (content: string) => {
     // Make citation references clickable
-    const processedContent = content.replace(/\[(\d+)\]/g, '<a href="#citation-$1" class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-900/30 text-blue-300 rounded-full mx-0.5 hover:bg-blue-800/50">$1</a>');
+    let processedContent = content.replace(/\[(\d+)\]/g, '<a href="#citation-$1" class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-900/30 text-blue-300 rounded-full mx-0.5 hover:bg-blue-800/50 transition-colors">$1</a>');
     
     // Handle URLs - make them clickable
-    return processedContent.replace(
+    processedContent = processedContent.replace(
       /(https?:\/\/[^\s]+)/g, 
-      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">$1</a>'
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
     );
+    
+    return processedContent;
+  };
+  
+  const getTruncatedContent = (content: string, maxLength = 350) => {
+    if (content.length <= maxLength) return content;
+    
+    // Try to find a good breaking point (end of sentence or paragraph)
+    const breakPoint = content.substring(0, maxLength).lastIndexOf('.');
+    const endPoint = breakPoint > maxLength * 0.7 ? breakPoint + 1 : maxLength;
+    
+    return content.substring(0, endPoint) + '...';
   };
   
   const formattedContent = isUserMessage ? message.content : formatContent(message.content);
+  const displayContent = isContentLong && !isExpanded ? 
+    getTruncatedContent(formattedContent) : formattedContent;
   
   // Modern design
   if (isModern) {
     return (
-      <div 
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
         className={cn(
           "flex gap-4 max-w-3xl mx-auto",
           isUserMessage ? "flex-row" : "flex-row"
@@ -114,16 +153,21 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
           ) : (
             <>
               <AvatarImage src="" />
-              <AvatarFallback className="text-white bg-gray-700">
+              <AvatarFallback className="text-white bg-gradient-to-r from-green-400 to-blue-500">
                 <Bot className="h-4 w-4" />
               </AvatarFallback>
             </>
           )}
         </Avatar>
         
-        <div className="flex-1 space-y-2">
-          <div className="font-medium text-sm">
-            {isUserMessage ? "You" : "AI Career Advisor"}
+        <div className="flex-1 space-y-1">
+          <div className="flex justify-between items-center">
+            <div className="font-medium text-sm">
+              {isUserMessage ? "You" : "AI Career Advisor"}
+            </div>
+            <div className="text-xs text-gray-400">
+              {formatDateTime(message.created_at)}
+            </div>
           </div>
           
           <div className={cn(
@@ -131,10 +175,14 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
             isThinking ? "text-gray-400" : "text-white"
           )}>
             {isThinking ? (
-              <div className="flex items-center">
+              <motion.div 
+                className="flex items-center"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
                 <Loader2 className="h-3 w-3 animate-spin mr-2" />
                 <span>Thinking...</span>
-              </div>
+              </motion.div>
             ) : (
               <div>
                 {isUserMessage ? (
@@ -146,29 +194,50 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                   <div className="space-y-3">
                     <div 
                       className="prose prose-invert max-w-none prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4"
-                      dangerouslySetInnerHTML={{ __html: processContentWithCitations(formattedContent) }}
+                      dangerouslySetInnerHTML={{ __html: processContentWithCitations(displayContent) }}
                     />
+                    
+                    {isContentLong && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        {isExpanded ? "Show less" : "Show more"}
+                      </motion.button>
+                    )}
                     
                     {/* Feedback and actions for AI messages */}
                     <div className="flex flex-wrap items-center gap-1.5 pt-1 mt-2 border-t border-gray-800">
                       {/* Feedback buttons */}
                       <div className="flex items-center gap-1 mr-2">
-                        <Button 
-                          variant={liked === true ? "default" : "ghost"} 
-                          size="icon" 
-                          className="h-6 w-6"
-                          onClick={() => handleFeedback(true)}
-                        >
-                          <ThumbsUp className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button 
-                          variant={liked === false ? "default" : "ghost"} 
-                          size="icon" 
-                          className="h-6 w-6"
-                          onClick={() => handleFeedback(false)}
-                        >
-                          <ThumbsDown className="h-3.5 w-3.5" />
-                        </Button>
+                        <motion.div whileTap={{ scale: 0.9 }}>
+                          <Button 
+                            variant={liked === true ? "default" : "ghost"} 
+                            size="icon" 
+                            className={cn(
+                              "h-6 w-6 transition-all",
+                              liked === true && "bg-green-600 hover:bg-green-700"
+                            )}
+                            onClick={() => handleFeedback(true)}
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                          </Button>
+                        </motion.div>
+                        <motion.div whileTap={{ scale: 0.9 }}>
+                          <Button 
+                            variant={liked === false ? "default" : "ghost"} 
+                            size="icon" 
+                            className={cn(
+                              "h-6 w-6 transition-all",
+                              liked === false && "bg-red-600 hover:bg-red-700"
+                            )}
+                            onClick={() => handleFeedback(false)}
+                          >
+                            <ThumbsDown className="h-3.5 w-3.5" />
+                          </Button>
+                        </motion.div>
                       </div>
                       
                       {/* Separator */}
@@ -209,15 +278,17 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                       <div className="h-4 w-px bg-gray-700 mx-1" />
                       
                       {/* Copy button */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={handleCopyText}
-                        title="Copy text"
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
+                      <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={handleCopyText}
+                          title="Copy text"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </motion.div>
                     </div>
                   </div>
                 )}
@@ -225,7 +296,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
   
@@ -248,7 +319,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
         ) : (
           <>
             <AvatarImage src="" />
-            <AvatarFallback className="bg-gray-700 text-white">
+            <AvatarFallback className="bg-gradient-to-r from-green-400 to-blue-500 text-white">
               <Bot className="h-4 w-4" />
             </AvatarFallback>
           </>
@@ -256,8 +327,13 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
       </Avatar>
       
       <div className="flex flex-col flex-1 gap-1 min-w-0">
-        <div className="text-sm font-medium text-gray-300">
-          {isUserMessage ? "You" : "AI Assistant"}
+        <div className="flex justify-between items-center">
+          <div className="text-sm font-medium text-gray-300">
+            {isUserMessage ? "You" : "AI Assistant"}
+          </div>
+          <div className="text-xs text-gray-400">
+            {formatDateTime(message.created_at)}
+          </div>
         </div>
         
         <div className="text-sm text-gray-100">
@@ -275,8 +351,17 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
             <div className="space-y-3">
               <div 
                 className="prose prose-invert max-w-none text-gray-100"
-                dangerouslySetInnerHTML={{ __html: processContentWithCitations(formattedContent) }}
+                dangerouslySetInnerHTML={{ __html: processContentWithCitations(displayContent) }}
               />
+              
+              {isContentLong && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  {isExpanded ? "Show less" : "Show more"}
+                </button>
+              )}
               
               {/* Feedback and actions for AI messages */}
               <div className="flex flex-wrap items-center gap-1.5 pt-2 mt-2 border-t border-gray-800">
@@ -285,7 +370,10 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                   <Button 
                     variant={liked === true ? "default" : "ghost"} 
                     size="icon" 
-                    className="h-6 w-6"
+                    className={cn(
+                      "h-6 w-6 transition-colors",
+                      liked === true && "bg-green-600 hover:bg-green-700"
+                    )}
                     onClick={() => handleFeedback(true)}
                   >
                     <ThumbsUp className="h-3.5 w-3.5" />
@@ -293,7 +381,10 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                   <Button 
                     variant={liked === false ? "default" : "ghost"} 
                     size="icon" 
-                    className="h-6 w-6"
+                    className={cn(
+                      "h-6 w-6 transition-colors",
+                      liked === false && "bg-red-600 hover:bg-red-700"
+                    )}
                     onClick={() => handleFeedback(false)}
                   >
                     <ThumbsDown className="h-3.5 w-3.5" />
