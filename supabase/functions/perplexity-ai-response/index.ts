@@ -26,6 +26,7 @@ serve(async (req) => {
       temperature = 0.2
     } = requestData;
 
+    console.log('Incoming prompt:', prompt); // Log the full prompt
     console.log('Request data:', { 
       promptLength: prompt?.length || 0, 
       type,
@@ -107,6 +108,7 @@ serve(async (req) => {
       }
       
       const data = await response.json();
+      console.log('Raw Perplexity API success response:', data); // Log the full raw success response
       console.log('Perplexity response received');
       
       if (!data.choices || !data.choices[0]) {
@@ -114,9 +116,34 @@ serve(async (req) => {
         throw new Error('Invalid response from Perplexity');
       }
       
-      const generatedText = data.choices[0].message.content;
+      const aiOutputString = data.choices[0].message.content;
+      let responsePayload;
 
-      return new Response(JSON.stringify({ generatedText }), {
+      try {
+        const parsedOutput = JSON.parse(aiOutputString);
+        if (typeof parsedOutput.generatedText === 'string' && Array.isArray(parsedOutput.sourceUrls)) {
+          // Validate that sourceUrls contains only strings, if not empty
+          const allUrlsAreStrings = parsedOutput.sourceUrls.every((url: unknown) => typeof url === 'string');
+          if (allUrlsAreStrings) {
+            responsePayload = {
+              generatedText: parsedOutput.generatedText,
+              sourceUrls: parsedOutput.sourceUrls,
+            };
+            console.log('Successfully parsed AI output as JSON with expected fields.');
+          } else {
+            console.warn('Perplexity response parsed as JSON, but sourceUrls array contains non-string elements. Original output:', aiOutputString);
+            responsePayload = { generatedText: aiOutputString, sourceUrls: [] };
+          }
+        } else {
+          console.warn('Perplexity response parsed as JSON, but did not contain expected fields (generatedText: string, sourceUrls: array). Original output:', aiOutputString);
+          responsePayload = { generatedText: aiOutputString, sourceUrls: [] };
+        }
+      } catch (e) {
+        console.warn('Perplexity response was not in the expected JSON format. Treating as plain text. Error:', e.message, 'Original output:', aiOutputString);
+        responsePayload = { generatedText: aiOutputString, sourceUrls: [] };
+      }
+
+      return new Response(JSON.stringify(responsePayload), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (perplexityError) {

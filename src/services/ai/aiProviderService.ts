@@ -28,6 +28,8 @@ const aiProviderService = {
         - Respond like you're texting a friend
         
         User message: ${prompt}
+
+        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
       // Call Supabase Edge Function to generate AI response
@@ -86,6 +88,8 @@ const aiProviderService = {
         - Suggest 2-3 specific improvements
         - Be conversational and supportive
         - If referring to specific parts, use numbered citations [1], [2]
+
+        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
       // Call Supabase Edge Function to analyze file
@@ -141,6 +145,8 @@ const aiProviderService = {
         - Give specific, actionable advice
         - Be supportive and helpful
         - If referring to specific parts, use numbered citations [1], [2]
+
+        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
       // Call Supabase Edge Function to analyze URL
@@ -165,12 +171,59 @@ const aiProviderService = {
       if (!data.generatedText) {
         throw new Error('No analysis received from AI service');
       }
+
+      // Define failure patterns for URL analysis
+      const failurePatterns = [
+        "i cannot access this url",
+        "i can't access that link",
+        "i am unable to access external websites",
+        "please provide content from the url",
+        "could not retrieve content",
+        "unable to fetch",
+        "failed to load",
+        "error processing the url",
+        "i do not have the capability to access external urls",
+        "i'm sorry, but i cannot directly access external urls",
+        "i am unable to directly access the content of urls"
+      ];
+
+      const genericErrorMessage = "I tried to analyze the URL, but I couldn't get specific information from it. This can happen if the website blocks automated access, requires a login, or if the content isn't in a format I can easily read. You could try summarizing the key points from the URL yourself and asking me about those.";
+
+      if (typeof data.generatedText === 'string') {
+        const lowercasedText = data.generatedText.toLowerCase();
+        
+        // Check for explicit failure patterns
+        for (const pattern of failurePatterns) {
+          if (lowercasedText.includes(pattern)) {
+            console.warn("Perplexity returned vague/error for URL:", data.generatedText);
+            return genericErrorMessage;
+          }
+        }
+        
+        // Check for very short responses (e.g., less than 30 characters)
+        // This is an additional heuristic and might need refinement.
+        // The prompt emphasized focusing on explicit phrases first.
+        if (data.generatedText.length < 30) {
+           // A more sophisticated check for analytical keywords could be added here if needed,
+           // but for now, length is a simple proxy for potentially unhelpful generic responses.
+           // Let's assume very short non-matching (to above patterns) responses might also be problematic.
+           // Example: "Okay.", "I see.", "Done." - these are unlikely from perplexity for this task but used as an example of short unhelpful text.
+           // For now, we will be a bit more aggressive and if it's very short, and not caught by specific errors,
+           // it might still be a generic "I can't do that" that wasn't in our list.
+           // We will only return the generic error if it's short AND contains a phrase like "unable", "cannot", "can't"
+           // to avoid flagging valid short summaries.
+           if (lowercasedText.includes("unable") || lowercasedText.includes("cannot") || lowercasedText.includes("can't")) {
+             console.warn("Perplexity returned very short and potentially unhelpful response for URL:", data.generatedText);
+             return genericErrorMessage;
+           }
+        }
+      }
       
       return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
       
-      // Provide a brief fallback response for URL analysis
+      // Provide a brief fallback response for URL analysis (for network/Supabase function errors)
       return `I couldn't analyze that URL in detail. Would you like me to try again?`;
     }
   },

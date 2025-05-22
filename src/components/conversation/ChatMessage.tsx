@@ -105,13 +105,29 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
     return content;
   };
   
-  // Process citations in format [1], [2], etc. and make them visually distinct
-  const processContentWithCitations = (content: string) => {
-    // Add spans around citation references
-    return content.replace(/\[(\d+)\]/g, '<span class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full mx-0.5">$1</span>');
+  // Process citations in format [1], [2], etc. and make them visually distinct,
+  // linking them if a corresponding URL is available.
+  const processContentWithCitations = (content: string, sourceUrls?: string[]) => {
+    return content.replace(/\[(\d+)\]/g, (match, numberStr) => {
+      const originalNumber = numberStr;
+      const index = parseInt(numberStr, 10) - 1;
+
+      if (sourceUrls && Array.isArray(sourceUrls) && index >= 0 && index < sourceUrls.length && typeof sourceUrls[index] === 'string' && sourceUrls[index]) {
+        // Valid URL found, create a link
+        const url = sourceUrls[index];
+        // Escape HTML attributes properly for security, though template literals with trusted vars are generally okay.
+        // For URLs from external sources, further sanitization might be needed if they weren't already validated.
+        return `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium underline">[${originalNumber}]</a>`;
+      } else {
+        // No valid URL, return the non-clickable styled span
+        return `<span class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full mx-0.5">${originalNumber}</span>`;
+      }
+    });
   };
   
-  const formattedContent = isUser ? message.content : processContentWithCitations(formatContent(message.content));
+  const formattedContent = isUser 
+    ? message.content 
+    : processContentWithCitations(formatContent(message.content), message.sourceUrls);
   
   return (
     <div className={cn("flex items-start gap-3 max-w-4xl mx-auto", isUser && "flex-row-reverse")}>
@@ -149,7 +165,7 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="prose dark:prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+            <div className="prose dark:prose-invert max-w-none text-sm break-words" dangerouslySetInnerHTML={{ __html: formattedContent }} />
             
             {/* Feedback and actions for AI messages */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1 mt-2 border-t border-gray-200 dark:border-gray-700">
