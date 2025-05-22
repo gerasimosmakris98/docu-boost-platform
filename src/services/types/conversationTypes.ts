@@ -28,6 +28,7 @@ export interface Message {
   content: string;
   created_at: string;
   attachments?: string[];
+  sourceUrls?: string[];
 }
 
 export interface ConversationMessage extends Message {

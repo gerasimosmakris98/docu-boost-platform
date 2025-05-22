@@ -83,10 +83,11 @@ export const sendMessage = async (
       .insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: aiResponseContent,
+        content: aiResponseContent.generatedText, // Use generatedText field
+        source_urls: aiResponseContent.sourceUrls, // Add sourceUrls
         attachments: []
       })
-      .select()
+      .select('*, source_urls') // Ensure source_urls is selected
       .single();
 
     if (aiMessageError) {
@@ -101,7 +102,8 @@ export const sendMessage = async (
     // We only want to do this if there are now enough messages to create a meaningful title
     if (conversationData.title === "New Conversation" && previousMessages && previousMessages.length >= 1) {
       try {
-        const allMessages = [...previousMessages, { role: 'user', content }, { role: 'assistant', content: aiResponseContent }];
+        // Pass the generatedText part of AI response for title generation
+        const allMessages = [...previousMessages, { role: 'user', content }, { role: 'assistant', content: aiResponseContent.generatedText }];
         const generatedTitle = await aiProviderService.generateTitle(allMessages);
         
         if (generatedTitle && generatedTitle !== "New Conversation") {
@@ -141,7 +143,8 @@ export const sendMessage = async (
       conversation_id: aiMessageData.conversation_id,
       role: 'assistant',
       content: aiMessageData.content,
-      created_at: aiMessageData.created_at
+      created_at: aiMessageData.created_at,
+      sourceUrls: aiMessageData.source_urls || [] // Include sourceUrls
     };
 
     return { aiResponse };
