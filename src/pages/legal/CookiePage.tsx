@@ -2,6 +2,7 @@
 import { Helmet } from 'react-helmet-async';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import LegalNavigation from '@/components/legal/LegalNavigation';
+import Logo from '@/components/common/Logo';
 
 const CookiePage = () => {
   return (
@@ -10,6 +11,10 @@ const CookiePage = () => {
         <title>Cookie Policy - AI Career Advisor</title>
         <meta name="description" content="Cookie Policy for AI Career Advisor - Learn how we use cookies and similar technologies." />
       </Helmet>
+      
+      <div className="mb-6">
+        <Logo size="md" withLink={true} />
+      </div>
       
       <h1 className="text-3xl font-bold mb-2">Cookie Policy</h1>
       <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>

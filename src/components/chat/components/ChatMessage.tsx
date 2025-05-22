@@ -48,6 +48,20 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
     toast.success("Message copied to clipboard");
   };
   
+  const handleFeedback = (isPositive: boolean) => {
+    setLiked(isPositive);
+    
+    // Show feedback toast
+    if (isPositive) {
+      toast.success("Thanks for your feedback!");
+    } else {
+      toast.success("Thanks for your feedback. We'll improve our responses.");
+    }
+    
+    // TODO: Send feedback to backend when implemented
+    console.log("Feedback submitted:", isPositive ? "positive" : "negative", "for message:", message.id);
+  };
+  
   const formatContent = (content: string) => {
     if (contentFormat === 'normal') return content;
     
@@ -63,10 +77,16 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
     return content;
   };
   
-  // Process citations in format [1], [2], etc. and make them visually distinct
+  // Process citations in format [1], [2], etc. and make them clickable
   const processContentWithCitations = (content: string) => {
-    // Add spans around citation references
-    return content.replace(/\[(\d+)\]/g, '<span class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-900/30 text-blue-300 rounded-full mx-0.5">$1</span>');
+    // Make citation references clickable
+    const processedContent = content.replace(/\[(\d+)\]/g, '<a href="#citation-$1" class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-900/30 text-blue-300 rounded-full mx-0.5 hover:bg-blue-800/50">$1</a>');
+    
+    // Handle URLs - make them clickable
+    return processedContent.replace(
+      /(https?:\/\/[^\s]+)/g, 
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">$1</a>'
+    );
   };
   
   const formattedContent = isUserMessage ? message.content : formatContent(message.content);
@@ -137,7 +157,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                           variant={liked === true ? "default" : "ghost"} 
                           size="icon" 
                           className="h-6 w-6"
-                          onClick={() => setLiked(true)}
+                          onClick={() => handleFeedback(true)}
                         >
                           <ThumbsUp className="h-3.5 w-3.5" />
                         </Button>
@@ -145,7 +165,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                           variant={liked === false ? "default" : "ghost"} 
                           size="icon" 
                           className="h-6 w-6"
-                          onClick={() => setLiked(false)}
+                          onClick={() => handleFeedback(false)}
                         >
                           <ThumbsDown className="h-3.5 w-3.5" />
                         </Button>
@@ -266,7 +286,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                     variant={liked === true ? "default" : "ghost"} 
                     size="icon" 
                     className="h-6 w-6"
-                    onClick={() => setLiked(true)}
+                    onClick={() => handleFeedback(true)}
                   >
                     <ThumbsUp className="h-3.5 w-3.5" />
                   </Button>
@@ -274,7 +294,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                     variant={liked === false ? "default" : "ghost"} 
                     size="icon" 
                     className="h-6 w-6"
-                    onClick={() => setLiked(false)}
+                    onClick={() => handleFeedback(false)}
                   >
                     <ThumbsDown className="h-3.5 w-3.5" />
                   </Button>

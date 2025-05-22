@@ -2,6 +2,7 @@
 import { Helmet } from 'react-helmet-async';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import LegalNavigation from '@/components/legal/LegalNavigation';
+import Logo from '@/components/common/Logo';
 
 const PrivacyPage = () => {
   return (
@@ -10,6 +11,10 @@ const PrivacyPage = () => {
         <title>Privacy Policy - AI Career Advisor</title>
         <meta name="description" content="Privacy Policy for AI Career Advisor - Learn how we handle your personal information." />
       </Helmet>
+      
+      <div className="mb-6">
+        <Logo size="md" withLink={true} />
+      </div>
       
       <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
       <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>

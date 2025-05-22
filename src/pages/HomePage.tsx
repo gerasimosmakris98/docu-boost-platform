@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +6,7 @@ import { ArrowRight, MessageSquare, Shield, Brain, Zap, UserCheck } from "lucide
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const currentYear = new Date().getFullYear();
   
   const handleGetStarted = () => {
     if (isAuthenticated) {
@@ -174,7 +174,7 @@ Would you like more details on any specific area?"
           </Button>
           
           <div className="text-gray-400 text-sm">
-            <p>© 2023 AI Career Advisor. All rights reserved.</p>
+            <p>© {currentYear} AI Career Advisor. All rights reserved.</p>
           </div>
         </div>
       </footer>

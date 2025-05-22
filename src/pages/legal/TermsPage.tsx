@@ -2,6 +2,7 @@
 import { Helmet } from 'react-helmet-async';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import LegalNavigation from '@/components/legal/LegalNavigation';
+import Logo from '@/components/common/Logo';
 
 const TermsPage = () => {
   return (
@@ -10,6 +11,10 @@ const TermsPage = () => {
         <title>Terms of Use - AI Career Advisor</title>
         <meta name="description" content="Terms of Use for AI Career Advisor - Our policies and guidelines for using the service." />
       </Helmet>
+      
+      <div className="mb-6">
+        <Logo size="md" withLink={true} />
+      </div>
       
       <h1 className="text-3xl font-bold mb-2">Terms of Use</h1>
       <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>

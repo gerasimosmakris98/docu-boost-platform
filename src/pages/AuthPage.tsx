@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/components/common/Logo";
 
 import AuthContainer from "@/components/auth/AuthContainer";
 import AuthTypeToggle from "@/components/auth/AuthTypeToggle";
@@ -100,12 +101,17 @@ const AuthPage = () => {
   );
   
   return (
-    <AuthContainer
-      title={getTitle()}
-      description={getDescription()}
-      content={renderAuthContent()}
-      footer={<AuthTypeToggle authType={authType} onToggle={setAuthType} />}
-    />
+    <>
+      <div className="fixed top-0 left-0 p-4 z-10">
+        <Logo size="md" withLink={true} />
+      </div>
+      <AuthContainer
+        title={getTitle()}
+        description={getDescription()}
+        content={renderAuthContent()}
+        footer={<AuthTypeToggle authType={authType} onToggle={setAuthType} />}
+      />
+    </>
   );
 };
 

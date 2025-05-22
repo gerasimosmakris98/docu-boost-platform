@@ -28,14 +28,26 @@ export const getAiResponse = async (
       conversationType, 
       userMessage, 
       contextMessages,
-      { brief: true, depth: 'low', format: 'paragraph' }
+      { 
+        brief: true, 
+        depth: 'low', 
+        format: 'paragraph',
+        // Add constraints for more concise responses
+        maxLength: 300,
+        focusedResponse: true 
+      }
     );
     const enhancedPrompt = profileContext 
-      ? `${profileContext}\n\n${prompt}` 
-      : prompt;
+      ? `${profileContext}\n\nPlease provide a concise and focused response: ${prompt}` 
+      : `Please provide a concise and focused response: ${prompt}`;
     
     // Get model options based on conversation type
-    const options = getModelOptions(conversationType);
+    const options = {
+      ...getModelOptions(conversationType),
+      // Reduce max tokens for more concise responses
+      maxTokens: 250,
+      temperature: 0.2
+    };
     
     let aiResponseContent = '';
     
