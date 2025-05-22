@@ -18,9 +18,18 @@ const Logo = ({ size = "md", withLink = true, className }: LogoProps) => {
       className
     )}>
       <div className="relative">
-        <Briefcase className="h-8 w-8 text-green-500" />
+        {/* Briefcase icon with gradient */}
+        <div className="relative">
+          <Briefcase className={cn(
+            "text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500",
+            size === "sm" ? "h-6 w-6" : size === "lg" ? "h-10 w-10" : "h-8 w-8"
+          )} />
+        </div>
       </div>
-      <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+      <span className={cn(
+        "font-bold tracking-tight bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent",
+        size === "sm" ? "text-lg" : size === "lg" ? "text-2xl" : "text-xl"
+      )}>
         AI Career Advisor
       </span>
     </div>

@@ -5,6 +5,7 @@ import { asConversationType } from "./conversationApiUtils";
 import { getAiResponse } from "./aiResponseHandlers";
 import { formatConversationContext } from "./conversationUtils";
 import { toast } from "sonner";
+import { aiProviderService } from "../ai/aiProviderService";
 
 /**
  * Send a message to the conversation and get an AI response
@@ -96,11 +97,44 @@ export const sendMessage = async (
     
     console.log('AI response saved successfully');
 
-    // Update conversation timestamp
-    await supabase
-      .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId);
+    // Generate a title for the conversation if it's currently "New Conversation"
+    // We only want to do this if there are now enough messages to create a meaningful title
+    if (conversationData.title === "New Conversation" && previousMessages && previousMessages.length >= 1) {
+      try {
+        const allMessages = [...previousMessages, { role: 'user', content }, { role: 'assistant', content: aiResponseContent }];
+        const generatedTitle = await aiProviderService.generateTitle(allMessages);
+        
+        if (generatedTitle && generatedTitle !== "New Conversation") {
+          await supabase
+            .from('conversations')
+            .update({ 
+              title: generatedTitle,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', conversationId);
+          console.log('Conversation title updated to:', generatedTitle);
+        } else {
+          // Just update the timestamp
+          await supabase
+            .from('conversations')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', conversationId);
+        }
+      } catch (titleError) {
+        console.error('Error generating title:', titleError);
+        // Still update the timestamp even if title generation fails
+        await supabase
+          .from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId);
+      }
+    } else {
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+    }
 
     const aiResponse: Message = {
       id: aiMessageData.id,

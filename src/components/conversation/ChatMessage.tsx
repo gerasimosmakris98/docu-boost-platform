@@ -1,10 +1,15 @@
 
-import { Bot, User, Loader2, FileText, Image as ImageIcon, Link as LinkIcon, Paperclip } from "lucide-react";
+import { useState } from "react";
+import { 
+  Bot, User, Loader2, FileText, Image as ImageIcon, Link as LinkIcon, 
+  Paperclip, ThumbsUp, ThumbsDown, Copy, List, ListOrdered
+} from "lucide-react";
 import { Message } from "@/services/conversationService";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from 'react-markdown';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ChatMessageProps {
   message: Message;
@@ -14,6 +19,8 @@ interface ChatMessageProps {
 const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
   const isUser = message.role === 'user';
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const [liked, setLiked] = useState<boolean | null>(null);
+  const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
   
   const getAttachmentIcon = (url: string) => {
     const fileExtension = url.split('.').pop()?.toLowerCase() || '';
@@ -78,6 +85,34 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
     );
   };
   
+  const handleCopyText = () => {
+    navigator.clipboard.writeText(message.content);
+    toast.success("Message copied to clipboard");
+  };
+  
+  const formatContent = (content: string) => {
+    if (contentFormat === 'normal') return content;
+    
+    // Split content by paragraphs or newlines
+    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim() !== '');
+    
+    if (contentFormat === 'bullets') {
+      return paragraphs.map(p => `• ${p}`).join('\n\n');
+    } else if (contentFormat === 'numbered') {
+      return paragraphs.map((p, i) => `${i + 1}. ${p}`).join('\n\n');
+    }
+    
+    return content;
+  };
+  
+  // Process citations in format [1], [2], etc. and make them visually distinct
+  const processContentWithCitations = (content: string) => {
+    // Add spans around citation references
+    return content.replace(/\[(\d+)\]/g, '<span class="inline-flex items-center justify-center h-5 w-5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full mx-0.5">$1</span>');
+  };
+  
+  const formattedContent = isUser ? message.content : processContentWithCitations(formatContent(message.content));
+  
   return (
     <div className={cn("flex items-start gap-3 max-w-4xl mx-auto", isUser && "flex-row-reverse")}>
       <Avatar className={cn("h-8 w-8 border", isUser ? "bg-primary/10 border-primary/20" : "bg-muted/50 border-muted")}>
@@ -113,8 +148,79 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
             )}
           </div>
         ) : (
-          <div className="prose dark:prose-invert max-w-none text-sm">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+          <div className="space-y-3">
+            <div className="prose dark:prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: formattedContent }} />
+            
+            {/* Feedback and actions for AI messages */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 mt-2 border-t border-gray-200 dark:border-gray-700">
+              {/* Feedback buttons */}
+              <div className="flex items-center gap-1 mr-2">
+                <Button 
+                  variant={liked === true ? "default" : "ghost"} 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={() => setLiked(true)}
+                >
+                  <ThumbsUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button 
+                  variant={liked === false ? "default" : "ghost"} 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={() => setLiked(false)}
+                >
+                  <ThumbsDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              
+              {/* Separator */}
+              <div className="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-1" />
+              
+              {/* Format buttons */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={contentFormat === 'normal' ? "default" : "ghost"}
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setContentFormat('normal')}
+                  title="Normal text"
+                >
+                  <span className="text-xs font-mono">T</span>
+                </Button>
+                <Button
+                  variant={contentFormat === 'bullets' ? "default" : "ghost"}
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setContentFormat('bullets')}
+                  title="Bullet points"
+                >
+                  <List className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={contentFormat === 'numbered' ? "default" : "ghost"}
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setContentFormat('numbered')}
+                  title="Numbered list"
+                >
+                  <ListOrdered className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              
+              {/* Separator */}
+              <div className="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-1" />
+              
+              {/* Copy button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={handleCopyText}
+                title="Copy text"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         )}
       </div>

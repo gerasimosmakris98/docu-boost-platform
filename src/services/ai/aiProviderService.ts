@@ -14,18 +14,18 @@ const aiProviderService = {
     console.log('Generating response for:', conversationType);
     
     try {
-      // Create a more conversational prompt that encourages brief, natural responses
+      // Create a more conversational prompt that encourages brief, natural responses with citations
       const enhancedPrompt = `
-        You are a friendly AI career advisor having a concise conversation. Keep responses under 3 short paragraphs.
+        You are a friendly AI career advisor having a concise conversation. 
         
         Guidelines:
-        - Be extremely brief and conversational
+        - Be extremely brief and conversational (max 2 short paragraphs)
         - Only respond directly to what was asked
         - Use a friendly, supportive tone
+        - If referring to sources, use numbered citations like [1], [2]
+        - Personalize based on any context about the user's background
         - Avoid introductions or conclusions
-        - Focus only on what was directly asked
         - Respond like you're texting a friend
-        - Keep it short even if the question is complex
         
         User message: ${prompt}
       `;
@@ -35,7 +35,7 @@ const aiProviderService = {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
-          maxTokens: 250, // Limit token count for brevity
+          maxTokens: 200, // Limit token count for brevity
           brief: true
         }
       });
@@ -85,6 +85,7 @@ const aiProviderService = {
         - Highlight 2-3 key strengths
         - Suggest 2-3 specific improvements
         - Be conversational and supportive
+        - If referring to specific parts, use numbered citations [1], [2]
       `;
       
       // Call Supabase Edge Function to analyze file
@@ -92,7 +93,7 @@ const aiProviderService = {
         body: { 
           prompt: fileAnalysisPrompt,
           type: 'file_analysis',
-          maxTokens: 300
+          maxTokens: 250
         }
       });
       
@@ -139,6 +140,7 @@ const aiProviderService = {
         - Focus on 2-3 key takeaways
         - Give specific, actionable advice
         - Be supportive and helpful
+        - If referring to specific parts, use numbered citations [1], [2]
       `;
       
       // Call Supabase Edge Function to analyze URL
@@ -146,7 +148,7 @@ const aiProviderService = {
         body: { 
           prompt: urlAnalysisPrompt,
           type: 'url_analysis',
-          maxTokens: 300
+          maxTokens: 250
         }
       });
       
@@ -170,6 +172,56 @@ const aiProviderService = {
       
       // Provide a brief fallback response for URL analysis
       return `I couldn't analyze that URL in detail. Would you like me to try again?`;
+    }
+  },
+  
+  // Generate title for a conversation based on its messages
+  generateTitle: async (
+    messages: {role: string, content: string}[]
+  ): Promise<string> => {
+    if (messages.length === 0) return "New Conversation";
+    
+    try {
+      // Extract first few user messages for context
+      const messageContext = messages
+        .filter(msg => msg.role === 'user')
+        .slice(0, 2)
+        .map(msg => msg.content)
+        .join('\n');
+        
+      if (!messageContext) return "New Conversation";
+      
+      const titlePrompt = `
+        Generate a very short, concise title (4-5 words max) for a conversation that starts with:
+        "${messageContext.substring(0, 100)}${messageContext.length > 100 ? '...' : ''}"
+        
+        Return ONLY the title with no quotes or additional text.
+      `;
+      
+      // Call Supabase Edge Function to generate title
+      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+        body: { 
+          prompt: titlePrompt,
+          type: 'conversation_title',
+          maxTokens: 20
+        }
+      });
+      
+      if (error || data.error || !data.generatedText) {
+        console.error('Error generating title:', error || data.error);
+        return "New Conversation";
+      }
+      
+      // Clean up the title - remove quotes and limit length
+      const title = data.generatedText
+        .replace(/^["']|["']$/g, '') // Remove surrounding quotes
+        .replace(/^Title: /i, '')    // Remove "Title:" prefix if present
+        .trim();
+        
+      return title || "New Conversation";
+    } catch (error) {
+      console.error('Error in generateTitle:', error);
+      return "New Conversation";
     }
   },
   

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Menu, PlusCircle } from "lucide-react";
+import { Menu, PlusCircle, Briefcase } from "lucide-react";
 
 interface SidebarHeaderProps {
   isCollapsed: boolean;
@@ -36,8 +36,11 @@ const SidebarHeader = ({ isCollapsed, onToggleCollapse, onNewChat }: SidebarHead
   return (
     <div>
       <div className="p-3 flex items-center justify-between">
-        <div className="font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-          AI Career Advisor
+        <div className="flex items-center">
+          <Briefcase className="h-5 w-5 mr-2 text-transparent bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text" />
+          <span className="font-semibold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+            AI Career Advisor
+          </span>
         </div>
         <Button 
           variant="ghost" 
