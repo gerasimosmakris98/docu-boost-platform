@@ -9,7 +9,7 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = (props: ChatMessageProps) => {
-  return <MessageComponent {...props} />;
+  return <MessageComponent {...props} showTimestamp={props.showTimestamp || true} />;
 };
 
 export default ChatMessage;

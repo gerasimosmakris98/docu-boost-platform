@@ -89,9 +89,9 @@ const ChatPage = () => {
   
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Header for mobile - only visible when sidebar is collapsed */}
+      {/* Header for mobile - fixed position */}
       {isMobile && sidebarCollapsed && (
-        <div className="absolute top-0 left-0 z-50 p-4">
+        <div className="fixed top-0 left-0 z-50 p-4">
           <Button 
             variant="ghost" 
             size="icon" 

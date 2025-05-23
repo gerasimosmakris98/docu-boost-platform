@@ -116,19 +116,21 @@ const MessageComponent = ({
     return content;
   };
   
-  // Process content for better display - formatting paragraphs, preserving newlines
+  // Process content to properly format text and handle bold markers
   const processContent = (content: string) => {
     // Format content based on user selection
     const formattedText = formatContent(content);
     
+    // Convert **text** to <strong>text</strong> for proper bold formatting
+    const processedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
     // Replace newlines with <br> tags and preserve paragraph breaks
-    return formattedText
+    return processedText
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br>');
   };
   
-  // Process citations in format [1], [2], etc. and make them visually distinct,
-  // linking them if a corresponding URL is available.
+  // Process citations in format [1], [2], etc.
   const processContentWithCitations = (content: string, sourceUrls?: string[]) => {
     // First format paragraphs and line breaks
     let processedContent = processContent(content);
@@ -150,7 +152,7 @@ const MessageComponent = ({
   };
   
   const formattedContent = isUser 
-    ? `<p>${message.content.replace(/\n/g, '<br>')}</p>` 
+    ? `<p>${processContent(message.content)}</p>` 
     : `<p>${processContentWithCitations(message.content, message.sourceUrls)}</p>`;
   
   return (
@@ -178,7 +180,9 @@ const MessageComponent = ({
       
       <div className={cn(
         "rounded-lg px-4 py-2.5 max-w-[calc(100%-44px)]",
-        isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+        isModern 
+          ? isUser ? "border border-gray-700 bg-transparent text-white" : "border border-gray-700 bg-transparent text-white"
+          : isUser ? "border border-primary/20 bg-transparent text-foreground" : "border border-muted bg-transparent text-foreground"
       )}>
         {/* Message timestamp */}
         {showTimestamp && (
