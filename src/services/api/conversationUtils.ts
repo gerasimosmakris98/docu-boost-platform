@@ -59,13 +59,12 @@ export const getChatPromptForType = (
   options: { 
     brief?: boolean; 
     depth?: 'low' | 'medium' | 'high'; 
-    format?: 'paragraph' | 'bullets' | 'markdown' | 'code' | 'mixed';
+    format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
     maxLength?: number;
     focusedResponse?: boolean;
-    conversational?: boolean;
   }
 ): string => {
-  const { brief = true, depth = 'low', format = 'mixed', conversational = true } = options;
+  const { brief = true, depth = 'low', format = 'paragraph' } = options;
   
   // Base prompt that works for all types - making it more conversational and brief
   let prompt = `
@@ -74,12 +73,8 @@ export const getChatPromptForType = (
     ${context ? `Previous conversation context:\n${context}\n\n` : ''}
     
     Please provide a ${brief ? 'brief' : 'detailed'} response with ${depth} level of detail.
-    ${conversational ? 'Be conversational, friendly, and natural in your response. Write like a helpful human, not a formal AI.' : 'Be professional in your response.'}
-    
-    ${format === 'mixed' 
-      ? 'Use a mix of short paragraphs and bullet points for easy readability. Add space between paragraphs.'
-      : `Format your response as ${format}.`
-    }
+    Be conversational, friendly, and direct in your response.
+    Format your response as ${format}.
   `;
   
   // Add constraints for length if specified
@@ -97,37 +92,31 @@ export const getChatPromptForType = (
     case 'resume':
       prompt += `
         Focus on specific, practical resume tips without being too formal.
-        Use bullet points for key suggestions.
       `;
       break;
     case 'cover_letter':
       prompt += `
         Offer clear, actionable cover letter advice in a friendly tone.
-        Break up long advice into bullet points or numbered steps.
       `;
       break;
     case 'interview_prep':
       prompt += `
         Provide concise interview guidance as if we're having a casual conversation.
-        Use bullet points for key interview tips or sample answers.
       `;
       break;
     case 'job_search':
       prompt += `
         Share practical job search suggestions in a supportive, friendly way.
-        Use bullet points for listing steps or strategies.
       `;
       break;
     case 'linkedin':
       prompt += `
         Give straightforward LinkedIn advice without being overly formal.
-        Use bullet points for optimization tips.
       `;
       break;
     default:
       prompt += `
         Provide helpful career guidance in a friendly, conversational manner.
-        Use a mix of paragraphs and bullet points for readability.
       `;
   }
   
@@ -178,3 +167,4 @@ export const validateMessageContent = (content: string): string => {
   
   return trimmedContent;
 };
+

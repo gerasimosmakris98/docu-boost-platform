@@ -123,7 +123,7 @@ const SidebarGroups = ({
   }, [conversations]);
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="flex-1 flex flex-col"> {/* Removed overflow-hidden */}
       {/* AI Advisors Section */}
       {!isCollapsed && (
         <div className="px-3 py-2 text-xs font-semibold text-gray-400">

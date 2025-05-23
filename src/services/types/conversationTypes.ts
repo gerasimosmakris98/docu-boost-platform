@@ -29,7 +29,6 @@ export interface Message {
   created_at: string;
   attachments?: string[];
   sourceUrls?: string[];
-  formattedTime?: string; // Added formattedTime property for consistent timestamp display
 }
 
 export interface ConversationMessage extends Message {

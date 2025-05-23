@@ -7,6 +7,5 @@ import { ConversationType } from '../types/conversationTypes';
  */
 export const analyzeLinkedInProfile = async (profileData: any): Promise<string> => {
   const prompt = `Analyze this LinkedIn profile and provide optimization suggestions: ${JSON.stringify(profileData)}`;
-  const response = await aiProviderService.generateResponse(prompt, "linkedin_analysis" as ConversationType);
-  return response.generatedText;
+  return await aiProviderService.generateResponse(prompt, "linkedin_analysis" as ConversationType);
 };
