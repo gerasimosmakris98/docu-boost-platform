@@ -7,7 +7,7 @@ import {
   Message,
   ConversationType
 } from "@/services/conversationService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import ChatConversationHeader from "./chat/ChatConversationHeader";
 import ChatMessagesList from "./chat/ChatMessagesList";
 import ChatInputArea from "./chat/ChatInputArea";

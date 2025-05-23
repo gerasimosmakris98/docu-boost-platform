@@ -2,8 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
 import { aiProviderService } from "../ai/aiProviderService";
-import { getChatPromptForType } from "../utils/conversationUtils";
-import { extractUrlType, formatConversationContext } from "./conversationUtils";
+import { getChatPromptForType, extractUrlType, formatConversationContext } from "../utils/conversationUtils";
 import { getUserProfileContext } from "./profileUtils";
 import { getModelOptions } from "../ai/providerConfigs";
 

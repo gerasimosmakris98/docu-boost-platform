@@ -49,6 +49,22 @@ export const extractUrlType = (url: string): string => {
   }
 };
 
+// Helper function to get system prompts based on conversation type
+export const getSystemPrompt = (type: ConversationType): string => {
+  switch(type) {
+    case 'resume':
+      return "You are a professional resume writer and career coach. Help the user create or improve their resume. Provide specific, tailored advice based on their experience and the job they're targeting. Be concise but thorough, and format content in a clean, professional way.";
+    case 'cover_letter':
+      return "You are an expert at writing compelling cover letters. Help the user create a cover letter that highlights their relevant experience and skills for the specific job they're applying to. Be professional, authentic, and persuasive.";
+    case 'interview_prep':
+      return "You are an interview coach with expertise in preparing candidates. Help the user prepare for job interviews by providing common questions, strategies for effective answers, and feedback on their practice responses. Be supportive but honest in your assessment.";
+    // Add other cases from the existing getSystemPromptForType functions as needed, ensuring consistency.
+    // Default case:
+    default:
+      return "You are a helpful career development assistant. Provide guidance, advice, and support for various career-related questions and needs.";
+  }
+};
+
 /**
  * Generate a prompt based on conversation type
  */
@@ -153,5 +169,22 @@ export const getWelcomeMessageForType = (type: ConversationType): string => {
     default:
       return "Hello! I'm your AI Career Assistant. I can help with resume reviews, cover letters, interview preparation, job search strategies, and more. How can I assist you today?";
   }
+};
+
+/**
+ * Validate message content to prevent empty or malformed messages
+ */
+export const validateMessageContent = (content: string): string => {
+  if (!content || content.trim() === '') {
+    return 'No content provided.';
+  }
+  
+  // Trim excessive whitespace and limit length if needed
+  const trimmedContent = content.trim();
+  
+  // You can add more validation logic here if needed
+  // For example, limiting message length or removing unsafe content
+  
+  return trimmedContent;
 };
 

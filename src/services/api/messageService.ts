@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message, ConversationType } from "../types/conversationTypes";
 import { asConversationType } from "./conversationApiUtils";
 import { getAiResponse } from "./aiResponseHandlers";
-import { formatConversationContext } from "./conversationUtils";
+import { formatConversationContext } from "../utils/conversationUtils";
 import { toast } from "sonner";
 import { aiProviderService } from "../ai/aiProviderService";
 

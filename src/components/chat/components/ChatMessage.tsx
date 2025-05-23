@@ -14,7 +14,7 @@ import { Message } from "@/services/types/conversationTypes";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import ChatAttachment from "./ChatAttachment";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

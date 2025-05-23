@@ -11,7 +11,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import LinkedInImport from "@/components/linkedin/LinkedInImport";
 import LinkedInOptimizer from "@/components/linkedin/LinkedInOptimizer";
 import { 
@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
-import { LinkedInProfile } from "@/services/authService";
+import { LinkedInProfile } from "@/contexts/auth/types";
 import { documentService } from "@/services/documentService";
 import { conversationService } from "@/services/conversationService";
 

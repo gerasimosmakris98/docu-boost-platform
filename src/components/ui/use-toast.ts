@@ -1,6 +1,6 @@
 
-import { useToast as useShadcnToast } from "@/hooks/use-toast";
-import { toast as shadcnToast } from "@/hooks/use-toast";
+import { useToast as useShadcnToast } from "./toast/internalToastImplementation";
+import { toast as shadcnToast } from "./toast/internalToastImplementation";
 import { toast as sonnerToast } from "sonner";
 
 // Re-export the useToast hook from shadcn/ui
