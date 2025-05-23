@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { 
   Bot, User, Loader2, FileText, Image as ImageIcon, Link as LinkIcon, 
-  Paperclip, ThumbsUp, ThumbsDown, Copy, List, ListOrdered
+  Paperclip, ThumbsUp, ThumbsDown, Copy, List, ListOrdered, Clock
 } from "lucide-react";
 import { Message } from "@/services/conversationService";
 import { cn } from "@/lib/utils";
@@ -10,17 +10,23 @@ import ReactMarkdown from 'react-markdown';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface ChatMessageProps {
   message: Message;
   isLoading?: boolean;
+  showTimestamp?: boolean;
 }
 
-const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
+const ChatMessage = ({ message, isLoading = false, showTimestamp = false }: ChatMessageProps) => {
   const isUser = message.role === 'user';
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [liked, setLiked] = useState<boolean | null>(null);
   const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
+  
+  // Format timestamp
+  const timestamp = message.created_at ? new Date(message.created_at) : new Date();
+  const formattedTime = message.formattedTime || format(timestamp, 'h:mm a');
   
   const getAttachmentIcon = (url: string) => {
     const fileExtension = url.split('.').pop()?.toLowerCase() || '';
@@ -149,6 +155,16 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
         "rounded-lg px-4 py-2.5 max-w-[calc(100%-44px)]",
         isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
       )}>
+        {/* Message timestamp */}
+        {showTimestamp && (
+          <div className="flex items-center justify-end mb-1">
+            <span className="text-xs text-gray-500 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {formattedTime}
+            </span>
+          </div>
+        )}
+        
         {isLoading ? (
           <div className="flex items-center gap-1.5">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -175,7 +191,10 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
                   variant={liked === true ? "default" : "ghost"} 
                   size="icon" 
                   className="h-6 w-6"
-                  onClick={() => setLiked(true)}
+                  onClick={() => {
+                    setLiked(true);
+                    toast.success("Feedback recorded: Helpful");
+                  }}
                 >
                   <ThumbsUp className="h-3.5 w-3.5" />
                 </Button>
@@ -183,7 +202,10 @@ const ChatMessage = ({ message, isLoading = false }: ChatMessageProps) => {
                   variant={liked === false ? "default" : "ghost"} 
                   size="icon" 
                   className="h-6 w-6"
-                  onClick={() => setLiked(false)}
+                  onClick={() => {
+                    setLiked(false);
+                    toast.success("Feedback recorded: Not helpful");
+                  }}
                 >
                   <ThumbsDown className="h-3.5 w-3.5" />
                 </Button>

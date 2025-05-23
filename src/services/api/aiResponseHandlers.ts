@@ -32,22 +32,25 @@ export const getAiResponse = async (
       { 
         brief: true, 
         depth: 'low', 
-        format: 'paragraph',
-        // Add constraints for more concise responses
-        maxLength: 300,
-        focusedResponse: true 
+        format: 'mixed',
+        // Add constraints for more conversational responses
+        maxLength: 350,
+        focusedResponse: true,
+        conversational: true
       }
     );
+    
+    // Add instruction to treat each conversation separately
     const enhancedPrompt = profileContext 
-      ? `${profileContext}\n\nPlease provide a concise and focused response: ${prompt}` 
-      : `Please provide a concise and focused response: ${prompt}`;
+      ? `${profileContext}\n\nPlease provide a focused response treating this as a new conversation. Format with short paragraphs and appropriate spacing: ${prompt}` 
+      : `Please provide a focused response treating this as a new conversation. Format with short paragraphs and appropriate spacing: ${prompt}`;
     
     // Get model options based on conversation type
     const options = {
       ...getModelOptions(conversationType),
-      // Reduce max tokens for more concise responses
-      maxTokens: 250,
-      temperature: 0.2
+      // Adjust token settings for better responses
+      maxTokens: 300,
+      temperature: 0.3
     };
         
     // Handle file attachments if present
@@ -65,8 +68,20 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
+      // Enhanced file analysis prompt
+      const fileAnalysisPrompt = `
+        Analyze this ${fileType} file as if this is a completely new conversation. 
+        Focus only on the file content without referencing previous conversations.
+        Format your response with:
+        - Short, focused paragraphs
+        - Bullet points for key insights
+        - Clear section breaks
+        
+        Keep responses concise and human-like.
+      `;
+      
       resultFromProvider = await aiProviderService.analyzeFile(
-        fileUrl, fileName, fileType, profileContext || undefined, options
+        fileUrl, fileName, fileType, fileAnalysisPrompt, options
       );
       console.log('File analysis complete');
     } 
@@ -76,8 +91,20 @@ export const getAiResponse = async (
       if (url) {
         const urlType = extractUrlType(url);
         console.log('Analyzing URL:', url, 'Type:', urlType);
+        
+        // Enhanced URL analysis prompt
+        const urlAnalysisPrompt = `
+          Analyze this ${urlType} URL as a new conversation.
+          Format your response with:
+          - Short paragraphs with good spacing
+          - Bullet points for key takeaways
+          - Numbered lists for steps or recommendations
+          
+          Be conversational and human-like.
+        `;
+        
         resultFromProvider = await aiProviderService.analyzeUrl(
-          url, urlType, profileContext || undefined
+          url, urlType, urlAnalysisPrompt
         );
         console.log('URL analysis complete');
       } else {

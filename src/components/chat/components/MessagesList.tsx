@@ -4,7 +4,7 @@ import { Message } from "@/services/types/conversationTypes";
 import { Loader2, Bot, ChevronDown, ChevronUp } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import { Button } from "@/components/ui/button";
-import { format, isToday, isYesterday, isThisWeek, isThisMonth, differenceInDays } from "date-fns";
+import { format, isToday, isYesterday, isThisWeek, isThisMonth, differenceInDays, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface MessagesListProps {
@@ -18,7 +18,7 @@ interface MessageGroup {
   messages: Message[];
 }
 
-const MAX_VISIBLE_MESSAGES = 15; // Number of messages to show by default
+const MAX_VISIBLE_MESSAGES = 12; // Number of messages to show by default
 
 const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,15 @@ const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListPro
         groups.push(currentGroup);
       }
       
-      currentGroup.messages.push(message);
+      // Add timestamp to each message
+      const messageWithTime = {
+        ...message,
+        formattedTime: isToday(date) 
+          ? format(date, 'h:mm a') 
+          : format(date, 'MMM d, h:mm a')
+      };
+      
+      currentGroup.messages.push(messageWithTime as Message);
     });
     
     return groups;
@@ -68,23 +76,28 @@ const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListPro
   const visibleGroups = useMemo(() => {
     if (showAllMessages) return groupedMessages;
     
+    // If we have only a few messages, show them all
+    if (messages.length <= MAX_VISIBLE_MESSAGES) return groupedMessages;
+    
+    // For many messages, limit the display and show the most recent ones
     let count = 0;
     const result = [];
     
-    // Start from the most recent messages
-    for (let i = 0; i < groupedMessages.length; i++) {
+    // Start from the most recent messages (reverse order)
+    for (let i = groupedMessages.length - 1; i >= 0; i--) {
       const group = groupedMessages[i];
       
       if (count + group.messages.length <= MAX_VISIBLE_MESSAGES) {
         // Add the whole group
-        result.push(group);
+        result.unshift(group); // Add to beginning since we're going backwards
         count += group.messages.length;
       } else {
         // Add a partial group
         const remainingSlots = MAX_VISIBLE_MESSAGES - count;
         if (remainingSlots > 0) {
-          const partialMessages = group.messages.slice(0, remainingSlots);
-          result.push({
+          // Take the most recent messages from this group
+          const partialMessages = group.messages.slice(group.messages.length - remainingSlots);
+          result.unshift({
             label: group.label,
             messages: partialMessages
           });
@@ -94,7 +107,7 @@ const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListPro
     }
     
     return result;
-  }, [groupedMessages, showAllMessages]);
+  }, [groupedMessages, showAllMessages, messages.length]);
   
   const hasMoreMessages = messages.length > MAX_VISIBLE_MESSAGES;
   
@@ -162,6 +175,7 @@ const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListPro
                   key={message.id || `${group.label}-${index}`}
                   message={message} 
                   isModern={isModern}
+                  showTimestamp={true}
                 />
               ))}
             </div>
@@ -180,7 +194,7 @@ const MessagesList = ({ messages, isLoading, isModern = false }: MessagesListPro
             variant="outline"
             size="sm"
             onClick={() => setShowAllMessages(!showAllMessages)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 bg-gray-800 hover:bg-gray-700 text-gray-200"
           >
             {showAllMessages ? (
               <>
