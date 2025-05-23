@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { useNavigate } from "react-router-dom";
 
 interface SidebarFooterProps {

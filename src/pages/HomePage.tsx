@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { ArrowRight, MessageSquare, Shield, Brain, Zap, UserCheck } from "lucide-react";
 
 const HomePage = () => {

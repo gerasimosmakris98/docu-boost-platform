@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader } from "lucide-react";
-import { useAuth, AuthProviderType } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
+import { AuthProviderType } from "@/contexts/auth/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

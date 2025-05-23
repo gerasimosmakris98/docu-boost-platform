@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { AuthProviderType } from "@/contexts/auth/types";
 
 interface OAuthButtonsProps {

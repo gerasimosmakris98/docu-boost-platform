@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Paperclip, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { conversationService, Message, Conversation } from "@/services/conversationService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import ChatAttachments from "@/components/conversation/ChatAttachments";
 import ConversationHeader from "@/components/conversation/ConversationHeader";
 import MessagesList from "@/components/conversation/MessagesList";

@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LinkedInProfile, useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
+import { LinkedInProfile } from "@/contexts/auth/types";
 import { Linkedin, Loader, FileCheck, FileText, Github, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";

@@ -7,7 +7,7 @@ import RecentDocumentsSection from "@/components/dashboard/RecentDocumentsSectio
 import TemplatesSection from "@/components/dashboard/TemplatesSection";
 import AssessmentSection from "@/components/dashboard/AssessmentSection";
 import LoginDialog from "@/components/auth/LoginDialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { documentService } from "@/services/documentService";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import ModernChatSidebar from "@/components/chat/ModernChatSidebar";
 import ModernChatInterface from "@/components/chat/ModernChatInterface";

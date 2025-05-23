@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { getSystemPrompt } from "./utils/conversationUtils";
 
 // Define the types for chat responses from the AI
 export interface AIResponse {
@@ -26,7 +27,7 @@ export const aiService = {
   ): Promise<string> {
     try {
       // Get appropriate system prompt based on conversation type
-      const systemPrompt = getSystemPromptForType(conversationType);
+      const systemPrompt = getSystemPrompt(conversationType);
       
       // Format the messages for the AI API
       const formattedMessages = [
@@ -166,20 +167,6 @@ ${userProfile?.full_name || "Your Name"}
     }
   }
 };
-
-// Helper function to get system prompts based on conversation type
-function getSystemPromptForType(type: ConversationType): string {
-  switch(type) {
-    case 'resume':
-      return "You are a professional resume writer and career coach. Help the user create or improve their resume. Provide specific, tailored advice based on their experience and the job they're targeting. Be concise but thorough, and format content in a clean, professional way.";
-    case 'cover_letter':
-      return "You are an expert at writing compelling cover letters. Help the user create a cover letter that highlights their relevant experience and skills for the specific job they're applying to. Be professional, authentic, and persuasive.";
-    case 'interview_prep':
-      return "You are an interview coach with expertise in preparing candidates. Help the user prepare for job interviews by providing common questions, strategies for effective answers, and feedback on their practice responses. Be supportive but honest in your assessment.";
-    default:
-      return "You are a helpful career development assistant. Provide guidance, advice, and support for various career-related questions and needs.";
-  }
-}
 
 // Helper function to get mock responses based on the message and conversation type
 function getMockResponse(message: string, conversationType: ConversationType): string {

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { Bot } from "lucide-react";
 import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";

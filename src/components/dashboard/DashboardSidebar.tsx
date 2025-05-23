@@ -12,7 +12,7 @@ import {
   Briefcase 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import AdvisorList from "../advisor/AdvisorList";

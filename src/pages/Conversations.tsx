@@ -9,7 +9,7 @@ import {
   Trash2, Calendar, MoreVertical, ArrowLeft 
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
 import { 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { PlusCircle, Trash2, Pencil, Save, X, Github, Linkedin, Globe, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 

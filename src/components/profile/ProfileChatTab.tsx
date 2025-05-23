@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/useAuth";
 import { advisors } from "@/components/chat/advisorData";
 import { conversationService } from "@/services/conversationService";
 import { ConversationType } from "@/services/types/conversationTypes";
