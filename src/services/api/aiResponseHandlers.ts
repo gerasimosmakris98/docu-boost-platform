@@ -65,10 +65,38 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
-      resultFromProvider = await aiProviderService.analyzeFile(
-        fileUrl, fileName, fileType, profileContext || undefined, options
-      );
-      console.log('File analysis complete');
+      const systemPromptForFileAnalysis = `You are analyzing a file as part of an ongoing career advisory conversation. ${profileContext ? 'User profile context: ' + profileContext + '.' : ''} The user's message accompanying this file upload was: '${userMessage}'. Please provide analysis relevant to this context and the user's message.`;
+
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('perplexity-analyze-file', {
+        body: {
+          fileUrl: fileUrl,
+          fileName: fileName,
+          fileType: fileType,
+          systemPrompt: systemPromptForFileAnalysis,
+          maxTokens: options.maxTokens || 1500, // Ensure options.maxTokens is accessed correctly
+          temperature: options.temperature || 0.35 // Ensure options.temperature is accessed correctly
+        }
+      });
+
+      let textOutput;
+      if (analysisError) {
+        console.error('Error invoking perplexity-analyze-file function:', analysisError);
+        textOutput = "Sorry, I encountered an error analyzing the file. Please try again.";
+      } else if (analysisData.error) {
+        console.error('perplexity-analyze-file function returned an error:', analysisData.error, analysisData.message);
+        textOutput = analysisData.message || "Sorry, I couldn't analyze the file at this time.";
+      } else if (!analysisData.analysis) {
+        console.error('No analysis result was returned from perplexity-analyze-file for:', fileName);
+        textOutput = "I wasn't able to get an analysis for the file. Please ensure it's a supported format and try again.";
+      } else {
+        textOutput = analysisData.analysis;
+      }
+      
+      resultFromProvider = { 
+        generatedText: textOutput, 
+        sourceUrls: [] // File analysis itself usually doesn't cite external web sources.
+      };
+      console.log('File analysis via Supabase function complete');
     } 
     // Check for URLs in the message
     else if (containsUrl(userMessage)) {

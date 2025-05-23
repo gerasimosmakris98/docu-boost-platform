@@ -57,6 +57,7 @@ const ChatPage = () => {
           if (loadedConversation) {
             setConversation(loadedConversation);
             setMessages(loadedMessages);
+            console.log(`ChatPage: Loaded conversation ${id} with ${loadedMessages.length} initial messages.`);
           } else {
             // If conversation not found, redirect to default
             toast.error("Conversation not found");
@@ -88,7 +89,7 @@ const ChatPage = () => {
   };
   
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
+    <div className="flex h-screen bg-black text-white"> {/* Removed overflow-hidden */}
       {/* Header for mobile - only visible when sidebar is collapsed */}
       {isMobile && sidebarCollapsed && (
         <div className="absolute top-0 left-0 z-10 p-2">
@@ -113,6 +114,7 @@ const ChatPage = () => {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col h-full">
         <ModernChatInterface 
+          key={id} // Add key prop here
           conversationId={id}
           conversation={conversation}
           messages={messages}

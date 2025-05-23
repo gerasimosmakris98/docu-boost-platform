@@ -16,14 +16,16 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Perplexity AI response function called');
+    console.log('Perplexity AI response function called'); // This can be removed if redundant with the new Start log
     const requestData = await req.json();
+    console.log('--- perplexity-ai-response: Start ---');
+    console.log('Raw request body received by Supabase function:', JSON.stringify(requestData, null, 2));
     const { 
       prompt, 
       type = "general",
       systemPrompt,
       maxTokens = 1000,
-      temperature = 0.2
+      temperature // Removed default value here
     } = requestData;
 
     console.log('Incoming prompt:', prompt); // Log the full prompt
@@ -34,25 +36,43 @@ serve(async (req) => {
       temperature
     });
 
-    // Use provided system prompt or create default one
-    let finalSystemPrompt = systemPrompt || 'You are an AI career advisor that helps users with career guidance, resume optimization, and interview preparation.';
+    const CORE_SYSTEM_INSTRUCTIONS = `**Your Persona & Tone**: You are an AI Career Advisor. Your persona is that of a friendly, highly knowledgeable, and empathetic human expert. Your language must be conversational, natural, and engaging. Avoid overly formal or robotic phrasing. Speak directly to the user.
+
+**Interaction Style**:
+- Acknowledge user statements briefly and naturally where appropriate to create a smooth dialogue.
+- If a user's request is ambiguous, ask clarifying questions.
+- Focus on the user's most recent message, but use the conversation history intelligently to avoid repetition and maintain context. Do not repeat information you have already provided or that the user has already stated. Strive for fresh and relevant contributions in each turn.
+- Use varied sentence structures and vocabulary.
+
+**Critical Formatting Rules (Output MUST use Markdown)**:
+- **Paragraphs**: To create separate paragraphs, you MUST output two newline characters (\\n\\n) between them. Single newlines will not create new paragraphs in the final display.
+- **Bullet Points**: Start each bullet point with a hyphen or asterisk followed by a space, and ensure each bullet point is on its own line (ends with \\n). Example: - Point 1\\n- Point 2\\n- Point 3
+- **Numbered Lists**: Start each item with a number followed by a period and a space, and ensure each item is on its own line (ends with \\n). Example: 1. Item A\\n2. Item B\\n3. Item C
+- Ensure lists are clearly separated from surrounding text by blank lines (i.e., \\n\\n before and after the list block).
+
+**Conciseness & Clarity**: Avoid 'huge texts without a reason'. Be thorough if the topic requires it, but prioritize clarity and conciseness. Break down complex information into smaller, easily digestible paragraphs or appropriately formatted lists.
+
+**Avoid AI Clichés**: Do not start sentences with generic AI phrases like 'As an AI language model...', 'As an AI...', etc. Do not mention that you are an AI unless directly relevant to a limitation.`;
+
+    let finalSystemPrompt = systemPrompt || CORE_SYSTEM_INSTRUCTIONS;
     
-    // Default system prompts based on type if not provided
+    // If systemPrompt is NOT provided by the user, then we might specialize it based on 'type'
     if (!systemPrompt) {
       if (type === "resume") {
-        finalSystemPrompt = 'You are a friendly resume consultant. Help users create effective resumes. Be concise, specific, and constructive. Focus on practical advice tailored to modern hiring practices. Break down complex concepts into simple steps.';
+        finalSystemPrompt = `${CORE_SYSTEM_INSTRUCTIONS}\n\nYou are a friendly resume consultant. Help users create effective resumes. Be concise, specific, and constructive. Focus on practical advice tailored to modern hiring practices. Break down complex concepts into simple steps.`;
       } else if (type === "interview_prep") {
-        finalSystemPrompt = 'You are a supportive interview coach. Provide concise, practical advice for interview preparation. Focus on building confidence and authentic responses. Use examples to illustrate effective answers.';
+        finalSystemPrompt = `${CORE_SYSTEM_INSTRUCTIONS}\n\nYou are a supportive interview coach. Provide concise, practical advice for interview preparation. Focus on building confidence and authentic responses. Use examples to illustrate effective answers.`;
       } else if (type === "linkedin") {
-        finalSystemPrompt = 'You are a LinkedIn profile optimization expert. Provide specific, actionable advice for improving online professional presence. Focus on creating compelling profiles that attract recruiters.';
+        finalSystemPrompt = `${CORE_SYSTEM_INSTRUCTIONS}\n\nYou are a LinkedIn profile optimization expert. Provide specific, actionable advice for improving online professional presence. Focus on creating compelling profiles that attract recruiters.`;
       } else if (type === "cover_letter") {
-        finalSystemPrompt = 'You are a cover letter specialist. Help users create compelling, tailored cover letters. Focus on connecting their experience to specific roles. Be concise and practical.';
+        finalSystemPrompt = `${CORE_SYSTEM_INSTRUCTIONS}\n\nYou are a cover letter specialist. Help users create compelling, tailored cover letters. Focus on connecting their experience to specific roles. Be concise and practical.`;
       } else if (type === "assessment") {
-        finalSystemPrompt = 'You are an assessment preparation coach. Help users prepare for job assessments and tests. Provide practical strategies, sample questions, and preparation techniques.';
+        finalSystemPrompt = `${CORE_SYSTEM_INSTRUCTIONS}\n\nYou are an assessment preparation coach. Help users prepare for job assessments and tests. Provide practical strategies, sample questions, and preparation techniques.`;
       }
+      // If 'type' is 'general' or any other type not listed, finalSystemPrompt remains CORE_SYSTEM_INSTRUCTIONS
     }
 
-    console.log('Using system prompt:', finalSystemPrompt.substring(0, 50) + '...');
+    console.log('Using system prompt (first 200 chars):', finalSystemPrompt.substring(0, 200) + '...');
     
     if (!perplexityApiKey) {
       console.error('PERPLEXITY_API_KEY environment variable not set');
@@ -66,22 +86,29 @@ serve(async (req) => {
     }
     
     try {
+      const modelForPerplexity = 'llama-3.1-sonar-small-128k-online';
+      const actualTemperature = temperature ?? 0.35;
+      const topPValue = 0.9;
+
+      const perplexityRequestBody = {
+        model: modelForPerplexity,
+        messages: [
+          { role: 'system', content: finalSystemPrompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: actualTemperature,
+        max_tokens: maxTokens,
+        top_p: topPValue,
+      };
+      console.log('Payload being sent to Perplexity API:', JSON.stringify(perplexityRequestBody, null, 2));
+
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${perplexityApiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            { role: 'system', content: finalSystemPrompt },
-            { role: 'user', content: prompt }
-          ],
-          temperature: temperature,
-          max_tokens: maxTokens,
-          top_p: 0.9,
-        }),
+        body: JSON.stringify(perplexityRequestBody), // Use the logged body
       });
 
       if (!response.ok) {
@@ -142,7 +169,8 @@ serve(async (req) => {
         console.warn('Perplexity response was not in the expected JSON format. Treating as plain text. Error:', e.message, 'Original output:', aiOutputString);
         responsePayload = { generatedText: aiOutputString, sourceUrls: [] };
       }
-
+      
+      console.log('--- perplexity-ai-response: End ---');
       return new Response(JSON.stringify(responsePayload), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

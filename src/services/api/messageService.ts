@@ -15,6 +15,7 @@ export const sendMessage = async (
   content: string,
   attachments: string[] = []
 ): Promise<{ aiResponse: Message } | null> => {
+  console.log(`sendMessage called for conversationId: ${conversationId}`);
   try {
     // Get conversation data to determine the type
     const { data: conversationData, error: convError } = await supabase
@@ -64,6 +65,7 @@ export const sendMessage = async (
       console.error('Error fetching previous messages:', prevMsgError);
       throw prevMsgError;
     }
+    console.log(`sendMessage (convId: ${conversationId}): Fetched ${previousMessages?.length || 0} prev messages. Most recent: '${previousMessages?.[0]?.content?.substring(0, 70)}...' Role: ${previousMessages?.[0]?.role}`);
     
     // Build context from previous messages
     const contextMessages = previousMessages ? 
