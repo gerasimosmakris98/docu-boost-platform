@@ -15,7 +15,8 @@ export const getAiResponse = async (
   userMessage: string,
   contextMessages: string,
   attachments: string[] = []
-): Promise<string> => {
+): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  let resultFromProvider: any; // To store result from aiProviderService
   try {
     console.log('Generating AI response for:', conversationType);
     
@@ -48,19 +49,14 @@ export const getAiResponse = async (
       maxTokens: 250,
       temperature: 0.2
     };
-    
-    let aiResponseContent = '';
-    
+        
     // Handle file attachments if present
     if (attachments && attachments.length > 0) {
       console.log('Processing attachments:', attachments);
-      // Analyze the first attachment
       const fileUrl = attachments[0];
       const fileName = fileUrl.split('/').pop() || 'file';
-      // Determine file type from URL/name
       const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
-      let fileType = 'application/octet-stream';
-      
+      let fileType = 'application/octet-stream'; // Default
       if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)) {
         fileType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
       } else if (fileExtension === 'pdf') {
@@ -69,56 +65,65 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
-      // Analyze file using AI provider service
-      aiResponseContent = await aiProviderService.analyzeFile(
-        fileUrl, 
-        fileName, 
-        fileType,
-        profileContext || undefined,
-        options
+      resultFromProvider = await aiProviderService.analyzeFile(
+        fileUrl, fileName, fileType, profileContext || undefined, options
       );
       console.log('File analysis complete');
     } 
     // Check for URLs in the message
     else if (containsUrl(userMessage)) {
-      // Extract the first URL from the message
       const url = extractFirstUrl(userMessage);
       if (url) {
         const urlType = extractUrlType(url);
         console.log('Analyzing URL:', url, 'Type:', urlType);
-        
-        // Analyze URL using AI provider service
-        aiResponseContent = await aiProviderService.analyzeUrl(
-          url, 
-          urlType, 
-          profileContext || undefined
+        resultFromProvider = await aiProviderService.analyzeUrl(
+          url, urlType, profileContext || undefined
         );
         console.log('URL analysis complete');
       } else {
         // Fallback to text generation if URL extraction fails
-        aiResponseContent = await aiProviderService.generateResponse(
-          enhancedPrompt, 
-          conversationType,
-          options
+        resultFromProvider = await aiProviderService.generateResponse(
+          enhancedPrompt, conversationType, options
         );
       }
     } 
     // Standard text analysis
     else {
-      // Generate AI response based on text prompt
       console.log('Generating AI response using provider service');
-      aiResponseContent = await aiProviderService.generateResponse(
-        enhancedPrompt, 
-        conversationType,
-        options
+      resultFromProvider = await aiProviderService.generateResponse(
+        enhancedPrompt, conversationType, options
       );
       console.log('AI response generated successfully');
     }
+
+    console.log('Result from aiProviderService in getAiResponse:', resultFromProvider);
+    let aiResponseContent = { generatedText: '', sourceUrls: [] as string[] };
+
+    if (typeof resultFromProvider === 'object' && resultFromProvider !== null && 
+        typeof resultFromProvider.generatedText === 'string' && 
+        Array.isArray(resultFromProvider.sourceUrls) &&
+        resultFromProvider.sourceUrls.every((url: unknown) => typeof url === 'string')) {
+      aiResponseContent.generatedText = resultFromProvider.generatedText;
+      aiResponseContent.sourceUrls = resultFromProvider.sourceUrls;
+    } else if (typeof resultFromProvider === 'string') {
+      aiResponseContent.generatedText = resultFromProvider;
+      // sourceUrls remains []
+      console.warn('aiProviderService returned a string, packaging into standard object:', resultFromProvider);
+    } else {
+      console.error('Malformed or unexpected response structure from aiProviderService in getAiResponse:', resultFromProvider);
+      aiResponseContent.generatedText = "Error: AI response was not in the expected format.";
+      // sourceUrls remains []
+    }
     
     return aiResponseContent;
+
   } catch (error) {
     console.error('Error in getAiResponse:', error);
-    return "I apologize, but I encountered an error while processing your request. Please try again.";
+    // Ensure the catch block also returns the new object structure
+    return { 
+      generatedText: "I apologize, but I encountered an error while processing your request. Please try again.", 
+      sourceUrls: [] 
+    };
   }
 };
 
