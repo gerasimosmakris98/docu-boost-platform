@@ -133,7 +133,7 @@ export const sendMessage = async (
       prompt = `${profileContext}\n\n${prompt}`;
     }
     
-    let aiResponseContent = '';
+    let aiResponseResult = { generatedText: '', sourceUrls: [] as string[] };
     
     // Handle file attachments if present
     if (attachments && attachments.length > 0) {
@@ -155,16 +155,17 @@ export const sendMessage = async (
       
       try {
         // Analyze file with our provider service
-        aiResponseContent = await aiProviderService.analyzeFile(
+        const response = await aiProviderService.analyzeFile(
           fileUrl, 
           fileName, 
           fileType,
           profileContext // Pass profile context for better file analysis
         );
+        aiResponseResult = response;
         console.log('File analysis complete');
       } catch (fileError) {
         console.error('Error analyzing file:', fileError);
-        aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
+        aiResponseResult.generatedText = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
       }
     } else if (hasUrls) {
       // If there are URLs in the message, analyze the first one
@@ -175,25 +176,28 @@ export const sendMessage = async (
       
       try {
         // Use the URL analysis method
-        aiResponseContent = await aiProviderService.analyzeUrl(urlToAnalyze, urlType, profileContext);
+        const response = await aiProviderService.analyzeUrl(urlToAnalyze, urlType, profileContext);
+        aiResponseResult = response;
         console.log('URL analysis complete');
       } catch (urlError) {
         console.error('Error analyzing URL:', urlError);
         // Fall back to regular text generation
-        aiResponseContent = await aiProviderService.generateResponse(
+        const response = await aiProviderService.generateResponse(
           prompt, 
           conversationType,
           options
         );
+        aiResponseResult = response;
       }
     } else {
       // Generate AI response based on text prompt using our provider service
       console.log('Generating AI response using provider service');
-      aiResponseContent = await aiProviderService.generateResponse(
+      const response = await aiProviderService.generateResponse(
         prompt, 
         conversationType,
         options
       );
+      aiResponseResult = response;
       console.log('AI response generated successfully');
     }
     
@@ -203,7 +207,7 @@ export const sendMessage = async (
       .insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: aiResponseContent,
+        content: aiResponseResult.generatedText,
         attachments: []
       })
       .select()

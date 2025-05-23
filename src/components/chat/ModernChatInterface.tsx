@@ -134,24 +134,23 @@ const ModernChatInterface = ({
   
   return (
     <div className="flex flex-col h-full bg-black">
-      {/* Conversation title for mobile */}
-      {isMobile && conversation && (
-        <div className="p-3 border-b border-gray-800 flex items-center">
+      {/* Conversation title */}
+      {conversation && (
+        <div className="p-3 border-b border-gray-800 flex items-center pl-16 md:pl-3">
           <h1 className="text-lg font-medium truncate">{conversation.title}</h1>
         </div>
       )}
       
       {/* Messages area with optimized performance for mobile */}
       <div 
-        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0" // Added min-h-0
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <MessagesList 
           messages={messages} 
           isLoading={isLoading} 
           isModern={true}
+          messagesEndRef={messagesEndRef}
         />
-        <div ref={messagesEndRef} />
       </div>
       
       {/* Input area */}

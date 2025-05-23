@@ -2,10 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
 import { aiProviderService } from "../ai/aiProviderService";
-import { getChatPromptForType } from "../utils/conversationUtils";
+import { getChatPromptForType } from "./conversationUtils";
 import { extractUrlType, formatConversationContext } from "./conversationUtils";
 import { getUserProfileContext } from "./profileUtils";
 import { getModelOptions } from "../ai/providerConfigs";
+import { AIResponseResult } from "../ai/types";
 
 /**
  * Get an AI response with fallback handling
@@ -15,8 +16,7 @@ export const getAiResponse = async (
   userMessage: string,
   contextMessages: string,
   attachments: string[] = []
-): Promise<{ generatedText: string, sourceUrls: string[] }> => {
-  let resultFromProvider: any; // To store result from aiProviderService
+): Promise<AIResponseResult> => {
   try {
     console.log('Generating AI response for:', conversationType);
     
@@ -32,22 +32,25 @@ export const getAiResponse = async (
       { 
         brief: true, 
         depth: 'low', 
-        format: 'paragraph',
-        // Add constraints for more concise responses
-        maxLength: 300,
-        focusedResponse: true 
+        format: 'mixed',
+        // Add constraints for more conversational responses
+        maxLength: 350,
+        focusedResponse: true,
+        conversational: true
       }
     );
+    
+    // Add instruction to treat each conversation separately
     const enhancedPrompt = profileContext 
-      ? `${profileContext}\n\nPlease provide a concise and focused response: ${prompt}` 
-      : `Please provide a concise and focused response: ${prompt}`;
+      ? `${profileContext}\n\nPlease provide a focused response treating this as a new conversation. Format with short paragraphs and appropriate spacing: ${prompt}` 
+      : `Please provide a focused response treating this as a new conversation. Format with short paragraphs and appropriate spacing: ${prompt}`;
     
     // Get model options based on conversation type
     const options = {
       ...getModelOptions(conversationType),
-      // Reduce max tokens for more concise responses
-      maxTokens: 250,
-      temperature: 0.2
+      // Adjust token settings for better responses
+      maxTokens: 300,
+      temperature: 0.3
     };
         
     // Handle file attachments if present
@@ -65,52 +68,30 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
-      const systemPromptForFileAnalysis = `You are analyzing a file as part of an ongoing career advisory conversation. ${profileContext ? 'User profile context: ' + profileContext + '.' : ''} The user's message accompanying this file upload was: '${userMessage}'. Please provide analysis relevant to this context and the user's message.`;
-
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('perplexity-analyze-file', {
-        body: {
-          fileUrl: fileUrl,
-          fileName: fileName,
-          fileType: fileType,
-          systemPrompt: systemPromptForFileAnalysis,
-          maxTokens: options.maxTokens || 1500, // Ensure options.maxTokens is accessed correctly
-          temperature: options.temperature || 0.35 // Ensure options.temperature is accessed correctly
-        }
-      });
-
-      let textOutput;
-      if (analysisError) {
-        console.error('Error invoking perplexity-analyze-file function:', analysisError);
-        textOutput = "Sorry, I encountered an error analyzing the file. Please try again.";
-      } else if (analysisData.error) {
-        console.error('perplexity-analyze-file function returned an error:', analysisData.error, analysisData.message);
-        textOutput = analysisData.message || "Sorry, I couldn't analyze the file at this time.";
-      } else if (!analysisData.analysis) {
-        console.error('No analysis result was returned from perplexity-analyze-file for:', fileName);
-        textOutput = "I wasn't able to get an analysis for the file. Please ensure it's a supported format and try again.";
-      } else {
-        textOutput = analysisData.analysis;
-      }
-      
-      resultFromProvider = { 
-        generatedText: textOutput, 
-        sourceUrls: [] // File analysis itself usually doesn't cite external web sources.
-      };
-      console.log('File analysis via Supabase function complete');
-    } 
     // Check for URLs in the message
     else if (containsUrl(userMessage)) {
       const url = extractFirstUrl(userMessage);
       if (url) {
         const urlType = extractUrlType(url);
         console.log('Analyzing URL:', url, 'Type:', urlType);
-        resultFromProvider = await aiProviderService.analyzeUrl(
-          url, urlType, profileContext || undefined
+        
+        // Enhanced URL analysis prompt
+        const urlAnalysisPrompt = `
+          Analyze this ${urlType} URL as a new conversation.
+          Format your response with:
+          - Short paragraphs with good spacing
+          - Bullet points for key takeaways
+          - Numbered lists for steps or recommendations
+          
+          Be conversational and human-like.
+        `;
+        
+        return await aiProviderService.analyzeUrl(
+          url, urlType, urlAnalysisPrompt
         );
-        console.log('URL analysis complete');
       } else {
         // Fallback to text generation if URL extraction fails
-        resultFromProvider = await aiProviderService.generateResponse(
+        return await aiProviderService.generateResponse(
           enhancedPrompt, conversationType, options
         );
       }
@@ -118,33 +99,10 @@ export const getAiResponse = async (
     // Standard text analysis
     else {
       console.log('Generating AI response using provider service');
-      resultFromProvider = await aiProviderService.generateResponse(
+      return await aiProviderService.generateResponse(
         enhancedPrompt, conversationType, options
       );
-      console.log('AI response generated successfully');
     }
-
-    console.log('Result from aiProviderService in getAiResponse:', resultFromProvider);
-    let aiResponseContent = { generatedText: '', sourceUrls: [] as string[] };
-
-    if (typeof resultFromProvider === 'object' && resultFromProvider !== null && 
-        typeof resultFromProvider.generatedText === 'string' && 
-        Array.isArray(resultFromProvider.sourceUrls) &&
-        resultFromProvider.sourceUrls.every((url: unknown) => typeof url === 'string')) {
-      aiResponseContent.generatedText = resultFromProvider.generatedText;
-      aiResponseContent.sourceUrls = resultFromProvider.sourceUrls;
-    } else if (typeof resultFromProvider === 'string') {
-      aiResponseContent.generatedText = resultFromProvider;
-      // sourceUrls remains []
-      console.warn('aiProviderService returned a string, packaging into standard object:', resultFromProvider);
-    } else {
-      console.error('Malformed or unexpected response structure from aiProviderService in getAiResponse:', resultFromProvider);
-      aiResponseContent.generatedText = "Error: AI response was not in the expected format.";
-      // sourceUrls remains []
-    }
-    
-    return aiResponseContent;
-
   } catch (error) {
     console.error('Error in getAiResponse:', error);
     // Ensure the catch block also returns the new object structure
