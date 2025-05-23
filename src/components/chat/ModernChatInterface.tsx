@@ -143,15 +143,15 @@ const ModernChatInterface = ({
       
       {/* Messages area with optimized performance for mobile */}
       <div 
-        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain" 
+        className="flex-1 overflow-y-auto overscroll-contain" 
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <MessagesList 
           messages={messages} 
           isLoading={isLoading} 
           isModern={true}
+          messagesEndRef={messagesEndRef}
         />
-        <div ref={messagesEndRef} />
       </div>
       
       {/* Input area */}

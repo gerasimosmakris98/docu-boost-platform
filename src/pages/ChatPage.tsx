@@ -91,7 +91,7 @@ const ChatPage = () => {
     <div className="flex h-screen bg-black text-white overflow-hidden">
       {/* Header for mobile - only visible when sidebar is collapsed */}
       {isMobile && sidebarCollapsed && (
-        <div className="absolute top-0 left-0 z-10 p-2">
+        <div className="absolute top-0 left-0 z-50 p-4">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -110,8 +110,8 @@ const ChatPage = () => {
         onToggleCollapse={toggleSidebar}
       />
       
-      {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full">
+      {/* Main chat area - Add padding-top on mobile to prevent header overlap */}
+      <div className={`flex-1 flex flex-col h-full ${isMobile && sidebarCollapsed ? 'pt-14' : ''}`}>
         <ModernChatInterface 
           conversationId={id}
           conversation={conversation}
