@@ -80,7 +80,6 @@ export type Database = {
           created_at: string
           id: string
           role: string
-          source_urls: string[] | null
         }
         Insert: {
           attachments?: string[] | null
@@ -89,7 +88,6 @@ export type Database = {
           created_at?: string
           id?: string
           role: string
-          source_urls?: string[] | null
         }
         Update: {
           attachments?: string[] | null
@@ -98,7 +96,6 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
-          source_urls?: string[] | null
         }
         Relationships: [
           {

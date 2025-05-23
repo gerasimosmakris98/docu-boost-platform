@@ -21,13 +21,7 @@ export interface AIModelOptions {
 export interface ProgressiveResponseOptions {
   brief?: boolean;
   depth?: 'low' | 'medium' | 'high';
-  format?: 'paragraph' | 'bullets' | 'markdown' | 'code' | 'mixed'; // Added 'mixed' as a valid format
-}
-
-// AI response structure
-export interface AIResponseResult {
-  generatedText: string;
-  sourceUrls: string[];
+  format?: 'paragraph' | 'bullets' | 'markdown' | 'code';
 }
 
 // Complete AI Provider Service interface
@@ -36,7 +30,7 @@ export interface AIProviderService {
     prompt: string, 
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
-  ) => Promise<AIResponseResult>;
+  ) => Promise<string>;
   
   analyzeFile: (
     fileUrl: string,
@@ -44,13 +38,13 @@ export interface AIProviderService {
     fileType: string,
     profileContext?: string,
     options?: AIModelOptions
-  ) => Promise<AIResponseResult>;
+  ) => Promise<string>;
   
   analyzeUrl: (
     url: string,
     type: string,
     profileContext?: string
-  ) => Promise<AIResponseResult>;
+  ) => Promise<string>;
   
   resetProviders: () => void;
 }

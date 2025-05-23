@@ -53,13 +53,13 @@ export const sendMessage = async (
     
     console.log('User message saved successfully:', userMessageData.id);
     
-    // Get previous messages to provide context - limit context to recent messages
+    // Get previous messages to provide context
     const { data: previousMessages, error: prevMsgError } = await supabase
       .from('messages')
       .select('role, content')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: false })
-      .limit(5); // Reduced context to make responses more focused
+      .limit(10);
     
     if (prevMsgError) {
       console.error('Error fetching previous messages:', prevMsgError);

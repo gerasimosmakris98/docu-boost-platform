@@ -10,7 +10,7 @@ const aiProviderService = {
     prompt: string, 
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Generating response for:', conversationType);
     
     try {
@@ -19,16 +19,13 @@ const aiProviderService = {
         You are a friendly AI career advisor having a concise conversation. 
         
         Guidelines:
-        - Be extremely brief and conversational (max 2-3 short paragraphs)
-        - Use bullet points for lists or steps
+        - Be extremely brief and conversational (max 2 short paragraphs)
         - Only respond directly to what was asked
         - Use a friendly, supportive tone
         - If referring to sources, use numbered citations like [1], [2]
         - Personalize based on any context about the user's background
         - Avoid introductions or conclusions
-        - Use short paragraphs with line breaks
         - Respond like you're texting a friend
-        - Format for readability with spacing between paragraphs
         
         User message: ${prompt}
 
@@ -40,7 +37,7 @@ const aiProviderService = {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
-          maxTokens: 300, // Increased token count for better formatting
+          maxTokens: 200, // Limit token count for brevity
           brief: true
         }
       });
@@ -59,27 +56,12 @@ const aiProviderService = {
         throw new Error('No response received from AI service');
       }
       
-      // Ensure proper formatting with line breaks
-      let formattedText = data.generatedText;
-      
-      // Add proper line breaks if they're missing
-      if (!formattedText.includes('\n\n') && formattedText.length > 150) {
-        // Try to add line breaks after sentences for readability
-        formattedText = formattedText.replace(/\.\s+/g, '.\n\n');
-      }
-      
-      return {
-        generatedText: formattedText,
-        sourceUrls: data.sourceUrls || []
-      };
+      return data.generatedText;
     } catch (error) {
       console.error('Error in generateResponse:', error);
       
       // Provide a brief, helpful fallback response
-      return {
-        generatedText: `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`,
-        sourceUrls: []
-      };
+      return `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`;
     }
   },
   
@@ -90,7 +72,7 @@ const aiProviderService = {
     fileType: string,
     profileContext?: string,
     options?: AIModelOptions
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Analyzing file:', fileName, fileType);
     
     try {
@@ -105,8 +87,6 @@ const aiProviderService = {
         - Highlight 2-3 key strengths
         - Suggest 2-3 specific improvements
         - Be conversational and supportive
-        - Use bullet points for key points
-        - Add space between paragraphs
         - If referring to specific parts, use numbered citations [1], [2]
 
         IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
@@ -117,7 +97,7 @@ const aiProviderService = {
         body: { 
           prompt: fileAnalysisPrompt,
           type: 'file_analysis',
-          maxTokens: 300
+          maxTokens: 250
         }
       });
       
@@ -135,18 +115,12 @@ const aiProviderService = {
         throw new Error('No analysis received from AI service');
       }
       
-      return {
-        generatedText: data.generatedText,
-        sourceUrls: data.sourceUrls || []
-      };
+      return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeFile:', error);
       
       // Provide a brief fallback response for file analysis
-      return {
-        generatedText: `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`,
-        sourceUrls: []
-      };
+      return `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`;
     }
   },
   
@@ -155,7 +129,7 @@ const aiProviderService = {
     url: string, 
     type: string, 
     profileContext?: string
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Analyzing URL:', url, type);
     
     try {
@@ -170,8 +144,6 @@ const aiProviderService = {
         - Focus on 2-3 key takeaways
         - Give specific, actionable advice
         - Be supportive and helpful
-        - Use bullet points for key points
-        - Add space between paragraphs
         - If referring to specific parts, use numbered citations [1], [2]
 
         IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
@@ -182,7 +154,7 @@ const aiProviderService = {
         body: { 
           prompt: urlAnalysisPrompt,
           type: 'url_analysis',
-          maxTokens: 300
+          maxTokens: 250
         }
       });
       
@@ -224,37 +196,35 @@ const aiProviderService = {
         for (const pattern of failurePatterns) {
           if (lowercasedText.includes(pattern)) {
             console.warn("Perplexity returned vague/error for URL:", data.generatedText);
-            return { 
-              generatedText: genericErrorMessage,
-              sourceUrls: [url]
-            };
+            return genericErrorMessage;
           }
         }
         
         // Check for very short responses (e.g., less than 30 characters)
+        // This is an additional heuristic and might need refinement.
+        // The prompt emphasized focusing on explicit phrases first.
         if (data.generatedText.length < 30) {
+           // A more sophisticated check for analytical keywords could be added here if needed,
+           // but for now, length is a simple proxy for potentially unhelpful generic responses.
+           // Let's assume very short non-matching (to above patterns) responses might also be problematic.
+           // Example: "Okay.", "I see.", "Done." - these are unlikely from perplexity for this task but used as an example of short unhelpful text.
+           // For now, we will be a bit more aggressive and if it's very short, and not caught by specific errors,
+           // it might still be a generic "I can't do that" that wasn't in our list.
+           // We will only return the generic error if it's short AND contains a phrase like "unable", "cannot", "can't"
+           // to avoid flagging valid short summaries.
            if (lowercasedText.includes("unable") || lowercasedText.includes("cannot") || lowercasedText.includes("can't")) {
              console.warn("Perplexity returned very short and potentially unhelpful response for URL:", data.generatedText);
-             return { 
-               generatedText: genericErrorMessage,
-               sourceUrls: [url]
-             };
+             return genericErrorMessage;
            }
         }
       }
       
-      return {
-        generatedText: data.generatedText,
-        sourceUrls: data.sourceUrls || [url]
-      };
+      return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
       
-      // Provide a brief fallback response for URL analysis
-      return {
-        generatedText: `I couldn't analyze that URL in detail. Would you like me to try again?`,
-        sourceUrls: [url]
-      };
+      // Provide a brief fallback response for URL analysis (for network/Supabase function errors)
+      return `I couldn't analyze that URL in detail. Would you like me to try again?`;
     }
   },
   
@@ -275,10 +245,9 @@ const aiProviderService = {
       if (!messageContext) return "New Conversation";
       
       const titlePrompt = `
-        Generate a very short, concise title (3-5 words max) for a conversation that starts with:
+        Generate a very short, concise title (4-5 words max) for a conversation that starts with:
         "${messageContext.substring(0, 100)}${messageContext.length > 100 ? '...' : ''}"
         
-        The title should be specific to this conversation's content, not generic.
         Return ONLY the title with no quotes or additional text.
       `;
       
