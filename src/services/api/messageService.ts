@@ -76,6 +76,19 @@ export const sendMessage = async (
       contextMessages,
       attachments
     );
+
+    // Log and validate the AI response object
+    console.log('AI response object before saving in messageService:', aiResponseContent);
+
+    if (!aiResponseContent || typeof aiResponseContent.generatedText !== 'string') {
+      console.error('Invalid AI response: generatedText is missing or not a string. Full object:', aiResponseContent);
+      throw new Error("Invalid AI response content (text missing/wrong type)");
+    }
+
+    if (!Array.isArray(aiResponseContent.sourceUrls)) {
+      console.warn('Invalid AI response: sourceUrls is not an array. Defaulting to empty. Full object:', aiResponseContent);
+      aiResponseContent.sourceUrls = [];
+    }
     
     // Insert AI response
     const { data: aiMessageData, error: aiMessageError } = await supabase
