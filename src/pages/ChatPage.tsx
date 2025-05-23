@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"; // Added missing import
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -129,3 +130,4 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+
