@@ -68,22 +68,6 @@ export const getAiResponse = async (
         fileType = 'application/msword';
       }
       
-      // Enhanced file analysis prompt
-      const fileAnalysisPrompt = `
-        Analyze this ${fileType} file as if this is a completely new conversation. 
-        Focus only on the file content without referencing previous conversations.
-        Format your response with:
-        - Short, focused paragraphs
-        - Bullet points for key insights
-        - Clear section breaks
-        
-        Keep responses concise and human-like.
-      `;
-      
-      return await aiProviderService.analyzeFile(
-        fileUrl, fileName, fileType, fileAnalysisPrompt, options
-      );
-    } 
     // Check for URLs in the message
     else if (containsUrl(userMessage)) {
       const url = extractFirstUrl(userMessage);

@@ -57,6 +57,7 @@ const ChatPage = () => {
           if (loadedConversation) {
             setConversation(loadedConversation);
             setMessages(loadedMessages);
+            console.log(`ChatPage: Loaded conversation ${id} with ${loadedMessages.length} initial messages.`);
           } else {
             // If conversation not found, redirect to default
             toast.error("Conversation not found");
@@ -88,8 +89,6 @@ const ChatPage = () => {
   };
   
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Header for mobile - fixed position */}
       {isMobile && sidebarCollapsed && (
         <div className="fixed top-0 left-0 z-50 p-4">
           <Button 
@@ -113,6 +112,7 @@ const ChatPage = () => {
       {/* Main chat area - Add padding-top on mobile to prevent header overlap */}
       <div className={`flex-1 flex flex-col h-full ${isMobile && sidebarCollapsed ? 'pt-14' : ''}`}>
         <ModernChatInterface 
+          key={id} // Add key prop here
           conversationId={id}
           conversation={conversation}
           messages={messages}

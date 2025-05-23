@@ -143,7 +143,6 @@ const ModernChatInterface = ({
       
       {/* Messages area with optimized performance for mobile */}
       <div 
-        className="flex-1 overflow-y-auto overscroll-contain" 
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <MessagesList 
