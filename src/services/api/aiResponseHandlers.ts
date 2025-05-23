@@ -2,10 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationType } from "../types/conversationTypes";
 import { aiProviderService } from "../ai/aiProviderService";
-import { getChatPromptForType } from "../utils/conversationUtils";
+import { getChatPromptForType } from "./conversationUtils";
 import { extractUrlType, formatConversationContext } from "./conversationUtils";
 import { getUserProfileContext } from "./profileUtils";
 import { getModelOptions } from "../ai/providerConfigs";
+import { AIResponseResult } from "../ai/types";
 
 /**
  * Get an AI response with fallback handling
@@ -15,8 +16,7 @@ export const getAiResponse = async (
   userMessage: string,
   contextMessages: string,
   attachments: string[] = []
-): Promise<{ generatedText: string, sourceUrls: string[] }> => {
-  let resultFromProvider: any; // To store result from aiProviderService
+): Promise<AIResponseResult> => {
   try {
     console.log('Generating AI response for:', conversationType);
     
@@ -80,10 +80,9 @@ export const getAiResponse = async (
         Keep responses concise and human-like.
       `;
       
-      resultFromProvider = await aiProviderService.analyzeFile(
+      return await aiProviderService.analyzeFile(
         fileUrl, fileName, fileType, fileAnalysisPrompt, options
       );
-      console.log('File analysis complete');
     } 
     // Check for URLs in the message
     else if (containsUrl(userMessage)) {
@@ -103,13 +102,12 @@ export const getAiResponse = async (
           Be conversational and human-like.
         `;
         
-        resultFromProvider = await aiProviderService.analyzeUrl(
+        return await aiProviderService.analyzeUrl(
           url, urlType, urlAnalysisPrompt
         );
-        console.log('URL analysis complete');
       } else {
         // Fallback to text generation if URL extraction fails
-        resultFromProvider = await aiProviderService.generateResponse(
+        return await aiProviderService.generateResponse(
           enhancedPrompt, conversationType, options
         );
       }
@@ -117,33 +115,10 @@ export const getAiResponse = async (
     // Standard text analysis
     else {
       console.log('Generating AI response using provider service');
-      resultFromProvider = await aiProviderService.generateResponse(
+      return await aiProviderService.generateResponse(
         enhancedPrompt, conversationType, options
       );
-      console.log('AI response generated successfully');
     }
-
-    console.log('Result from aiProviderService in getAiResponse:', resultFromProvider);
-    let aiResponseContent = { generatedText: '', sourceUrls: [] as string[] };
-
-    if (typeof resultFromProvider === 'object' && resultFromProvider !== null && 
-        typeof resultFromProvider.generatedText === 'string' && 
-        Array.isArray(resultFromProvider.sourceUrls) &&
-        resultFromProvider.sourceUrls.every((url: unknown) => typeof url === 'string')) {
-      aiResponseContent.generatedText = resultFromProvider.generatedText;
-      aiResponseContent.sourceUrls = resultFromProvider.sourceUrls;
-    } else if (typeof resultFromProvider === 'string') {
-      aiResponseContent.generatedText = resultFromProvider;
-      // sourceUrls remains []
-      console.warn('aiProviderService returned a string, packaging into standard object:', resultFromProvider);
-    } else {
-      console.error('Malformed or unexpected response structure from aiProviderService in getAiResponse:', resultFromProvider);
-      aiResponseContent.generatedText = "Error: AI response was not in the expected format.";
-      // sourceUrls remains []
-    }
-    
-    return aiResponseContent;
-
   } catch (error) {
     console.error('Error in getAiResponse:', error);
     // Ensure the catch block also returns the new object structure

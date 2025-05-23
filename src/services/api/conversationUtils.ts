@@ -178,4 +178,3 @@ export const validateMessageContent = (content: string): string => {
   
   return trimmedContent;
 };
-

@@ -29,6 +29,7 @@ export interface Message {
   created_at: string;
   attachments?: string[];
   sourceUrls?: string[];
+  formattedTime?: string; // Added formattedTime property
 }
 
 export interface ConversationMessage extends Message {

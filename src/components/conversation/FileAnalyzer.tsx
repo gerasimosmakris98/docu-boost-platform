@@ -18,6 +18,7 @@ import FileUpload from '@/components/common/FileUpload';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AIResponseResult } from '@/services/ai/types';
 
 interface FileAnalyzerProps {
   onAnalysisComplete: (analysis: string) => void;
@@ -75,7 +76,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
         systemPrompt = "Analyze this image and describe its content. If it contains text, extract and analyze it. If it appears to be a document, profile, or other career-related content, provide relevant feedback. Be as specific as possible in your analysis.";
       }
       
-      const analysis = await aiProviderService.analyzeFile(
+      const analysis: AIResponseResult = await aiProviderService.analyzeFile(
         fileToAnalyze.url, 
         fileToAnalyze.name, 
         fileToAnalyze.type,
@@ -87,8 +88,8 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
         throw new Error("No analysis was returned");
       }
       
-      console.log('Analysis received:', analysis.substring(0, 100) + '...');
-      onAnalysisComplete(analysis);
+      console.log('Analysis received:', analysis.generatedText.substring(0, 100) + '...');
+      onAnalysisComplete(analysis.generatedText);
       toast.success("File analysis complete");
       
       // Clear the file after successful analysis for a cleaner UX
