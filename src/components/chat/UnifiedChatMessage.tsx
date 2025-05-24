@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/auth/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { supabase } from '@/integrations/supabase/client';
 
 interface UnifiedChatMessageProps {
   message: Message;
@@ -31,46 +32,77 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
   const [liked, setLiked] = useState<boolean | null>(null);
   const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Adapted from ChatMessage.tsx
+  // Process citations in format [1], [2], etc. and make them visually distinct,
+  // linking them if a corresponding URL is available.
+  const processContentWithCitations = (content: string, sourceUrls?: string[]) => {
+    return content.replace(/\[(\d+)\]/g, (match, numberStr) => {
+      const originalNumber = numberStr;
+      const index = parseInt(numberStr, 10) - 1;
+
+      if (sourceUrls && Array.isArray(sourceUrls) && index >= 0 && index < sourceUrls.length && typeof sourceUrls[index] === 'string' && sourceUrls[index]) {
+        // Valid URL found, create a link
+        const url = sourceUrls[index];
+        // Escape HTML attributes properly for security
+        return `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 font-medium underline transition-colors">[${originalNumber}]</a>`;
+      } else {
+        // No valid URL, return the non-clickable styled span (adjusted style for UnifiedChatMessage)
+        return `<span class="font-semibold text-sky-400">[${originalNumber}]</span>`;
+      }
+    });
+  };
   
   const handleCopyText = () => {
-    const textToCopy = extractTextContent(message.content);
-    navigator.clipboard.writeText(textToCopy);
+    // message.content is now plain text
+    navigator.clipboard.writeText(message.content);
     toast.success("Message copied to clipboard");
   };
   
-  const handleFeedback = (isPositive: boolean) => {
+  const handleFeedback = async (isPositive: boolean) => {
+    if (liked !== null) { // Already submitted
+      return;
+    }
+
+    // Prevent feedback on temporary messages
+    if (message.id?.startsWith('temp-') || message.id?.startsWith('error-')) {
+      toast.error("Cannot submit feedback for temporary or error messages.");
+      return;
+    }
+    
+    // Optimistic UI update
     setLiked(isPositive);
-    toast.success(isPositive ? "Thanks for your feedback!" : "Thanks for your feedback. We'll improve our responses.");
-  };
-  
-  // Extract text content from potential JSON response
-  const extractTextContent = (content: string) => {
+
     try {
-      // Check if content is JSON
-      const parsed = JSON.parse(content);
-      if (parsed.generatedText) {
-        return parsed.generatedText;
+      const { error }_ = await supabase.functions.invoke('record-feedback', {
+        body: {
+          message_id: message.id,
+          conversation_id: message.conversation_id,
+          is_positive: isPositive,
+          // feedback_text is optional and not collected here
+        },
+      });
+
+      if (error) {
+        console.error('Error submitting feedback:', error);
+        toast.error(`Failed to submit feedback: ${error.message || 'Please try again.'}`);
+        setLiked(null); // Revert optimistic update on error
+      } else {
+        toast.success("Feedback submitted. Thank you!");
+        // Buttons will remain disabled due to `liked` state
       }
-      if (parsed.text) {
-        return parsed.text;
-      }
-      if (parsed.content) {
-        return parsed.content;
-      }
-      // If it's an object but no expected fields, return stringified
-      return typeof parsed === 'object' ? JSON.stringify(parsed, null, 2) : content;
-    } catch {
-      // Not JSON, return as is
-      return content;
+    } catch (invokeError) {
+      console.error('Supabase function invocation error:', invokeError);
+      toast.error("Failed to submit feedback due to a network or function error. Please try again.");
+      setLiked(null); // Revert optimistic update on error
     }
   };
   
   const formatContent = (content: string) => {
-    const textContent = extractTextContent(content);
+    // content is already plain text
+    if (contentFormat === 'normal') return content;
     
-    if (contentFormat === 'normal') return textContent;
-    
-    const paragraphs = textContent.split(/\n\n|\n/).filter(p => p.trim() !== '');
+    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim() !== '');
     
     if (contentFormat === 'bullets') {
       return paragraphs.map(p => `• ${p}`).join('\n\n');
@@ -78,7 +110,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       return paragraphs.map((p, i) => `${i + 1}. ${p}`).join('\n\n');
     }
     
-    return textContent;
+    return content;
   };
   
   const formatDateTime = (dateString: string) => {
@@ -90,11 +122,12 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     }
   };
   
-  // Process content to add proper formatting
-  const processContentWithFormatting = (content: string) => {
-    let processedContent = formatContent(content);
+  // Process content to add proper formatting (markdown-like features)
+  const processContentWithFormatting = (plainText: string) => {
+    let processedContent = plainText;
     
     // Add proper paragraph breaks
+    // Ensure this doesn't mess up code blocks if we add them later, for now it's fine.
     processedContent = processedContent.replace(/\n\n/g, '</p><p class="mb-3">');
     processedContent = processedContent.replace(/\n/g, '<br />');
     
@@ -109,21 +142,35 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     // Handle *italic* text
     processedContent = processedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
     
-    // Make URLs clickable
+    // Make URLs clickable (ensure this doesn't conflict with citation links later)
+    // This regex tries to avoid matching URLs already in href attributes.
     processedContent = processedContent.replace(
-      /(https?:\/\/[^\s]+)/g, 
+      /(?<!href="|src=")(https?:\/\/[^\s<>"]+)/g,
       '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
     );
     
     return processedContent;
   };
   
-  const isContentLong = extractTextContent(message.content).length > 500;
+  const isContentLong = message.content.length > 500;
   const displayContent = isContentLong && !isExpanded ? 
-    extractTextContent(message.content).substring(0, 500) + '...' : extractTextContent(message.content);
-  
-  const formattedContent = isUserMessage ? 
-    displayContent : processContentWithFormatting(displayContent);
+    message.content.substring(0, 500) + '...' : message.content;
+
+  let finalContentToRender: string;
+
+  if (isUserMessage) {
+    finalContentToRender = formatContent(displayContent); // User message remains plain text (or with list formatting)
+  } else {
+    // AI Message
+    const textAfterPossibleListFormatting = formatContent(displayContent);
+    let htmlWithBasicMarkdown = processContentWithFormatting(textAfterPossibleListFormatting);
+
+    if (message.sourceUrls && message.sourceUrls.length > 0) {
+      finalContentToRender = processContentWithCitations(htmlWithBasicMarkdown, message.sourceUrls);
+    } else {
+      finalContentToRender = htmlWithBasicMarkdown;
+    }
+  }
   
   return (
     <motion.div 
@@ -183,13 +230,13 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
             <div className="space-y-3">
               {isUserMessage ? (
                 <div className="whitespace-pre-wrap bg-green-900/20 rounded-lg p-3 border border-green-500/20">
-                  {displayContent}
+                  {finalContentToRender}
                 </div>
               ) : (
                 <>
                   <div 
                     className="prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-2 prose-headings:mt-4"
-                    dangerouslySetInnerHTML={{ __html: formattedContent }}
+                    dangerouslySetInnerHTML={{ __html: finalContentToRender }}
                   />
                   
                   {isContentLong && (
@@ -213,9 +260,11 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           size="icon" 
                           className={cn(
                             "h-6 w-6 transition-all",
-                            liked === true && "bg-green-600 hover:bg-green-700"
+                            liked === true && "bg-green-600 hover:bg-green-700 text-white",
+                            liked !== null && liked !== true && "opacity-50", // Dim if other option was chosen or feedback submitted
                           )}
                           onClick={() => handleFeedback(true)}
+                          disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
                           <ThumbsUp className="h-3 w-3" />
                         </Button>
@@ -226,9 +275,11 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           size="icon" 
                           className={cn(
                             "h-6 w-6 transition-all",
-                            liked === false && "bg-red-600 hover:bg-red-700"
+                            liked === false && "bg-red-600 hover:bg-red-700 text-white",
+                            liked !== null && liked !== false && "opacity-50", // Dim if other option was chosen or feedback submitted
                           )}
                           onClick={() => handleFeedback(false)}
+                          disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
                           <ThumbsDown className="h-3 w-3" />
                         </Button>
