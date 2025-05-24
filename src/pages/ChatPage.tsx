@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils"; // Added missing import
+import { cn } from "@/lib/utils";
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -90,7 +90,7 @@ const ChatPage = () => {
   };
   
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden"> {/* Added overflow-hidden */}
+    <div className="flex h-screen bg-black text-white overflow-hidden">
       {/* Header for mobile - only visible when sidebar is collapsed */}
       {isMobile && sidebarCollapsed && (
         <div className="absolute top-0 left-0 z-10 p-2">
@@ -115,10 +115,10 @@ const ChatPage = () => {
       {/* Main chat area */}
       <div className={cn(
         "flex-1 flex flex-col h-full",
-        isMobile && sidebarCollapsed && "pl-12 md:pl-0" // Add padding left when sidebar is collapsed on mobile only
+        isMobile && sidebarCollapsed && "pl-12 md:pl-0"
       )}>
         <ModernChatInterface 
-          key={id} // Add key prop here
+          key={id}
           conversationId={id}
           conversation={conversation}
           messages={messages}
@@ -130,4 +130,3 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
-
