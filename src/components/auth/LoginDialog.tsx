@@ -9,15 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/auth/useAuth';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import Logo from '@/components/ui/Logo';
 
 interface LoginDialogProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const LoginDialog = ({ children }: LoginDialogProps) => {
-  const [open, setOpen] = useState(false);
+const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
+  const [open, setOpen] = useState(isOpen || false);
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,7 +29,7 @@ const LoginDialog = ({ children }: LoginDialogProps) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { loginWithEmail, signUpWithEmail } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,31 +37,42 @@ const LoginDialog = ({ children }: LoginDialogProps) => {
     
     try {
       if (isLogin) {
-        await signIn(formData.email, formData.password);
+        await loginWithEmail(formData.email, formData.password);
         toast.success('Welcome back!');
       } else {
         if (formData.password !== formData.confirmPassword) {
           toast.error('Passwords do not match');
           return;
         }
-        await signUp(formData.email, formData.password, {
-          full_name: formData.fullName
-        });
+        await signUpWithEmail(formData.email, formData.password, formData.fullName);
         toast.success('Account created successfully! Please check your email to verify your account.');
       }
       setOpen(false);
+      if (onClose) onClose();
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Handle controlled open state
+  const dialogOpen = isOpen !== undefined ? isOpen : open;
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isOpen !== undefined && onClose) {
+      if (!newOpen) onClose();
+    } else {
+      setOpen(newOpen);
+    }
+  };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md bg-gray-900 border-gray-800">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

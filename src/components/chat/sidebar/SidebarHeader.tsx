@@ -8,9 +8,10 @@ interface SidebarHeaderProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   isMobile?: boolean;
+  onNewChat?: () => void | Promise<void>;
 }
 
-const SidebarHeader = ({ isCollapsed, onToggleCollapse, isMobile }: SidebarHeaderProps) => {
+const SidebarHeader = ({ isCollapsed, onToggleCollapse, isMobile, onNewChat }: SidebarHeaderProps) => {
   return (
     <div className="p-4 border-b border-gray-800">
       <div className="flex items-center justify-between">

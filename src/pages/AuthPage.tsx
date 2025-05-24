@@ -3,9 +3,9 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/auth/useAuth';
-import AuthContainer from '@/components/auth/AuthContainer';
 import { Bot } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 const AuthPage = () => {
   const { isAuthenticated } = useAuth();
@@ -56,7 +56,7 @@ const AuthPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
-          <AuthContainer />
+          <LoginDialog isOpen={true} />
         </motion.div>
       </div>
     </div>
