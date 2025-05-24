@@ -10,7 +10,7 @@ import {
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileTab from '@/components/profile/ProfileTab';
 import SettingsTab from '@/components/profile/SettingsTab';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth/useAuth';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
