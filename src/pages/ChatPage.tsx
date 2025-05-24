@@ -68,10 +68,10 @@ const ChatPage = () => {
             }
           }
         } else {
-          // If no ID, create or load a default conversation
-          const defaultConversation = await conversationService.createDefaultConversation();
-          if (defaultConversation) {
-            navigate(`/chat/${defaultConversation.id}`, { replace: true });
+          // If no ID, always create a new conversation for fresh start
+          const newConversation = await conversationService.createDefaultConversation();
+          if (newConversation) {
+            navigate(`/chat/${newConversation.id}`, { replace: true });
           }
         }
       } catch (error) {

@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/auth/useAuth';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.svg';
+import Logo from '@/components/ui/Logo';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -46,7 +46,7 @@ const ProfilePage = () => {
       <div className="min-h-screen bg-gray-950 text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-6">
-            <img src={logo} alt="AI Career Advisor" className="h-10" />
+            <Logo size="md" withLink={false} />
             <Button
               variant="ghost"
               size="icon"

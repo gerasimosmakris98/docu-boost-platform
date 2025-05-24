@@ -1,95 +1,72 @@
 
-import { Helmet } from 'react-helmet-async';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import LegalNavigation from '@/components/legal/LegalNavigation';
-import Logo from '@/components/common/Logo';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Logo from '@/components/ui/Logo';
 
 const CookiePage = () => {
   return (
-    <div className="container max-w-4xl py-8 px-4">
-      <Helmet>
-        <title>Cookie Policy - AI Career Advisor</title>
-        <meta name="description" content="Cookie Policy for AI Career Advisor - Learn how we use cookies and similar technologies." />
-      </Helmet>
-      
-      <div className="mb-6">
-        <Logo size="md" withLink={true} />
-      </div>
-      
-      <h1 className="text-3xl font-bold mb-2">Cookie Policy</h1>
-      <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>
-      
-      <LegalNavigation />
-      
-      <ScrollArea className="h-[calc(100vh-300px)] pr-4">
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-3">1. What Are Cookies</h2>
-            <p>
-              Cookies are small text files that are stored on your computer or mobile device when you visit a website. 
-              They are widely used to make websites work more efficiently and provide information to the website owners.
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-gray-800">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Logo size="md" />
+          <Link to="/">
+            <Button variant="ghost" className="text-white hover:text-green-400">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+          Cookie Policy
+        </h1>
+        
+        <div className="prose prose-invert max-w-none">
+          <p className="text-lg text-gray-300 mb-8">
+            Last updated: {new Date().toLocaleDateString()}
+          </p>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">What Are Cookies</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Cookies are small text files that are placed on your computer or mobile device when you visit our website. They help us provide you with a better experience.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">2. How We Use Cookies</h2>
-            <p>
-              We use cookies for various purposes, including:
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">How We Use Cookies</h2>
+            <p className="text-gray-300 leading-relaxed">
+              We use cookies to remember your preferences, authenticate your sessions, and analyze how you use our service to improve your experience.
             </p>
-            <ul className="list-disc pl-6 mt-2 space-y-1">
-              <li>Authentication and security</li>
-              <li>Remembering your preferences</li>
-              <li>Analyzing how our website is used</li>
-              <li>Personalizing your experience</li>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Types of Cookies We Use</h2>
+            <ul className="text-gray-300 leading-relaxed list-disc pl-6">
+              <li>Essential cookies: Required for the website to function properly</li>
+              <li>Preference cookies: Remember your settings and preferences</li>
+              <li>Analytics cookies: Help us understand how you use our website</li>
             </ul>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">3. Types of Cookies We Use</h2>
-            <p>
-              <strong>Essential cookies:</strong> These are necessary for the website to function properly and cannot be disabled.
-            </p>
-            <p className="mt-2">
-              <strong>Preference cookies:</strong> These remember your settings and preferences.
-            </p>
-            <p className="mt-2">
-              <strong>Analytics cookies:</strong> These help us understand how visitors interact with our website.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Managing Cookies</h2>
+            <p className="text-gray-300 leading-relaxed">
+              You can control and manage cookies through your browser settings. However, disabling certain cookies may affect the functionality of our website.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">4. Third-Party Cookies</h2>
-            <p>
-              Some cookies are placed by third parties on our behalf. These third parties may include analytics 
-              providers that help us understand how our website is being used.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">5. Managing Cookies</h2>
-            <p>
-              Most web browsers allow you to control cookies through their settings. You can typically delete 
-              existing cookies and set your browser to prevent new cookies from being set. However, if you disable 
-              certain cookies, some features of our website may not function properly.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">6. Changes to This Cookie Policy</h2>
-            <p>
-              We may update our Cookie Policy from time to time. Any changes will be posted on this page with an 
-              updated "Last updated" date.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">7. Contact Us</h2>
-            <p>
-              If you have any questions about our Cookie Policy, please contact us at privacy@aicareeradvisor.com.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Contact Us</h2>
+            <p className="text-gray-300 leading-relaxed">
+              If you have any questions about our use of cookies, please contact us through our support channels.
             </p>
           </section>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };

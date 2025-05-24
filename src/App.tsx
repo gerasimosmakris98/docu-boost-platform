@@ -26,7 +26,7 @@ const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
 // Loading fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen bg-black">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
   </div>
 );
 

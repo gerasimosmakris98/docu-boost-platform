@@ -1,101 +1,70 @@
 
-import { Helmet } from 'react-helmet-async';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import LegalNavigation from '@/components/legal/LegalNavigation';
-import Logo from '@/components/common/Logo';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Logo from '@/components/ui/Logo';
 
 const TermsPage = () => {
   return (
-    <div className="container max-w-4xl py-8 px-4">
-      <Helmet>
-        <title>Terms of Use - AI Career Advisor</title>
-        <meta name="description" content="Terms of Use for AI Career Advisor - Our policies and guidelines for using the service." />
-      </Helmet>
-      
-      <div className="mb-6">
-        <Logo size="md" withLink={true} />
-      </div>
-      
-      <h1 className="text-3xl font-bold mb-2">Terms of Use</h1>
-      <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>
-      
-      <LegalNavigation />
-      
-      <ScrollArea className="h-[calc(100vh-300px)] pr-4">
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
-            <p>
-              By accessing or using AI Career Advisor ("the Service"), you agree to be bound by these Terms of Use. 
-              If you disagree with any part of these terms, you may not access the Service.
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-gray-800">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Logo size="md" />
+          <Link to="/">
+            <Button variant="ghost" className="text-white hover:text-green-400">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+          Terms of Service
+        </h1>
+        
+        <div className="prose prose-invert max-w-none">
+          <p className="text-lg text-gray-300 mb-8">
+            Last updated: {new Date().toLocaleDateString()}
+          </p>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">1. Acceptance of Terms</h2>
+            <p className="text-gray-300 leading-relaxed">
+              By accessing and using AI Career Advisor, you accept and agree to be bound by the terms and provision of this agreement.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">2. Description of Service</h2>
-            <p>
-              AI Career Advisor provides AI-powered career guidance, resume optimization, interview preparation, 
-              and related services through conversational interfaces and document analysis features.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">2. Use License</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Permission is granted to temporarily use AI Career Advisor for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">3. User Accounts and Registration</h2>
-            <p>
-              Some features of the Service require registration. You are responsible for maintaining 
-              the confidentiality of your account information and for all activities that occur under your account.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">3. Service Description</h2>
+            <p className="text-gray-300 leading-relaxed">
+              AI Career Advisor provides AI-powered career guidance, resume building, interview preparation, and job search assistance. The service is provided "as is" without warranties of any kind.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">4. Use of AI Technology</h2>
-            <p>
-              Our Service utilizes AI technology to generate responses and provide guidance. 
-              While we strive for accuracy, we cannot guarantee that all AI-generated advice will be 
-              completely accurate, suitable, or effective for your specific situation.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">4. Privacy and Data</h2>
+            <p className="text-gray-300 leading-relaxed">
+              Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service, to understand our practices.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">5. User Content</h2>
-            <p>
-              You retain ownership of content you submit to the Service (resumes, cover letters, etc.). 
-              By submitting content, you grant us a license to use it for providing and improving the Service.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">6. Prohibited Uses</h2>
-            <p>
-              You may not use the Service for any illegal purpose or to violate any laws, 
-              attempt to gain unauthorized access to any part of the Service, or interfere with its functionality.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">7. Limitation of Liability</h2>
-            <p>
-              The Service is provided "as is" without warranties of any kind. We shall not be liable 
-              for any indirect, incidental, special, consequential, or punitive damages.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">8. Changes to Terms</h2>
-            <p>
-              We reserve the right to modify these terms at any time. Your continued use of the Service 
-              after such modifications constitutes your acceptance of the new terms.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">9. Contact Information</h2>
-            <p>
-              If you have any questions about these Terms, please contact us at support@aicareeradvisor.com.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">5. Contact Information</h2>
+            <p className="text-gray-300 leading-relaxed">
+              If you have any questions about these Terms of Service, please contact us through our support channels.
             </p>
           </section>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };

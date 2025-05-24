@@ -1,93 +1,70 @@
 
-import { Helmet } from 'react-helmet-async';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import LegalNavigation from '@/components/legal/LegalNavigation';
-import Logo from '@/components/common/Logo';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Logo from '@/components/ui/Logo';
 
 const PrivacyPage = () => {
   return (
-    <div className="container max-w-4xl py-8 px-4">
-      <Helmet>
-        <title>Privacy Policy - AI Career Advisor</title>
-        <meta name="description" content="Privacy Policy for AI Career Advisor - Learn how we handle your personal information." />
-      </Helmet>
-      
-      <div className="mb-6">
-        <Logo size="md" withLink={true} />
-      </div>
-      
-      <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
-      <p className="text-muted-foreground mb-6">Last updated: May 19, 2025</p>
-      
-      <LegalNavigation />
-      
-      <ScrollArea className="h-[calc(100vh-300px)] pr-4">
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
-            <p>
-              We collect information that you provide directly to us, including personal information such as 
-              name, email address, and career-related documents you upload. We also collect usage data, 
-              including interactions with our AI systems.
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-gray-800">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Logo size="md" />
+          <Link to="/">
+            <Button variant="ghost" className="text-white hover:text-green-400">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+          Privacy Policy
+        </h1>
+        
+        <div className="prose prose-invert max-w-none">
+          <p className="text-lg text-gray-300 mb-8">
+            Last updated: {new Date().toLocaleDateString()}
+          </p>
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Information We Collect</h2>
+            <p className="text-gray-300 leading-relaxed">
+              We collect information you provide directly to us, such as when you create an account, use our services, or contact us for support.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">2. How We Use Your Information</h2>
-            <p>
-              We use your information to provide and improve our services, personalize your experience, 
-              communicate with you, and analyze usage patterns to enhance our AI capabilities.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">How We Use Your Information</h2>
+            <p className="text-gray-300 leading-relaxed">
+              We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">3. Information Sharing</h2>
-            <p>
-              We do not sell your personal information. We may share information with service providers who help us 
-              deliver our services, comply with legal obligations, or protect our rights and safety.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Information Sharing</h2>
+            <p className="text-gray-300 leading-relaxed">
+              We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">4. AI Training</h2>
-            <p>
-              Our AI systems are powered by Perplexity. Your conversations may be used to improve the AI system's 
-              performance and capabilities, but are subject to privacy protections and anonymization where appropriate.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Data Security</h2>
+            <p className="text-gray-300 leading-relaxed">
+              We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
             </p>
           </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">5. Data Security</h2>
-            <p>
-              We implement reasonable security measures to protect your information. However, no method of electronic 
-              transmission or storage is 100% secure, and we cannot guarantee absolute security.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">6. Your Rights</h2>
-            <p>
-              Depending on your location, you may have rights to access, correct, delete, or restrict the processing of 
-              your personal information. You may also have the right to data portability and to withdraw consent.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">7. Changes to This Policy</h2>
-            <p>
-              We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new 
-              Privacy Policy on this page and updating the "Last updated" date.
-            </p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-3">8. Contact Us</h2>
-            <p>
-              If you have any questions about this Privacy Policy, please contact us at privacy@aicareeradvisor.com.
+
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Contact Us</h2>
+            <p className="text-gray-300 leading-relaxed">
+              If you have any questions about this Privacy Policy, please contact us through our support channels.
             </p>
           </section>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };
