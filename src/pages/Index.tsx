@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -6,10 +7,8 @@ import StatsSection from "@/components/dashboard/StatsSection";
 import RecentDocumentsSection from "@/components/dashboard/RecentDocumentsSection";
 import TemplatesSection from "@/components/dashboard/TemplatesSection";
 import AssessmentSection from "@/components/dashboard/AssessmentSection";
-import LoginDialog from "@/components/auth/LoginDialog";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { documentService } from "@/services/documentService";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare, FileText, PenBox, User } from "lucide-react";
@@ -17,12 +16,7 @@ import { MessageSquare, FileText, PenBox, User } from "lucide-react";
 const Index = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
-
-  const handleLogin = () => {
-    setLoginDialogOpen(true);
-  };
 
   const handleDocumentUpload = async (file: File) => {
     // Instead of parsing directly, read the file and create a document
@@ -40,7 +34,7 @@ const Index = () => {
 
   const handleNavigateToConversationType = (type: string) => {
     if (!isAuthenticated) {
-      setLoginDialogOpen(true);
+      navigate('/auth');
       return;
     }
     navigate(`/conversations?type=${type}`);
@@ -64,7 +58,6 @@ const Index = () => {
         <WelcomeSection 
           username={user?.user_metadata?.full_name || "there"} 
           isAuthenticated={isAuthenticated}
-          onLogin={handleLogin}
           onUpload={handleDocumentUpload}
         />
         
@@ -145,11 +138,6 @@ const Index = () => {
         
         <AssessmentSection />
       </div>
-
-      <LoginDialog 
-        isOpen={loginDialogOpen} 
-        onClose={() => setLoginDialogOpen(false)} 
-      />
     </DashboardLayout>
   );
 };

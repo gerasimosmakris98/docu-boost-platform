@@ -3,21 +3,21 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Upload, Sparkles, Loader } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface WelcomeSectionProps {
   username?: string;
   isAuthenticated?: boolean;
-  onLogin?: () => void;
   onUpload?: (file: File) => void;
 }
 
 const WelcomeSection = ({ 
   username = "there", 
   isAuthenticated = false,
-  onLogin,
   onUpload
 }: WelcomeSectionProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -34,6 +34,10 @@ const WelcomeSection = ({
       setIsUploading(false);
       toast.success(`File "${file.name}" uploaded successfully`);
     }, 1500);
+  };
+
+  const handleLogin = () => {
+    navigate('/auth');
   };
 
   return (
@@ -77,7 +81,7 @@ const WelcomeSection = ({
               </Button>
             </>
           ) : (
-            <Button onClick={onLogin} className="gap-2">
+            <Button onClick={handleLogin} className="gap-2">
               Sign In
             </Button>
           )}
