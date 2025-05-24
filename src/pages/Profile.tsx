@@ -9,7 +9,7 @@ import { UserCircle, Settings, LogOut, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import logo from "@/assets/logo.svg";
+import Logo from "@/components/ui/Logo";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ const Profile = () => {
         <div className="flex flex-col h-full">
           <div className="mb-6">
             <div className="flex items-center mb-4">
-              <img src={logo} alt="AI Career Advisor" className="h-8 mr-2" />
+              <Logo size="md" withLink={false} />
             </div>
             <h2 className="text-xl font-bold">Your Profile</h2>
             <p className="text-sm text-gray-400">Manage your account</p>
@@ -132,7 +132,7 @@ const Profile = () => {
           <div className="space-y-6">
             {/* Header with back button for mobile */}
             <div className="flex items-center justify-between md:hidden mb-6">
-              <img src={logo} alt="AI Career Advisor" className="h-8" />
+              <Logo size="md" withLink={false} />
               <Button 
                 variant="ghost" 
                 size="icon"

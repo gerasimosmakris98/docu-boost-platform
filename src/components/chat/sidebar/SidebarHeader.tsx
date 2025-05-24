@@ -1,60 +1,41 @@
 
 import { Button } from "@/components/ui/button";
-import { Menu, PlusCircle } from "lucide-react";
-import Logo from "@/components/common/Logo";
+import { Menu, X } from "lucide-react";
+import { motion } from "framer-motion";
+import Logo from "@/components/ui/Logo";
 
 interface SidebarHeaderProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  onNewChat: () => void;
+  isMobile?: boolean;
 }
 
-const SidebarHeader = ({ isCollapsed, onToggleCollapse, onNewChat }: SidebarHeaderProps) => {
-  if (isCollapsed) {
-    return (
-      <div className="p-2 flex flex-col items-center">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="w-full mb-4" 
-          onClick={onToggleCollapse}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+const SidebarHeader = ({ isCollapsed, onToggleCollapse, isMobile }: SidebarHeaderProps) => {
+  return (
+    <div className="p-4 border-b border-gray-800">
+      <div className="flex items-center justify-between">
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Logo size="md" withLink={false} />
+          </motion.div>
+        )}
         
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
-          className="w-full mb-2 bg-green-600/10 border-green-500/20 hover:bg-green-600/20"
-          onClick={onNewChat}
-        >
-          <PlusCircle className="h-5 w-5 text-green-500" />
-        </Button>
-      </div>
-    );
-  }
-  
-  return (
-    <div>
-      <div className="p-3 flex items-center justify-between">
-        <Logo size="sm" withLink={true} />
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
           onClick={onToggleCollapse}
+          className="text-gray-400 hover:text-white ml-auto"
         >
-          <Menu className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="px-3 pb-3">
-        <Button 
-          className="w-full justify-start gap-2 bg-green-600 hover:bg-green-700 text-white"
-          onClick={onNewChat}
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Chat
+          {isCollapsed ? (
+            <Menu className="h-5 w-5" />
+          ) : (
+            <X className="h-5 w-5" />
+          )}
         </Button>
       </div>
     </div>

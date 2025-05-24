@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import Logo from '@/components/common/Logo';
+import Logo from '@/components/ui/Logo';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0 flex flex-col items-center md:items-start gap-2">
-            <Logo size="sm" />
+            <Logo size="sm" withLink={false} />
             <p className="text-sm">
               © {currentYear} AI Career Advisor. All rights reserved.
             </p>

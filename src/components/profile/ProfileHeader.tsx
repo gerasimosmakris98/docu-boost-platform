@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
-import Logo from "@/components/common/Logo";
+import Logo from "@/components/ui/Logo";
 
 export interface ProfileHeaderProps {
   profileData: {
@@ -27,7 +27,7 @@ const ProfileHeader = ({ profileData }: ProfileHeaderProps) => {
         {profileData.email && <p className="text-sm text-gray-500">{profileData.email}</p>}
       </div>
       <div className="hidden sm:block ml-auto">
-        <Logo size="md" />
+        <Logo size="md" withLink={false} />
       </div>
     </div>
   );

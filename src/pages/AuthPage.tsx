@@ -1,117 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useAuth } from "@/contexts/auth/useAuth";
-import Logo from "@/components/common/Logo";
-
-import AuthContainer from "@/components/auth/AuthContainer";
-import AuthTypeToggle from "@/components/auth/AuthTypeToggle";
-import EmailAuthForm from "@/components/auth/EmailAuthForm";
-import MagicLinkForm from "@/components/auth/MagicLinkForm";
-import OAuthButtons from "@/components/auth/OAuthButtons";
-import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
-
-type AuthType = "signin" | "signup";
-type ProviderType = "email" | "magic" | "oauth" | "forgot";
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/auth/useAuth';
+import AuthContainer from '@/components/auth/AuthContainer';
+import { Bot } from 'lucide-react';
+import Logo from '@/components/ui/Logo';
 
 const AuthPage = () => {
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
   
-  const [authType, setAuthType] = useState<AuthType>("signin");
-  const [providerType, setProviderType] = useState<ProviderType>("email");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  
-  // Get the return URL from location state or default to app home
-  const from = location.state?.from?.pathname || "/";
+  const from = location.state?.from || '/chat';
   
   useEffect(() => {
-    // If user is already authenticated, redirect to the return URL
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      // Navigate to chat with state to create new conversation
+      navigate(from, { state: { createNew: true }, replace: true });
     }
   }, [isAuthenticated, navigate, from]);
-
-  const getTitle = () => authType === "signin" ? "Sign In" : "Create Account";
-  const getDescription = () => {
-    return authType === "signin"
-      ? "Enter your credentials to access your account"
-      : "Create a new account to get started";
-  };
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-  
-  const renderAuthContent = () => (
-    <Tabs defaultValue="email" className="w-full" onValueChange={(value) => setProviderType(value as ProviderType)}>
-      <TabsList className="grid w-full grid-cols-3 mb-4 bg-gray-900/50">
-        <TabsTrigger value="email" className="text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-          <span>Email</span>
-        </TabsTrigger>
-        <TabsTrigger value="magic" className="text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-          <span>Magic Link</span>
-        </TabsTrigger>
-        <TabsTrigger value="oauth" className="text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-          <span>Google</span>
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="email">
-        <EmailAuthForm 
-          authType={authType} 
-          isLoading={isLoading} 
-          setIsLoading={setIsLoading}
-          showPassword={showPassword}
-          togglePasswordVisibility={togglePasswordVisibility}
-          onSuccess={(path) => navigate(path, { replace: true })}
-          onForgotPassword={() => setProviderType("forgot")}
-        />
-      </TabsContent>
-      
-      <TabsContent value="magic">
-        <MagicLinkForm 
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-        />
-      </TabsContent>
-      
-      <TabsContent value="oauth">
-        <OAuthButtons 
-          isLoading={isLoading}
-          onProviderSelect={(provider) => {
-            setIsLoading(true);
-            // This will be handled by the OAuth flow
-          }}
-        />
-      </TabsContent>
-
-      <TabsContent value="forgot">
-        <ForgotPasswordForm 
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          onBackToLogin={() => setProviderType("email")}
-        />
-      </TabsContent>
-    </Tabs>
-  );
   
   return (
-    <>
-      <div className="fixed top-0 left-0 p-4 z-10">
-        <Logo size="md" withLink={true} />
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-8"
+        >
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-500 rounded-full blur-xl opacity-30 animate-pulse"></div>
+              <div className="relative bg-black/50 backdrop-blur-sm border border-gray-700 rounded-full p-4">
+                <Bot className="h-12 w-12 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500" />
+              </div>
+            </div>
+          </div>
+          
+          <Logo size="lg" withLink={false} className="justify-center mb-4" />
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-gray-400 text-lg"
+          >
+            Your AI-powered career companion
+          </motion.p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+        >
+          <AuthContainer />
+        </motion.div>
       </div>
-      <AuthContainer
-        title={getTitle()}
-        description={getDescription()}
-        content={renderAuthContent()}
-        footer={<AuthTypeToggle authType={authType} onToggle={setAuthType} />}
-      />
-    </>
+    </div>
   );
 };
 

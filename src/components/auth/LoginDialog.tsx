@@ -1,254 +1,196 @@
 
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader } from "lucide-react";
-import { useAuth } from "@/contexts/auth/useAuth";
-import { AuthProviderType } from "@/contexts/auth/types";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Logo from "@/components/common/Logo";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/auth/useAuth';
+import { toast } from 'sonner';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Logo from '@/components/ui/Logo';
 
 interface LoginDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  children: React.ReactNode;
 }
 
-const LoginDialog = ({ isOpen, onClose }: LoginDialogProps) => {
-  const { loginWithProvider, loginWithEmail, signUpWithEmail } = useAuth();
-  const [isLoading, setIsLoading] = useState<AuthProviderType | 'email' | null>(null);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+const LoginDialog = ({ children }: LoginDialogProps) => {
+  const [open, setOpen] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Form states
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSocialLogin = async (provider: AuthProviderType) => {
-    setError('');
-    setIsLoading(provider);
-    try {
-      await loginWithProvider(provider);
-      // We don't immediately close the dialog because the OAuth flow will redirect
-    } catch (error) {
-      console.error(`Error logging in with ${provider}:`, error);
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const { signIn, signUp } = useAuth();
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading('email');
+    setIsLoading(true);
+    
     try {
-      await loginWithEmail(email, password);
-      onClose();
-    } catch (error: any) {
-      setError(error.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!fullName) {
-      setError('Full name is required');
-      return;
-    }
-    setIsLoading('email');
-    try {
-      await signUpWithEmail(email, password, fullName);
-      onClose();
-    } catch (error: any) {
-      setError(error.message || 'Signup failed. Please try again.');
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setFullName('');
-    setError('');
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        resetForm();
-        onClose();
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
+        toast.success('Welcome back!');
+      } else {
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('Passwords do not match');
+          return;
+        }
+        await signUp(formData.email, formData.password, {
+          full_name: formData.fullName
+        });
+        toast.success('Account created successfully! Please check your email to verify your account.');
       }
-    }}>
-      <DialogContent className="sm:max-w-md">
-        <div className="flex justify-center mb-4">
-          <Logo size="lg" withLink={false} />
-        </div>
-        
-        <DialogHeader>
-          <DialogTitle>
-            {authMode === 'login' ? 'Sign in to your account' : 'Create a new account'}
-          </DialogTitle>
-          <DialogDescription>
-            {authMode === 'login' 
-              ? 'Enter your credentials or use Google to sign in.'
-              : 'Fill in the details below to create your account.'}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'signup')}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleEmailLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+      setOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md bg-gray-900 border-gray-800">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="text-center pb-2">
+              <div className="flex justify-center mb-4">
+                <Logo size="lg" withLink={false} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+              <CardTitle className="text-white">
+                {isLogin ? 'Welcome back' : 'Create account'}
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                {isLogin 
+                  ? 'Sign in to your AI Career Advisor account' 
+                  : 'Start your career journey with AI guidance'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-white">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-white">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-white">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        id="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        className="pl-10 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-semibold py-2.5"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      {isLogin ? 'Sign In' : 'Create Account'}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </form>
               
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading !== null}
-              >
-                {isLoading === 'email' ? (
-                  <Loader className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Sign in with Email
-              </Button>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input 
-                  id="fullName" 
-                  type="text" 
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {isLogin 
+                    ? "Don't have an account? Sign up" 
+                    : "Already have an account? Sign in"
+                  }
+                </button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input 
-                  id="signup-email" 
-                  type="email" 
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input 
-                  id="signup-password" 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading !== null}
-              >
-                {isLoading === 'email' ? (
-                  <Loader className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                Create Account
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t"></span>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        
-        <div className="flex flex-col gap-4 py-4">
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => handleSocialLogin('google')}
-            disabled={isLoading !== null}
-          >
-            {isLoading === 'google' ? (
-              <Loader className="h-4 w-4 animate-spin" />
-            ) : (
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-            )}
-            Sign in with Google
-          </Button>
-        </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
