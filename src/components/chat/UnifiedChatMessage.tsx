@@ -33,7 +33,8 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
   const [isExpanded, setIsExpanded] = useState(false);
   
   const handleCopyText = () => {
-    navigator.clipboard.writeText(message.content);
+    const textToCopy = extractTextContent(message.content);
+    navigator.clipboard.writeText(textToCopy);
     toast.success("Message copied to clipboard");
   };
   
@@ -42,10 +43,34 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     toast.success(isPositive ? "Thanks for your feedback!" : "Thanks for your feedback. We'll improve our responses.");
   };
   
+  // Extract text content from potential JSON response
+  const extractTextContent = (content: string) => {
+    try {
+      // Check if content is JSON
+      const parsed = JSON.parse(content);
+      if (parsed.generatedText) {
+        return parsed.generatedText;
+      }
+      if (parsed.text) {
+        return parsed.text;
+      }
+      if (parsed.content) {
+        return parsed.content;
+      }
+      // If it's an object but no expected fields, return stringified
+      return typeof parsed === 'object' ? JSON.stringify(parsed, null, 2) : content;
+    } catch {
+      // Not JSON, return as is
+      return content;
+    }
+  };
+  
   const formatContent = (content: string) => {
-    if (contentFormat === 'normal') return content;
+    const textContent = extractTextContent(content);
     
-    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim() !== '');
+    if (contentFormat === 'normal') return textContent;
+    
+    const paragraphs = textContent.split(/\n\n|\n/).filter(p => p.trim() !== '');
     
     if (contentFormat === 'bullets') {
       return paragraphs.map(p => `• ${p}`).join('\n\n');
@@ -53,7 +78,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       return paragraphs.map((p, i) => `${i + 1}. ${p}`).join('\n\n');
     }
     
-    return content;
+    return textContent;
   };
   
   const formatDateTime = (dateString: string) => {
@@ -70,12 +95,12 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     let processedContent = formatContent(content);
     
     // Add proper paragraph breaks
-    processedContent = processedContent.replace(/\n\n/g, '</p><p>');
+    processedContent = processedContent.replace(/\n\n/g, '</p><p class="mb-3">');
     processedContent = processedContent.replace(/\n/g, '<br />');
     
     // Wrap in paragraph tags
-    if (!processedContent.startsWith('<p>')) {
-      processedContent = `<p>${processedContent}</p>`;
+    if (!processedContent.startsWith('<p')) {
+      processedContent = `<p class="mb-3">${processedContent}</p>`;
     }
     
     // Handle **bold** text
@@ -93,12 +118,12 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     return processedContent;
   };
   
-  const isContentLong = message.content.length > 500;
+  const isContentLong = extractTextContent(message.content).length > 500;
   const displayContent = isContentLong && !isExpanded ? 
-    message.content.substring(0, 500) + '...' : message.content;
+    extractTextContent(message.content).substring(0, 500) + '...' : extractTextContent(message.content);
   
   const formattedContent = isUserMessage ? 
-    message.content : processContentWithFormatting(displayContent);
+    displayContent : processContentWithFormatting(displayContent);
   
   return (
     <motion.div 
@@ -157,7 +182,9 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
           ) : (
             <div className="space-y-3">
               {isUserMessage ? (
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="whitespace-pre-wrap bg-green-900/20 rounded-lg p-3 border border-green-500/20">
+                  {displayContent}
+                </div>
               ) : (
                 <>
                   <div 

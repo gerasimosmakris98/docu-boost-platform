@@ -1,6 +1,5 @@
 
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui/Logo';
 
@@ -10,12 +9,18 @@ const TermsPage = () => {
       <header className="border-b border-gray-800">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Logo size="md" />
-          <Link to="/">
-            <Button variant="ghost" className="text-white hover:text-green-400">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/auth">
+              <Button variant="ghost" className="text-white hover:text-green-400">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white">
+                Get Started
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 

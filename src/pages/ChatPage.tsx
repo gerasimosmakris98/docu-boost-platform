@@ -29,27 +29,25 @@ const ChatPage = () => {
   }, [isMobile]);
   
   useEffect(() => {
-    // Always start by attempting to load or create a conversation
     const initChat = async () => {
       setIsLoading(true);
       
       if (!isAuthenticated) {
-        // For non-authenticated users, show a preview conversation
-        setConversation(null);
-        setMessages([
-          {
-            id: "preview-1",
-            conversation_id: "preview",
-            role: 'assistant',
-            content: "Hello! I'm your AI career assistant. Sign in to get personalized help with your career journey.",
-            created_at: new Date().toISOString()
-          }
-        ]);
-        setIsLoading(false);
+        // For non-authenticated users, redirect to auth
+        navigate("/auth");
         return;
       }
       
       try {
+        // Always create a new conversation when accessing /chat without ID or when user signs in
+        if (!id || location.state?.createNew) {
+          const newConversation = await conversationService.createDefaultConversation();
+          if (newConversation) {
+            navigate(`/chat/${newConversation.id}`, { replace: true });
+            return;
+          }
+        }
+        
         // If there's an ID in the URL, load that conversation
         if (id) {
           const { conversation: loadedConversation, messages: loadedMessages } = 
@@ -60,18 +58,12 @@ const ChatPage = () => {
             setMessages(loadedMessages);
             console.log(`ChatPage: Loaded conversation ${id} with ${loadedMessages.length} initial messages.`);
           } else {
-            // If conversation not found, redirect to default
+            // If conversation not found, create a new one
             toast.error("Conversation not found");
             const defaultConversation = await conversationService.createDefaultConversation();
             if (defaultConversation) {
               navigate(`/chat/${defaultConversation.id}`, { replace: true });
             }
-          }
-        } else {
-          // If no ID, always create a new conversation for fresh start
-          const newConversation = await conversationService.createDefaultConversation();
-          if (newConversation) {
-            navigate(`/chat/${newConversation.id}`, { replace: true });
           }
         }
       } catch (error) {
@@ -83,7 +75,7 @@ const ChatPage = () => {
     };
     
     initChat();
-  }, [id, isAuthenticated, navigate]);
+  }, [id, isAuthenticated, navigate, location.state]);
   
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
