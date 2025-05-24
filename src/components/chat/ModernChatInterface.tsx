@@ -95,11 +95,12 @@ const ModernChatInterface = ({
         );
       } else {
         // If error occurs, replace loading message with friendly error message
+        const specificErrorContent = "Sorry, I couldn't get a response from the AI. Please check your connection or try again.";
         const errorAiMessage: Message = {
           id: `error-${Date.now()}`,
           conversation_id: conversationId,
           role: 'assistant',
-          content: "I apologize, but I'm currently experiencing some technical difficulties. Please try again in a moment.",
+          content: specificErrorContent,
           created_at: new Date().toISOString()
         };
         
@@ -107,26 +108,31 @@ const ModernChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
         );
         
-        toast.error("AI service is currently unavailable");
+        toast.error("AI response error. Please check connection or try again.");
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
       
-      // Create a more descriptive error message depending on the error type
-      let errorMessage = "Sorry, I encountered an issue processing your request. Let's try again in a moment.";
+      let displayErrorMessage = "An unexpected error occurred. If the problem persists, please contact support.";
+      if (error && typeof error.message === 'string' && error.message.length > 0) {
+        if (!error.message.toLowerCase().includes("internal server error") && error.message.length < 150) {
+          displayErrorMessage = error.message;
+        }
+        // If error.message is "Internal Server Error" or too long, the default displayErrorMessage is already set.
+      }
       
-      // If error occurs, remove loading message and add error message
       const errorAiMessage: Message = {
         id: `error-${Date.now()}`,
-        conversation_id: conversationId,
+        conversation_id: conversationId, // conversationId should exist here as per logic flow
         role: 'assistant',
-        content: errorMessage,
+        content: displayErrorMessage,
         created_at: new Date().toISOString()
       };
       
       setMessages(prev => 
         prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
       );
+      toast.error(displayErrorMessage); // Also use this message for the toast
     } finally {
       setIsSending(false);
     }

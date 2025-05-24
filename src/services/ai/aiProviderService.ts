@@ -2,6 +2,7 @@
 import { AIModelOptions, ProgressiveResponseOptions, ConversationType } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getSystemPrompt } from '@/services/utils/conversationUtils';
 
 // Enhanced version of the AI provider service with more conversational responses
 const aiProviderService = {
@@ -10,13 +11,14 @@ const aiProviderService = {
     prompt: string, 
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
-  ): Promise<string> => {
+  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
     console.log('Generating response for:', conversationType);
     
     try {
+      const systemPromptForType = getSystemPrompt(conversationType);
       // Create a more conversational prompt that encourages brief, natural responses with citations
       const enhancedPrompt = `
-        You are a friendly AI career advisor having a concise conversation. 
+        ${systemPromptForType}
         
         Guidelines:
         - Be extremely brief and conversational (max 2 short paragraphs)
@@ -56,12 +58,27 @@ const aiProviderService = {
         throw new Error('No response received from AI service');
       }
       
-      return data.generatedText;
+      try {
+        const parsedResponse = JSON.parse(data.generatedText);
+        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
+          return parsedResponse;
+        } else {
+          console.error("AI response JSON structure incorrect:", parsedResponse);
+          return { generatedText: "Error: AI response format unexpected.", sourceUrls: [] };
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI response JSON:", parseError, data.generatedText);
+        // Fallback: return the original string if it's not JSON, or an error message.
+        return { generatedText: data.generatedText, sourceUrls: [] }; 
+      }
     } catch (error) {
       console.error('Error in generateResponse:', error);
       
       // Provide a brief, helpful fallback response
-      return `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`;
+      return { 
+        generatedText: `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`, 
+        sourceUrls: [] 
+      };
     }
   },
   
@@ -72,7 +89,7 @@ const aiProviderService = {
     fileType: string,
     profileContext?: string,
     options?: AIModelOptions
-  ): Promise<string> => {
+  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
     console.log('Analyzing file:', fileName, fileType);
     
     try {
@@ -115,12 +132,26 @@ const aiProviderService = {
         throw new Error('No analysis received from AI service');
       }
       
-      return data.generatedText;
+      try {
+        const parsedResponse = JSON.parse(data.generatedText);
+        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
+          return parsedResponse;
+        } else {
+          console.error("AI response JSON structure incorrect:", parsedResponse);
+          return { generatedText: "Error: AI response format unexpected.", sourceUrls: [] };
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI response JSON:", parseError, data.generatedText);
+        return { generatedText: data.generatedText, sourceUrls: [] };
+      }
     } catch (error) {
       console.error('Error in analyzeFile:', error);
       
       // Provide a brief fallback response for file analysis
-      return `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`;
+      return { 
+        generatedText: `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`, 
+        sourceUrls: [] 
+      };
     }
   },
   
@@ -129,7 +160,7 @@ const aiProviderService = {
     url: string, 
     type: string, 
     profileContext?: string
-  ): Promise<string> => {
+  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
     console.log('Analyzing URL:', url, type);
     
     try {
@@ -196,7 +227,7 @@ const aiProviderService = {
         for (const pattern of failurePatterns) {
           if (lowercasedText.includes(pattern)) {
             console.warn("Perplexity returned vague/error for URL:", data.generatedText);
-            return genericErrorMessage;
+            return { generatedText: genericErrorMessage, sourceUrls: [] };
           }
         }
         
@@ -214,17 +245,51 @@ const aiProviderService = {
            // to avoid flagging valid short summaries.
            if (lowercasedText.includes("unable") || lowercasedText.includes("cannot") || lowercasedText.includes("can't")) {
              console.warn("Perplexity returned very short and potentially unhelpful response for URL:", data.generatedText);
-             return genericErrorMessage;
+             return { generatedText: genericErrorMessage, sourceUrls: [] };
            }
         }
       }
       
-      return data.generatedText;
+      try {
+        const parsedResponse = JSON.parse(data.generatedText);
+        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
+          // Additional check: if the parsed text is one of the failure patterns, use generic error message
+          const parsedLowercasedText = parsedResponse.generatedText.toLowerCase();
+          for (const pattern of failurePatterns) {
+            if (parsedLowercasedText.includes(pattern)) {
+              console.warn("Perplexity returned vague/error for URL (after parsing):", parsedResponse.generatedText);
+              return { generatedText: genericErrorMessage, sourceUrls: parsedResponse.sourceUrls || [] };
+            }
+          }
+          // Check for very short responses after parsing
+          if (parsedResponse.generatedText.length < 30) {
+            if (parsedLowercasedText.includes("unable") || parsedLowercasedText.includes("cannot") || parsedLowercasedText.includes("can't")) {
+              console.warn("Perplexity returned very short and potentially unhelpful response for URL (after parsing):", parsedResponse.generatedText);
+              return { generatedText: genericErrorMessage, sourceUrls: parsedResponse.sourceUrls || [] };
+            }
+          }
+          return parsedResponse;
+        } else {
+          console.error("AI response JSON structure incorrect:", parsedResponse);
+          // If structure is incorrect, but we have some text, return it. Otherwise, use a generic error.
+          const fallbackText = typeof parsedResponse.generatedText === 'string' ? parsedResponse.generatedText : "Error: AI response format unexpected.";
+          return { generatedText: fallbackText, sourceUrls: [] };
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI response JSON (analyzeUrl):", parseError, data.generatedText);
+        // If parsing fails, the original data.generatedText is likely not JSON.
+        // We've already checked for failure patterns in the raw string.
+        // So, we return the raw string as generatedText.
+        return { generatedText: data.generatedText, sourceUrls: [] };
+      }
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
       
       // Provide a brief fallback response for URL analysis (for network/Supabase function errors)
-      return `I couldn't analyze that URL in detail. Would you like me to try again?`;
+      return { 
+        generatedText: `I couldn't analyze that URL in detail. Would you like me to try again?`, 
+        sourceUrls: [] 
+      };
     }
   },
   
