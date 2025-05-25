@@ -6,6 +6,7 @@ import { getAiResponse } from "./aiResponseHandlers";
 import { formatConversationContext } from "../utils/conversationUtils";
 import { toast } from "sonner";
 import { aiProviderService } from "../ai/aiProviderService";
+import { extractCleanText, extractSourceUrls, createAIResponse } from "./responseHandler";
 
 /**
  * Send a message to the conversation and get an AI response
@@ -72,24 +73,22 @@ export const sendMessage = async (
       formatConversationContext(previousMessages.reverse()) : '';
     
     // Get AI response with context
-    const aiResponseContent = await getAiResponse(
+    const rawAiResponse = await getAiResponse(
       conversationType,
       content,
       contextMessages,
       attachments
     );
 
-    // Log and validate the AI response object
-    console.log('AI response object before saving in messageService:', aiResponseContent);
+    console.log('Raw AI response received:', rawAiResponse);
 
-    if (!aiResponseContent || typeof aiResponseContent.generatedText !== 'string') {
+    // Process the AI response to extract clean content
+    const aiResponseContent = createAIResponse(rawAiResponse);
+    console.log('Processed AI response:', aiResponseContent);
+
+    if (!aiResponseContent.generatedText || typeof aiResponseContent.generatedText !== 'string') {
       console.error('Invalid AI response: generatedText is missing or not a string. Full object:', aiResponseContent);
-      throw new Error("Invalid AI response content (text missing/wrong type)");
-    }
-
-    if (!Array.isArray(aiResponseContent.sourceUrls)) {
-      console.warn('Invalid AI response: sourceUrls is not an array. Defaulting to empty. Full object:', aiResponseContent);
-      aiResponseContent.sourceUrls = [];
+      throw new Error("Invalid AI response content");
     }
     
     // Insert AI response
@@ -98,11 +97,11 @@ export const sendMessage = async (
       .insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: aiResponseContent.generatedText, // Use generatedText field
-        source_urls: aiResponseContent.sourceUrls, // Add sourceUrls
+        content: aiResponseContent.generatedText,
+        source_urls: aiResponseContent.sourceUrls || [],
         attachments: []
       })
-      .select('*, source_urls') // Ensure source_urls is selected
+      .select('*, source_urls')
       .single();
 
     if (aiMessageError) {
@@ -114,10 +113,8 @@ export const sendMessage = async (
     console.log('AI response saved successfully');
 
     // Generate a title for the conversation if it's currently "New Conversation"
-    // We only want to do this if there are now enough messages to create a meaningful title
     if (conversationData.title === "New Conversation" && previousMessages && previousMessages.length >= 1) {
       try {
-        // Pass the generatedText part of AI response for title generation
         const allMessages = [...previousMessages, { role: 'user', content }, { role: 'assistant', content: aiResponseContent.generatedText }];
         const generatedTitle = await aiProviderService.generateTitle(allMessages);
         
@@ -159,7 +156,7 @@ export const sendMessage = async (
       role: 'assistant',
       content: aiMessageData.content,
       created_at: aiMessageData.created_at,
-      sourceUrls: aiMessageData.source_urls || [] // Include sourceUrls
+      sourceUrls: aiMessageData.source_urls || []
     };
 
     return { aiResponse };

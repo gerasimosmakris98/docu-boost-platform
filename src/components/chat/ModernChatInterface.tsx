@@ -32,6 +32,7 @@ const ModernChatInterface = ({
   
   // Update messages when initialMessages changes
   useEffect(() => {
+    console.log('Updating messages in ModernChatInterface:', initialMessages.length, 'messages');
     setMessages(initialMessages);
   }, [initialMessages]);
   
@@ -56,13 +57,20 @@ const ModernChatInterface = ({
     }
     
     if (!conversationId) {
-      toast.error("Invalid conversation");
+      toast.error("No conversation available. Please try refreshing the page.");
       return;
     }
     
+    if (!messageText.trim() && attachmentUrls.length === 0) {
+      toast.error("Please enter a message or attach a file.");
+      return;
+    }
+    
+    console.log('Sending message:', messageText, 'attachments:', attachmentUrls);
+    
     // Add user message to UI immediately
     const optimisticUserMessage: Message = {
-      id: `temp-${Date.now()}`,
+      id: `temp-user-${Date.now()}`,
       conversation_id: conversationId,
       role: 'user',
       content: messageText,
@@ -70,7 +78,10 @@ const ModernChatInterface = ({
       attachments: attachmentUrls
     };
     
-    setMessages(prev => [...prev, optimisticUserMessage]);
+    setMessages(prev => {
+      console.log('Adding user message to UI. Previous count:', prev.length);
+      return [...prev, optimisticUserMessage];
+    });
     
     // Add AI thinking message
     const optimisticAiMessage: Message = {
@@ -85,17 +96,22 @@ const ModernChatInterface = ({
     setMessages(prev => [...prev, optimisticAiMessage]);
     
     try {
+      console.log('Calling conversationService.sendMessage');
       // Send the message
       const response = await conversationService.sendMessage(conversationId, messageText, attachmentUrls);
       
+      console.log('Response received:', response);
+      
       // Update messages with real AI response
       if (response && response.aiResponse) {
+        console.log('Adding real AI response to UI');
         setMessages(prev => 
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
         );
       } else {
+        console.error('No AI response received');
         // If error occurs, replace loading message with friendly error message
-        const specificErrorContent = "Sorry, I couldn't get a response from the AI. Please check your connection or try again.";
+        const specificErrorContent = "I apologize, but I couldn't process your request at the moment. Please try again or rephrase your question.";
         const errorAiMessage: Message = {
           id: `error-${Date.now()}`,
           conversation_id: conversationId,
@@ -108,22 +124,21 @@ const ModernChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
         );
         
-        toast.error("AI response error. Please check connection or try again.");
+        toast.error("Couldn't get a response. Please try again.");
       }
     } catch (error: any) {
       console.error("Error sending message:", error);
       
-      let displayErrorMessage = "An unexpected error occurred. If the problem persists, please contact support.";
+      let displayErrorMessage = "I'm experiencing technical difficulties. Please try again in a moment.";
       if (error && typeof error.message === 'string' && error.message.length > 0) {
         if (!error.message.toLowerCase().includes("internal server error") && error.message.length < 150) {
-          displayErrorMessage = error.message;
+          displayErrorMessage = `I encountered an issue: ${error.message}`;
         }
-        // If error.message is "Internal Server Error" or too long, the default displayErrorMessage is already set.
       }
       
       const errorAiMessage: Message = {
         id: `error-${Date.now()}`,
-        conversation_id: conversationId, // conversationId should exist here as per logic flow
+        conversation_id: conversationId,
         role: 'assistant',
         content: displayErrorMessage,
         created_at: new Date().toISOString()
@@ -132,7 +147,7 @@ const ModernChatInterface = ({
       setMessages(prev => 
         prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
       );
-      toast.error(displayErrorMessage); // Also use this message for the toast
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -149,7 +164,7 @@ const ModernChatInterface = ({
       
       {/* Messages area with optimized performance for mobile */}
       <div 
-        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0" // Added min-h-0
+        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <MessagesList 
@@ -164,7 +179,7 @@ const ModernChatInterface = ({
       <div>
         <ChatInput
           onSendMessage={handleSendMessage}
-          isDisabled={!isAuthenticated || isSending}
+          isDisabled={!isAuthenticated || isSending || !conversationId}
           isSending={isSending}
           isModern={true}
         />

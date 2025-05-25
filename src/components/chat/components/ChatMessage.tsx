@@ -12,14 +12,14 @@ import {
 } from "lucide-react";
 import { Message } from "@/services/types/conversationTypes";
 import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth/useAuth";
 import ChatAttachment from "./ChatAttachment";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { submitMessageFeedback } from "@/services/api/feedbackService";
 
 interface ChatMessageProps {
   message: Message;
@@ -34,6 +34,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
   const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isContentLong, setIsContentLong] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   
   // Check if content is long and should be truncated
   useEffect(() => {
@@ -61,18 +62,34 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
     toast.success("Message copied to clipboard");
   };
   
-  const handleFeedback = (isPositive: boolean) => {
-    setLiked(isPositive);
-    
-    // Show feedback toast
-    if (isPositive) {
-      toast.success("Thanks for your feedback!");
-    } else {
-      toast.success("Thanks for your feedback. We'll improve our responses.");
+  const handleFeedback = async (isPositive: boolean) => {
+    if (isSubmittingFeedback || !message.id || message.id.startsWith('temp')) {
+      return;
     }
     
-    // In a real implementation, this would send feedback to the backend
-    console.log("Feedback submitted:", isPositive ? "positive" : "negative", "for message:", message.id);
+    setIsSubmittingFeedback(true);
+    setLiked(isPositive);
+    
+    try {
+      const success = await submitMessageFeedback({
+        message_id: message.id,
+        conversation_id: message.conversation_id,
+        is_positive: isPositive
+      });
+      
+      if (success) {
+        toast.success(isPositive ? "Thanks for your positive feedback!" : "Thanks for your feedback. We'll work to improve!");
+      } else {
+        // Reset the state if submission failed
+        setLiked(null);
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setLiked(null);
+      toast.error("Failed to submit feedback");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
   
   const formatContent = (content: string) => {
@@ -221,6 +238,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                               liked === true && "bg-green-600 hover:bg-green-700"
                             )}
                             onClick={() => handleFeedback(true)}
+                            disabled={isSubmittingFeedback}
                           >
                             <ThumbsUp className="h-3.5 w-3.5" />
                           </Button>
@@ -234,6 +252,7 @@ const ChatMessage = ({ message, isModern = false }: ChatMessageProps) => {
                               liked === false && "bg-red-600 hover:bg-red-700"
                             )}
                             onClick={() => handleFeedback(false)}
+                            disabled={isSubmittingFeedback}
                           >
                             <ThumbsDown className="h-3.5 w-3.5" />
                           </Button>

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -32,54 +32,90 @@ const ChatPage = () => {
     const initChat = async () => {
       setIsLoading(true);
       
+      // Don't proceed if auth is still loading
+      if (authLoading) {
+        return;
+      }
+      
       if (!isAuthenticated) {
         // For non-authenticated users, redirect to auth
-        navigate("/auth");
+        navigate("/auth", { state: { from: location.pathname } });
         return;
       }
       
       try {
-        // Always create a new conversation when accessing /chat without ID or when user signs in
-        if (!id || location.state?.createNew) {
+        // Case 1: No conversation ID provided - create a new default conversation
+        if (!id) {
+          console.log('No conversation ID provided, creating new conversation');
           const newConversation = await conversationService.createDefaultConversation();
           if (newConversation) {
+            console.log('Created new conversation:', newConversation.id);
             navigate(`/chat/${newConversation.id}`, { replace: true });
             return;
+          } else {
+            throw new Error('Failed to create new conversation');
           }
         }
         
-        // If there's an ID in the URL, load that conversation
-        if (id) {
-          const { conversation: loadedConversation, messages: loadedMessages } = 
-            await conversationService.getConversation(id);
-          
-          if (loadedConversation) {
-            setConversation(loadedConversation);
-            setMessages(loadedMessages);
-            console.log(`ChatPage: Loaded conversation ${id} with ${loadedMessages.length} initial messages.`);
+        // Case 2: Conversation ID provided - try to load it
+        console.log('Loading conversation with ID:', id);
+        const { conversation: loadedConversation, messages: loadedMessages } = 
+          await conversationService.getConversation(id);
+        
+        if (loadedConversation) {
+          console.log(`Loaded conversation: ${loadedConversation.title} with ${loadedMessages.length} messages`);
+          setConversation(loadedConversation);
+          setMessages(loadedMessages);
+        } else {
+          // Conversation not found, create a new one
+          console.log('Conversation not found, creating new one');
+          toast.error("Conversation not found, creating a new one");
+          const defaultConversation = await conversationService.createDefaultConversation();
+          if (defaultConversation) {
+            navigate(`/chat/${defaultConversation.id}`, { replace: true });
+            return;
           } else {
-            // If conversation not found, create a new one
-            toast.error("Conversation not found");
-            const defaultConversation = await conversationService.createDefaultConversation();
-            if (defaultConversation) {
-              navigate(`/chat/${defaultConversation.id}`, { replace: true });
-            }
+            throw new Error('Failed to create fallback conversation');
           }
         }
       } catch (error) {
         console.error("Error initializing chat:", error);
         toast.error("Failed to load conversation");
+        // Try to create a fallback conversation
+        try {
+          const fallbackConversation = await conversationService.createDefaultConversation();
+          if (fallbackConversation) {
+            navigate(`/chat/${fallbackConversation.id}`, { replace: true });
+          } else {
+            navigate("/"); // Last resort - go to homepage
+          }
+        } catch (fallbackError) {
+          console.error("Error creating fallback conversation:", fallbackError);
+          navigate("/");
+        }
       } finally {
         setIsLoading(false);
       }
     };
     
     initChat();
-  }, [id, isAuthenticated, navigate, location.state]);
+  }, [id, isAuthenticated, authLoading, navigate, location.pathname]);
   
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+  
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex h-screen bg-black text-white items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-500 border-t-transparent mx-auto"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
