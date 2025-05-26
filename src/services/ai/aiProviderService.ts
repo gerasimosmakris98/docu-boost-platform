@@ -11,7 +11,10 @@ const aiProviderService = {
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
   ): Promise<string> => {
-    console.log('Generating response for:', conversationType);
+    const functionName = 'generateResponse';
+    const supabaseFunctionName = 'perplexity-ai-response';
+    const fallbackMessage = "I'm having trouble responding right now. Could you try rephrasing your question?";
+    console.log(`AI Provider (${functionName}): Generating response for conversation type: ${conversationType}`);
     
     try {
       const systemPromptForType = getSystemPrompt(conversationType);
@@ -27,7 +30,7 @@ const aiProviderService = {
         User message: ${prompt}
       `;
       
-      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+      const { data, error } = await supabase.functions.invoke(supabaseFunctionName, {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
@@ -37,23 +40,25 @@ const aiProviderService = {
       });
       
       if (error) {
-        console.error('Error calling AI function:', error);
-        throw new Error(`Failed to generate AI response: ${error.message}`);
+        console.error(`AI Provider (${functionName}): Error invoking Supabase function '${supabaseFunctionName}':`, error);
+        throw new Error("Supabase invocation failed");
       }
       
       if (data.error) {
-        console.error('AI service error:', data.error);
-        throw new Error(data.message || 'AI service error');
+        console.error(`AI Provider (${functionName}): Supabase function '${supabaseFunctionName}' returned error:`, data.error, data.message);
+        throw new Error("Supabase function execution error");
       }
       
-      if (!data.generatedText || typeof data.generatedText !== 'string') {
-        throw new Error('No valid response received from AI service');
+      if (!data.generatedText || typeof data.generatedText !== 'string' || data.generatedText.trim() === '') {
+        console.error(`AI Provider (${functionName}): Invalid or missing generatedText from Supabase function '${supabaseFunctionName}'. Received:`, data.generatedText);
+        throw new Error("Invalid generatedText");
       }
       
+      console.log(`AI Provider (${functionName}): Successfully received response.`);
       return data.generatedText;
-    } catch (error) {
-      console.error('Error in generateResponse:', error);
-      return `I'm having trouble responding right now. Could you try rephrasing your question?`;
+    } catch (error: any) {
+      console.error(`AI Provider (${functionName}): Unhandled error - ${error.message}`, error);
+      return fallbackMessage;
     }
   },
   
@@ -63,7 +68,13 @@ const aiProviderService = {
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
   ): Promise<StructuredResponse> => {
-    console.log('Generating structured response for:', conversationType);
+    const functionName = 'generateStructuredResponse';
+    const supabaseFunctionName = 'perplexity-ai-response';
+    const fallbackResponse: StructuredResponse = { 
+      generatedText: "I'm having trouble responding right now. Could you try rephrasing your question?", 
+      sourceUrls: [] 
+    };
+    console.log(`AI Provider (${functionName}): Generating structured response for conversation type: ${conversationType}`);
     
     try {
       const systemPromptForType = getSystemPrompt(conversationType);
@@ -79,7 +90,7 @@ const aiProviderService = {
         User message: ${prompt}
       `;
       
-      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+      const { data, error } = await supabase.functions.invoke(supabaseFunctionName, {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
@@ -89,40 +100,60 @@ const aiProviderService = {
       });
       
       if (error) {
-        console.error('Error calling AI function:', error);
-        throw new Error(`Failed to generate AI response: ${error.message}`);
+        console.error(`AI Provider (${functionName}): Error invoking Supabase function '${supabaseFunctionName}':`, error);
+        throw new Error("Supabase invocation failed");
       }
       
       if (data.error) {
-        console.error('AI service error:', data.error);
-        throw new Error(data.message || 'AI service error');
+        console.error(`AI Provider (${functionName}): Supabase function '${supabaseFunctionName}' returned error:`, data.error, data.message);
+        throw new Error("Supabase function execution error");
       }
       
-      if (!data.generatedText) {
-        throw new Error('No response received from AI service');
+      if (!data.generatedText || typeof data.generatedText !== 'string') { // Check if string before parsing
+        console.error(`AI Provider (${functionName}): Invalid or missing generatedText (expected JSON string) from Supabase function '${supabaseFunctionName}'. Received:`, data.generatedText);
+        throw new Error("Invalid generatedText (expected JSON string)");
       }
       
-      // Try to parse as JSON, fallback to plain text
+      let parsedResponse: any;
+      let responseGeneratedText = '';
+      let responseSourceUrls: string[] = [];
+
       try {
-        const parsedResponse = JSON.parse(data.generatedText);
-        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
-          return parsedResponse;
+        parsedResponse = JSON.parse(data.generatedText);
+        
+        if (typeof parsedResponse.generatedText === 'string' && parsedResponse.generatedText.trim() !== '') {
+          responseGeneratedText = parsedResponse.generatedText;
+        } else {
+          console.warn(`AI Provider (${functionName}): Parsed generatedText is invalid or empty. Using fallback. Received:`, parsedResponse.generatedText);
+          responseGeneratedText = fallbackResponse.generatedText;
+        }
+
+        if (Array.isArray(parsedResponse.sourceUrls)) {
+          responseSourceUrls = parsedResponse.sourceUrls;
+        } else {
+          console.warn(`AI Provider (${functionName}): Parsed sourceUrls is not an array. Defaulting to empty array. Received:`, parsedResponse.sourceUrls);
+          responseSourceUrls = [];
         }
       } catch (parseError) {
-        console.warn("Response not in JSON format, treating as plain text");
+        console.warn(`AI Provider (${functionName}): Response not in valid JSON format, treating raw generatedText as plain text. Parse error:`, parseError, 'Received:', data.generatedText);
+        // Use raw data.generatedText if it's a non-empty string, otherwise fallback
+        if (data.generatedText.trim() !== '') {
+          responseGeneratedText = data.generatedText;
+        } else {
+          console.error(`AI Provider (${functionName}): Raw generatedText (fallback from parse error) is empty. Using error message.`);
+          responseGeneratedText = fallbackResponse.generatedText;
+        }
+        responseSourceUrls = []; // Reset sourceUrls as structure is unknown
       }
       
-      // Fallback: return as plain text response
+      console.log(`AI Provider (${functionName}): Successfully processed response.`);
       return { 
-        generatedText: data.generatedText, 
-        sourceUrls: [] 
+        generatedText: responseGeneratedText, 
+        sourceUrls: responseSourceUrls
       };
-    } catch (error) {
-      console.error('Error in generateStructuredResponse:', error);
-      return { 
-        generatedText: `I'm having trouble responding right now. Could you try rephrasing your question?`, 
-        sourceUrls: [] 
-      };
+    } catch (error: any) {
+      console.error(`AI Provider (${functionName}): Unhandled error - ${error.message}`, error);
+      return fallbackResponse;
     }
   },
   
@@ -134,7 +165,10 @@ const aiProviderService = {
     systemPrompt?: string,
     options?: AIModelOptions
   ): Promise<string> => {
-    console.log('Analyzing file:', fileName, fileType);
+    const functionName = 'analyzeFile';
+    const supabaseFunctionName = 'perplexity-ai-response';
+    const fallbackMessage = "I couldn't analyze your file in detail right now. Please try again in a moment.";
+    console.log(`AI Provider (${functionName}): Analyzing file: ${fileName}, Type: ${fileType}`);
     
     try {
       const analysisPrompt = systemPrompt || `
@@ -147,7 +181,7 @@ const aiProviderService = {
         - Be conversational and supportive
       `;
       
-      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+      const { data, error } = await supabase.functions.invoke(supabaseFunctionName, {
         body: { 
           prompt: analysisPrompt,
           type: 'file_analysis',
@@ -156,23 +190,25 @@ const aiProviderService = {
       });
       
       if (error) {
-        console.error('Error calling AI function for file analysis:', error);
-        throw new Error(`Failed to analyze file: ${error.message}`);
+        console.error(`AI Provider (${functionName}): Error invoking Supabase function '${supabaseFunctionName}':`, error);
+        throw new Error("Supabase invocation failed");
       }
       
       if (data.error) {
-        console.error('AI service error for file analysis:', data.error);
-        throw new Error(data.message || 'AI service error');
+        console.error(`AI Provider (${functionName}): Supabase function '${supabaseFunctionName}' returned error:`, data.error, data.message);
+        throw new Error("Supabase function execution error");
       }
       
-      if (!data.generatedText || typeof data.generatedText !== 'string') {
-        throw new Error('No analysis received from AI service');
+      if (!data.generatedText || typeof data.generatedText !== 'string' || data.generatedText.trim() === '') {
+        console.error(`AI Provider (${functionName}): Invalid or missing generatedText from Supabase function '${supabaseFunctionName}'. Received:`, data.generatedText);
+        throw new Error("Invalid generatedText");
       }
       
+      console.log(`AI Provider (${functionName}): Successfully received analysis.`);
       return data.generatedText;
-    } catch (error) {
-      console.error('Error in analyzeFile:', error);
-      return `I couldn't analyze your file in detail right now. Please try again in a moment.`;
+    } catch (error: any) {
+      console.error(`AI Provider (${functionName}): Unhandled error - ${error.message}`, error);
+      return fallbackMessage;
     }
   },
   
@@ -182,7 +218,11 @@ const aiProviderService = {
     type: string, 
     profileContext?: string
   ): Promise<string> => {
-    console.log('Analyzing URL:', url, type);
+    const functionName = 'analyzeUrl';
+    const supabaseFunctionName = 'perplexity-ai-response';
+    const specificFallbackMessage = "I tried to analyze the URL, but couldn't access the content. This can happen if the website blocks automated access or requires login. You could try summarizing the key points from the URL and asking me about those.";
+    const genericFallbackMessage = "I couldn't analyze that URL right now. Would you like to try again?";
+    console.log(`AI Provider (${functionName}): Analyzing URL: ${url}, Type: ${type}`);
     
     try {
       const urlAnalysisPrompt = `
@@ -196,7 +236,7 @@ const aiProviderService = {
         - Be conversational and helpful
       `;
       
-      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+      const { data, error } = await supabase.functions.invoke(supabaseFunctionName, {
         body: { 
           prompt: urlAnalysisPrompt,
           type: 'url_analysis',
@@ -205,39 +245,40 @@ const aiProviderService = {
       });
       
       if (error) {
-        console.error('Error calling AI function for URL analysis:', error);
-        throw new Error(`Failed to analyze URL: ${error.message}`);
+        console.error(`AI Provider (${functionName}): Error invoking Supabase function '${supabaseFunctionName}':`, error);
+        throw new Error("Supabase invocation failed"); // Caught by main try-catch, returns genericFallbackMessage
       }
       
       if (data.error) {
-        console.error('AI service error for URL analysis:', data.error);
-        throw new Error(data.message || 'AI service error');
+        console.error(`AI Provider (${functionName}): Supabase function '${supabaseFunctionName}' returned error:`, data.error, data.message);
+        throw new Error("Supabase function execution error"); // Caught by main try-catch, returns genericFallbackMessage
       }
       
-      if (!data.generatedText || typeof data.generatedText !== 'string') {
-        throw new Error('No analysis received from AI service');
+      if (!data.generatedText || typeof data.generatedText !== 'string' || data.generatedText.trim() === '') {
+        console.error(`AI Provider (${functionName}): Invalid or missing generatedText from Supabase function '${supabaseFunctionName}'. Received:`, data.generatedText);
+        // For this specific case, if AI returns empty/invalid, it might be similar to a failure pattern.
+        return specificFallbackMessage;
       }
 
       // Check for failure patterns
       const failurePatterns = [
-        "i cannot access this url",
-        "i can't access that link",
-        "i am unable to access external websites",
-        "could not retrieve content",
-        "unable to fetch"
+        "i cannot access this url", "i can't access that link", "i am unable to access external websites",
+        "could not retrieve content", "unable to fetch", "failed to retrieve the webpage",
+        "error in accessing the url", "unable to load the url"
       ];
-
       const lowercaseText = data.generatedText.toLowerCase();
       const hasFailurePattern = failurePatterns.some(pattern => lowercaseText.includes(pattern));
       
-      if (hasFailurePattern || data.generatedText.length < 30) {
-        return "I tried to analyze the URL, but couldn't access the content. This can happen if the website blocks automated access or requires login. You could try summarizing the key points from the URL and asking me about those.";
+      if (hasFailurePattern || data.generatedText.length < 50) { // Increased length check for more robustness
+        console.warn(`AI Provider (${functionName}): Detected failure pattern or short response in URL analysis. Response:`, data.generatedText);
+        return specificFallbackMessage;
       }
       
+      console.log(`AI Provider (${functionName}): Successfully received analysis.`);
       return data.generatedText;
-    } catch (error) {
-      console.error('Error in analyzeUrl:', error);
-      return `I couldn't analyze that URL right now. Would you like to try again?`;
+    } catch (error: any) { // This catch will handle errors thrown from invoke/data.error/etc.
+      console.error(`AI Provider (${functionName}): Unhandled error - ${error.message}`, error);
+      return genericFallbackMessage; // Generic fallback for unexpected errors
     }
   },
   
@@ -245,46 +286,73 @@ const aiProviderService = {
   generateTitle: async (
     messages: {role: string, content: string}[]
   ): Promise<string> => {
-    if (messages.length === 0) return "New Conversation";
+    const functionName = 'generateTitle';
+    const supabaseFunctionName = 'perplexity-ai-response';
+    const fallbackTitle = "New Conversation";
+
+    if (!messages || messages.length === 0) {
+      console.log(`AI Provider (${functionName}): No messages provided, returning default title.`);
+      return fallbackTitle;
+    }
     
     try {
       const messageContext = messages
-        .filter(msg => msg.role === 'user')
-        .slice(0, 2)
-        .map(msg => msg.content)
+        .filter(msg => msg.role === 'user' && msg.content && msg.content.trim() !== '')
+        .slice(0, 2) // Use first two user messages
+        .map(msg => msg.content.trim())
         .join('\n');
         
-      if (!messageContext) return "New Conversation";
+      if (!messageContext) {
+        console.log(`AI Provider (${functionName}): No valid user message content for title generation, returning default title.`);
+        return fallbackTitle;
+      }
       
       const titlePrompt = `
-        Generate a short title (4-5 words max) for a conversation starting with:
-        "${messageContext.substring(0, 100)}${messageContext.length > 100 ? '...' : ''}"
+        Generate a short title (3-5 words max) for a conversation starting with:
+        "${messageContext.substring(0, 150)}${messageContext.length > 150 ? '...' : ''}"
         
-        Return ONLY the title, no quotes or extra text.
+        Return ONLY the title, no quotes or "Title: " prefix.
       `;
       
-      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+      const { data, error } = await supabase.functions.invoke(supabaseFunctionName, {
         body: { 
           prompt: titlePrompt,
-          type: 'conversation_title',
-          maxTokens: 20
+          type: 'conversation_title', // Ensure this type is handled by the Supabase function
+          maxTokens: 15 // Reduced for very short titles
         }
       });
       
-      if (error || data.error || !data.generatedText) {
-        console.error('Error generating title:', error || data.error);
-        return "New Conversation";
+      if (error) {
+        console.error(`AI Provider (${functionName}): Error invoking Supabase function '${supabaseFunctionName}':`, error);
+        return fallbackTitle; // Directly return fallback on error
       }
       
+      if (data.error) {
+        console.error(`AI Provider (${functionName}): Supabase function '${supabaseFunctionName}' returned error:`, data.error, data.message);
+        return fallbackTitle; // Directly return fallback on error
+      }
+      
+      if (!data.generatedText || typeof data.generatedText !== 'string' || data.generatedText.trim() === '') {
+        console.warn(`AI Provider (${functionName}): Invalid or missing generatedText from Supabase function '${supabaseFunctionName}'. Received:`, data.generatedText);
+        return fallbackTitle; // Directly return fallback
+      }
+      
+      // Cleanup the title
       const title = data.generatedText
-        .replace(/^["']|["']$/g, '')
-        .replace(/^Title: /i, '')
-        .trim();
+        .replace(/^["'\s]+|["'\s]+$/g, '') // Remove leading/trailing quotes and spaces
+        .replace(/^(Title|Conversation Title):\s*/i, '') // Remove "Title: " or "Conversation Title: " prefix
+        .trim(); // Final trim
         
-      return title || "New Conversation";
-    } catch (error) {
-      console.error('Error in generateTitle:', error);
-      return "New Conversation";
+      if (title === '') {
+        console.warn(`AI Provider (${functionName}): Title became empty after cleanup. Original:`, data.generatedText);
+        return fallbackTitle;
+      }
+      
+      console.log(`AI Provider (${functionName}): Successfully generated title: "${title}"`);
+      return title;
+    } catch (error: any) {
+      console.error(`AI Provider (${functionName}): Unhandled error - ${error.message}`, error);
+      return fallbackTitle; // Fallback for any other errors
     }
   },
   

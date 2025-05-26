@@ -45,22 +45,21 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
         setConversation(data.conversation);
         setMessages(data.messages);
         
-        // If no messages yet, add a welcome message based on conversation type
-        if (data.messages.length === 0 && data.conversation.type) {
-          const welcomeMessage = getWelcomeMessage(data.conversation.type as ConversationType);
-          setMessages([
-            {
-              id: `welcome-${Date.now()}`,
-              conversation_id: conversationId,
-              role: 'assistant',
-              content: welcomeMessage,
-              created_at: new Date().toISOString()
-            }
-          ]);
-        }
+        // Removed local welcome message generation.
+        // The expectation is that conversationService.getConversation (via fetchConversation reader)
+        // will return messages including any initial welcome message created by the service.
+        // If data.messages.length is 0, it means the conversation is genuinely empty from the DB.
+        console.log(`ConversationChat: Fetched conversation ${data.conversation.id} with ${data.messages.length} messages.`);
+      } else {
+        // Handle case where conversation is not found but no error was thrown by service
+        // (e.g. service returned { conversation: null, messages: [] })
+        console.warn(`ConversationChat: Conversation with ID ${conversationId} not found by service.`);
+        setConversation(null);
+        setMessages([]);
+        toast.error("Conversation not found."); // It's okay for UI to toast this if service didn't make it an error
       }
     } catch (error) {
-      console.error("Error fetching conversation:", error);
+      console.error("ConversationChat: Error fetching conversation:", error);
       toast.error("Failed to load conversation");
     } finally {
       setLoading(false);
@@ -160,19 +159,23 @@ const ConversationChat = ({ conversationId }: ConversationChatProps) => {
       
       // Remove temporary loading message and add real response
       if (response && response.aiResponse) {
+        console.log('ConversationChat: Adding real AI response to UI');
         setMessages(prev => 
           prev.filter(msg => msg.id !== tempLoadingId).concat(response.aiResponse!)
         );
       } else {
-        // If response failed, remove loading message
+        // If sendMessage returned null (service handled the error and toast)
+        console.warn('ConversationChat: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic AI message.');
         setMessages(prev => prev.filter(msg => msg.id !== tempLoadingId));
-        toast.error("Failed to get response");
+        // No local toast here
       }
     } catch (error) {
-      console.error("Error sending message:", error);
-      // Remove loading message on error
+      // This catch block is for unexpected errors within ConversationChat itself
+      // or if conversationService.sendMessage threw an error it didn't handle with a toast.
+      console.error("ConversationChat: Error sending message or processing response:", error);
       setMessages(prev => prev.filter(msg => msg.id !== tempLoadingId));
-      toast.error("Failed to send message");
+      // Show a generic error toast if the service didn't (though it should)
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setSending(false);
     }

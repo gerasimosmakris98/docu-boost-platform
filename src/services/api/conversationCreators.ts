@@ -23,7 +23,10 @@ export const createSpecializedConversation = async (
       .select()
       .single();
 
-    if (conversationError) throw conversationError;
+    if (conversationError) {
+      console.error("Error inserting conversation record for specialized conversation:", conversationError);
+      throw conversationError;
+    }
 
     // Insert welcome message
     const welcomeMessage = getWelcomeMessageForType(type);
@@ -62,7 +65,10 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
       .eq('user_id', user.id)
       .limit(1);
 
-    if (checkError) throw checkError;
+    if (checkError) {
+      console.error("Error checking for existing conversations:", checkError);
+      throw checkError;
+    }
 
     // If user has existing conversations, create a general one
     if (existingConversations && existingConversations.length > 0) {
@@ -81,7 +87,10 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
       .select()
       .single();
 
-    if (conversationError) throw conversationError;
+    if (conversationError) {
+      console.error("Error inserting conversation record for default conversation (new user):", conversationError);
+      throw conversationError;
+    }
 
     // Insert a special first-time welcome message
     const firstTimeWelcome = `Welcome to AI Career Advisor! 🎉
