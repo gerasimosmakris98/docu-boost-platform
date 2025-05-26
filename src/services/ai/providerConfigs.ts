@@ -1,3 +1,4 @@
+
 import { AIModelOptions } from './types';
 import { ConversationType } from '../types/conversationTypes';
 
@@ -43,6 +44,7 @@ export const getModelOptions = (conversationType: ConversationType): AIModelOpti
         temperature: 0.7, // Balance of creative and precise
       };
     case 'linkedin':
+    case 'linkedin_analysis':
       return {
         ...baseOptions,
         temperature: 0.6, // More precise

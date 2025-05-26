@@ -6,7 +6,8 @@ export type ConversationType =
   | 'interview_prep' 
   | 'linkedin' 
   | 'job_search' 
-  | 'assessment';
+  | 'assessment'
+  | 'linkedin_analysis';
 
 export interface AIModelOptions {
   model?: string;
