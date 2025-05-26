@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -74,7 +73,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     setLiked(isPositive);
 
     try {
-      const { error }_ = await supabase.functions.invoke('record-feedback', {
+      const { error } = await supabase.functions.invoke('record-feedback', {
         body: {
           message_id: message.id,
           conversation_id: message.conversation_id,
