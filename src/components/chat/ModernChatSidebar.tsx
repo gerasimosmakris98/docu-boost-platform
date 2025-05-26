@@ -98,6 +98,12 @@ const ModernChatSidebar = ({
             size="icon"
             onClick={onToggleCollapse}
             className="text-gray-400 hover:text-white flex-shrink-0"
+            aria-expanded={!isCollapsed}
+            aria-label={
+              isMobile 
+                ? (isCollapsed ? "Open chat menu" : "Close chat menu") 
+                : (isCollapsed ? "Expand chat sidebar" : "Collapse chat sidebar")
+            }
           >
             {isMobile ? (
               isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />

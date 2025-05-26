@@ -140,6 +140,7 @@ const EmailAuthForm = ({
               size="sm"
               className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
               onClick={togglePasswordVisibility}
+              aria-label={showPassword ? "Hide password" : "Show password"} // Added dynamic aria-label
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>

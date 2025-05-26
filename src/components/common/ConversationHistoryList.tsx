@@ -123,7 +123,8 @@ const ConversationList = ({
                 size="icon"
                 onClick={() => handleConversationClick(conversation.id)}
                 className="w-full h-10"
-                title={conversation.title}
+                title={conversation.title} // Keep existing title for tooltip
+                aria-label={`View conversation: ${conversation.title}`} // Added dynamic aria-label
               >
                 <MessageSquare className="h-4 w-4" />
               </Button>

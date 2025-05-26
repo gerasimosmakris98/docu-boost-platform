@@ -15,10 +15,10 @@ import ChatPage from '@/pages/ChatPage';
 import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
-import Profile from '@/pages/Profile';
+// import Profile from '@/pages/Profile'; // Replaced by lazy loaded ProfilePage
 
 // Lazy loaded pages for better performance
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage')); // This is the correct one
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
 const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
@@ -71,7 +71,7 @@ function App() {
                   path="/profile" 
                   element={
                     <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <Profile />
+                      <ProfilePage /> {/* Changed to ProfilePage */}
                     </ProtectedRoute>
                   } 
                 />
