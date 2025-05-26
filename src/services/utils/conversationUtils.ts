@@ -1,4 +1,3 @@
-
 import { ConversationType } from "../types/conversationTypes";
 
 /**
@@ -188,3 +187,8 @@ export const validateMessageContent = (content: string): string => {
   return trimmedContent;
 };
 
+// Extract URLs from a message
+export const extractUrls = (text: string): string[] => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.match(urlRegex) || [];
+};

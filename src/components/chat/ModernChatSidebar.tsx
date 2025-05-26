@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { conversationService, Conversation, ConversationType } from "@/services/conversationService";
 import { useAuth } from "@/contexts/auth/useAuth";
+import { conversationService, Conversation } from "@/services/conversationService";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import SidebarHeader from "./sidebar/SidebarHeader";
-import SidebarGroups from "./sidebar/SidebarGroups";
-import SidebarFooter from "./sidebar/SidebarFooter";
+import ConversationList from "./components/ConversationList";
 
 interface ModernChatSidebarProps {
   activeConversationId?: string;
@@ -16,34 +15,27 @@ interface ModernChatSidebarProps {
   onToggleCollapse: () => void;
 }
 
-interface Advisor {
-  id: string;
-  name: string;
-  type: ConversationType;
-  icon: React.ReactNode;
-  description: string;
-}
-
 const ModernChatSidebar = ({ 
   activeConversationId, 
-  isCollapsed,
-  onToggleCollapse
+  isCollapsed, 
+  onToggleCollapse 
 }: ModernChatSidebarProps) => {
-  const { user, logout } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
+  
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       loadConversations();
     }
-  }, [user]);
+  }, [isAuthenticated]);
 
   const loadConversations = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const data = await conversationService.getConversations();
       setConversations(data);
     } catch (error) {
@@ -53,144 +45,83 @@ const ModernChatSidebar = ({
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/auth");
-    toast.success("Logged out successfully");
-  };
-
-  const handleCreateConversation = async (advisor: Advisor) => {
+  const handleCreateNew = async () => {
     try {
-      toast.loading(`Starting conversation with ${advisor.name}...`);
-      const conversation = await conversationService.createSpecializedConversation(advisor.type);
-      
-      if (conversation) {
-        navigate(`/chat/${conversation.id}`);
-        toast.dismiss();
-        toast.success(`Started conversation with ${advisor.name}`);
-        
-        // Automatically collapse sidebar on mobile after creating new conversation
-        if (isMobile && !isCollapsed) {
-          onToggleCollapse();
-        }
-      } else {
-        toast.error("Failed to start conversation");
-      }
+      // Navigate to new chat page for advisor selection
+      navigate("/new-chat");
     } catch (error) {
-      console.error("Error starting conversation:", error);
-      toast.error("Failed to start conversation");
+      console.error("Error creating new conversation:", error);
     }
   };
 
-  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (confirm("Are you sure you want to delete this conversation?")) {
-      try {
-        await conversationService.deleteConversation(id);
-        setConversations(prev => prev.filter(conv => conv.id !== id));
-        
-        if (id === activeConversationId) {
-          // Navigate to a different conversation or create a new one
-          if (conversations.length > 1) {
-            const nextConversation = conversations.find(c => c.id !== id);
-            if (nextConversation) {
-              navigate(`/chat/${nextConversation.id}`);
-              return;
-            }
-          }
-          
-          // No other conversations, create a new one
-          const newConversation = await conversationService.createSpecializedConversation('general');
-          if (newConversation) {
-            navigate(`/chat/${newConversation.id}`);
-          }
-        }
-        
-        toast.success("Conversation deleted");
-      } catch (error) {
-        console.error("Error deleting conversation:", error);
-        toast.error("Failed to delete conversation");
-      }
-    }
-  };
-
-  // Mobile sidebar with overlay
-  if (isMobile) {
-    // If sidebar is collapsed on mobile, render a minimal sidebar
-    if (isCollapsed) {
-      return null; // Don't render the sidebar when collapsed on mobile - we use the menu button in ChatPage
-    }
-    
-    // Full mobile sidebar with overlay
-    return (
-      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
-        <div className="absolute inset-0" onClick={onToggleCollapse}></div>
-        <div className="relative h-full w-80 bg-black border-r border-gray-800 animate-in slide-in-from-left">
-          <SidebarHeader 
-            isCollapsed={false} 
-            onToggleCollapse={onToggleCollapse} 
-            onNewChat={() => handleCreateConversation({
-              id: 'general',
-              name: 'Career Advisor',
-              type: 'general',
-              icon: null,
-              description: ''
-            })} 
-          />
-          
-          <Separator className="bg-gray-800" />
-          
-          <SidebarGroups
-            conversations={conversations}
-            activeConversationId={activeConversationId}
-            isCollapsed={false}
-            isLoading={isLoading}
-            onToggleCollapse={onToggleCollapse}
-            onConversationDelete={handleDeleteConversation}
-            handleCreateConversation={handleCreateConversation}
-          />
-          
-          <Separator className="bg-gray-800" />
-          
-          <SidebarFooter isCollapsed={false} onLogout={handleLogout} />
-        </div>
-      </div>
-    );
+  if (!isAuthenticated) {
+    return null;
   }
 
-  // Desktop sidebar
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-full bg-black border-r border-gray-800 flex flex-col transition-width duration-300`}>
-      <SidebarHeader 
-        isCollapsed={isCollapsed} 
-        onToggleCollapse={onToggleCollapse} 
-        onNewChat={() => handleCreateConversation({
-          id: 'general',
-          name: 'Career Advisor',
-          type: 'general',
-          icon: null,
-          description: ''
-        })} 
-      />
+    <>
+      {/* Mobile overlay */}
+      {isMobile && !isCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onToggleCollapse}
+        />
+      )}
       
-      <Separator className="bg-gray-800" />
-      
-      <SidebarGroups
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        isCollapsed={isCollapsed}
-        isLoading={isLoading}
-        onToggleCollapse={onToggleCollapse}
-        onConversationDelete={handleDeleteConversation}
-        handleCreateConversation={handleCreateConversation}
-      />
-      
-      <Separator className="bg-gray-800" />
-      
-      <SidebarFooter isCollapsed={isCollapsed} onLogout={handleLogout} />
-    </div>
+      {/* Sidebar */}
+      <div className={cn(
+        "fixed left-0 top-0 z-50 h-screen bg-black border-r border-gray-800 transition-all duration-300",
+        "lg:relative lg:z-auto",
+        isCollapsed 
+          ? "w-16 lg:w-16" 
+          : "w-80 lg:w-80",
+        isMobile && isCollapsed && "w-0 overflow-hidden"
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          {!isCollapsed && (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">AI</span>
+              </div>
+              <div>
+                <h1 className="text-white font-semibold text-sm">Career Advisor</h1>
+                <p className="text-gray-400 text-xs">
+                  Welcome, {user?.user_metadata?.full_name || 'User'}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="text-gray-400 hover:text-white flex-shrink-0"
+          >
+            {isMobile ? (
+              isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />
+            ) : (
+              isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+
+        {/* Conversations List */}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-green-500 border-t-transparent"></div>
+          </div>
+        ) : (
+          <ConversationList
+            conversations={conversations}
+            activeConversationId={activeConversationId}
+            onCreateNew={handleCreateNew}
+            isCollapsed={isCollapsed}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

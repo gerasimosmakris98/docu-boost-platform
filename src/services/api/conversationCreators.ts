@@ -1,128 +1,124 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
-import { Conversation, ConversationType } from "../types/conversationTypes";
-import { asConversationType, parseMetadata } from "./conversationApiUtils";
-import { getWelcomeMessageForType } from "../utils/conversationUtils";
+import { Conversation, ConversationType, Message } from "../types/conversationTypes";
+import { getWelcomeMessageForType } from "../utils/welcomeMessages";
 
-/**
- * Create a new conversation
- */
-export const createConversation = async (
-  title: string,
-  type?: ConversationType,
-  metadata?: Record<string, any>
+export const createSpecializedConversation = async (
+  type: ConversationType, 
+  metadata: Record<string, any> = {}
 ): Promise<Conversation | null> => {
   try {
-    // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create a conversation');
-    }
-    
-    // Prepare metadata for Supabase
-    const metadataJson = metadata ? metadata as unknown as Json : null;
-    
-    // Insert the new conversation
-    const { data, error } = await supabase
+    if (!user) return null;
+
+    // Create the conversation
+    const { data: conversationData, error: conversationError } = await supabase
       .from('conversations')
       .insert({
-        title,
         user_id: user.id,
-        type: type || 'general',
-        metadata: metadataJson
+        title: "New Conversation",
+        type,
+        metadata
       })
       .select()
       .single();
 
-    if (error) throw error;
-    
-    // Format the response
-    return data ? {
-      ...data,
-      type: asConversationType(data.type),
-      metadata: parseMetadata(data.metadata)
-    } as Conversation : null;
+    if (conversationError) throw conversationError;
+
+    // Insert welcome message
+    const welcomeMessage = getWelcomeMessageForType(type);
+    const { error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationData.id,
+        role: 'assistant',
+        content: welcomeMessage,
+        attachments: [],
+        source_urls: []
+      });
+
+    if (messageError) {
+      console.error('Error inserting welcome message:', messageError);
+      // Don't fail the conversation creation if welcome message fails
+    }
+
+    console.log(`Created ${type} conversation with welcome message:`, conversationData.id);
+    return conversationData;
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    console.error("Error creating specialized conversation:", error);
     return null;
   }
 };
 
-/**
- * Create a specialized conversation for a specific career document type
- */
-export const createSpecializedConversation = async (
-  type: ConversationType
-): Promise<Conversation | null> => {
-  // Generate an appropriate title based on type
-  let title = '';
-  let metadata = {};
-  
-  switch (type) {
-    case 'resume':
-      title = 'Resume Builder';
-      metadata = { documentType: 'resume' };
-      break;
-    case 'cover_letter':
-      title = 'Cover Letter Assistant';
-      metadata = { documentType: 'cover_letter' };
-      break;
-    case 'interview_prep':
-      title = 'Interview Preparation';
-      metadata = { stage: 'initial' };
-      break;
-    case 'linkedin':
-      title = 'LinkedIn Profile Optimization';
-      metadata = { platform: 'linkedin' };
-      break;
-    case 'job_search':
-      title = 'Job Search Strategy';
-      metadata = { status: 'active' };
-      break;
-    case 'assessment':
-      title = 'Assessment Preparation';
-      metadata = { assessmentType: 'general' };
-      break;
-    default:
-      title = 'Career Conversation';
-      metadata = { type: 'general' };
-  }
-  
-  return createConversation(title, type, metadata);
-};
-
-/**
- * Create a default conversation if none exists
- */
 export const createDefaultConversation = async (): Promise<Conversation | null> => {
   try {
-    // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create a conversation');
-    }
-    
-    // Check if user already has any conversations
-    const { data: existingConversations, error: fetchError } = await supabase
+    if (!user) return null;
+
+    // Check if user has any existing conversations
+    const { data: existingConversations, error: checkError } = await supabase
       .from('conversations')
       .select('id')
       .eq('user_id', user.id)
       .limit(1);
-      
-    if (fetchError) throw fetchError;
-    
-    // If conversations already exist, don't create a default one
+
+    if (checkError) throw checkError;
+
+    // If user has existing conversations, create a general one
     if (existingConversations && existingConversations.length > 0) {
-      return null;
+      return await createSpecializedConversation('general');
     }
-    
-    // Create a default general conversation
-    return createConversation('Career Advisor Chat', 'general', { isDefault: true });
+
+    // For new users, create a general conversation with a special welcome
+    const { data: conversationData, error: conversationError } = await supabase
+      .from('conversations')
+      .insert({
+        user_id: user.id,
+        title: "Welcome to AI Career Advisor",
+        type: 'general',
+        metadata: { isFirstConversation: true }
+      })
+      .select()
+      .single();
+
+    if (conversationError) throw conversationError;
+
+    // Insert a special first-time welcome message
+    const firstTimeWelcome = `Welcome to AI Career Advisor! 🎉
+
+I'm here to help you succeed in your career journey. I can assist you with:
+• **Resume building** and optimization
+• **Cover letter** writing
+• **Interview preparation** and practice
+• **Job search** strategies
+• **LinkedIn profile** optimization
+• **Career guidance** and advice
+
+To get started, tell me a bit about yourself:
+• What's your current role or career situation?
+• What brings you here today?
+• What are your main career goals or challenges?
+
+I'm excited to help you achieve your professional goals!`;
+
+    const { error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationData.id,
+        role: 'assistant',
+        content: firstTimeWelcome,
+        attachments: [],
+        source_urls: []
+      });
+
+    if (messageError) {
+      console.error('Error inserting first-time welcome message:', messageError);
+    }
+
+    console.log('Created default conversation with first-time welcome:', conversationData.id);
+    return conversationData;
   } catch (error) {
-    console.error('Error creating default conversation:', error);
+    console.error("Error creating default conversation:", error);
     return null;
   }
 };

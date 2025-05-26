@@ -11,11 +11,11 @@ import {
   fetchConversation,
   createConversation,
   updateConversation,
-  deleteConversation,
-  sendMessage,
-  createSpecializedConversation,
-  createDefaultConversation
+  deleteConversation
 } from "./api/conversationApi";
+
+import { sendMessage } from "./api/messageService";
+import { createSpecializedConversation, createDefaultConversation } from "./api/conversationCreators";
 
 import {
   getChatPromptForType,
