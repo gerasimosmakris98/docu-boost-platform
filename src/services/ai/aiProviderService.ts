@@ -11,8 +11,66 @@ const aiProviderService = {
     prompt: string, 
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Generating response for:', conversationType);
+    
+    try {
+      const systemPromptForType = getSystemPrompt(conversationType);
+      // Create a more conversational prompt that encourages brief, natural responses
+      const enhancedPrompt = `
+        ${systemPromptForType}
+        
+        Guidelines:
+        - Be extremely brief and conversational (max 2 short paragraphs)
+        - Only respond directly to what was asked
+        - Use a friendly, supportive tone
+        - Personalize based on any context about the user's background
+        - Avoid introductions or conclusions
+        - Respond like you're texting a friend
+        
+        User message: ${prompt}
+      `;
+      
+      // Call Supabase Edge Function to generate AI response
+      const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
+        body: { 
+          prompt: enhancedPrompt,
+          type: conversationType,
+          maxTokens: 200, // Limit token count for brevity
+          brief: true
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling AI function:', error);
+        throw new Error(`Failed to generate AI response: ${error.message}`);
+      }
+      
+      if (data.error) {
+        console.error('AI service error:', data.error);
+        throw new Error(data.message || 'AI service error');
+      }
+      
+      if (!data.generatedText) {
+        throw new Error('No response received from AI service');
+      }
+      
+      return data.generatedText;
+    } catch (error) {
+      console.error('Error in generateResponse:', error);
+      
+      // Provide a brief, helpful fallback response
+      return `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`;
+    }
+  },
+  
+  // Generate a structured response with sources (new method)
+  generateStructuredResponse: async (
+    prompt: string, 
+    conversationType: ConversationType,
+    options?: AIModelOptions & ProgressiveResponseOptions
+  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+    console.log('Generating structured response for:', conversationType);
     
     try {
       const systemPromptForType = getSystemPrompt(conversationType);
@@ -72,7 +130,7 @@ const aiProviderService = {
         return { generatedText: data.generatedText, sourceUrls: [] }; 
       }
     } catch (error) {
-      console.error('Error in generateResponse:', error);
+      console.error('Error in generateStructuredResponse:', error);
       
       // Provide a brief, helpful fallback response
       return { 
@@ -89,7 +147,7 @@ const aiProviderService = {
     fileType: string,
     profileContext?: string,
     options?: AIModelOptions
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Analyzing file:', fileName, fileType);
     
     try {
@@ -104,9 +162,6 @@ const aiProviderService = {
         - Highlight 2-3 key strengths
         - Suggest 2-3 specific improvements
         - Be conversational and supportive
-        - If referring to specific parts, use numbered citations [1], [2]
-
-        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
       // Call Supabase Edge Function to analyze file
@@ -132,26 +187,12 @@ const aiProviderService = {
         throw new Error('No analysis received from AI service');
       }
       
-      try {
-        const parsedResponse = JSON.parse(data.generatedText);
-        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
-          return parsedResponse;
-        } else {
-          console.error("AI response JSON structure incorrect:", parsedResponse);
-          return { generatedText: "Error: AI response format unexpected.", sourceUrls: [] };
-        }
-      } catch (parseError) {
-        console.error("Failed to parse AI response JSON:", parseError, data.generatedText);
-        return { generatedText: data.generatedText, sourceUrls: [] };
-      }
+      return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeFile:', error);
       
       // Provide a brief fallback response for file analysis
-      return { 
-        generatedText: `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`, 
-        sourceUrls: [] 
-      };
+      return `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`;
     }
   },
   
@@ -160,7 +201,7 @@ const aiProviderService = {
     url: string, 
     type: string, 
     profileContext?: string
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<string> => {
     console.log('Analyzing URL:', url, type);
     
     try {
@@ -175,9 +216,6 @@ const aiProviderService = {
         - Focus on 2-3 key takeaways
         - Give specific, actionable advice
         - Be supportive and helpful
-        - If referring to specific parts, use numbered citations [1], [2]
-
-        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
       // Call Supabase Edge Function to analyze URL
@@ -227,69 +265,25 @@ const aiProviderService = {
         for (const pattern of failurePatterns) {
           if (lowercasedText.includes(pattern)) {
             console.warn("Perplexity returned vague/error for URL:", data.generatedText);
-            return { generatedText: genericErrorMessage, sourceUrls: [] };
+            return genericErrorMessage;
           }
         }
         
         // Check for very short responses (e.g., less than 30 characters)
-        // This is an additional heuristic and might need refinement.
-        // The prompt emphasized focusing on explicit phrases first.
         if (data.generatedText.length < 30) {
-           // A more sophisticated check for analytical keywords could be added here if needed,
-           // but for now, length is a simple proxy for potentially unhelpful generic responses.
-           // Let's assume very short non-matching (to above patterns) responses might also be problematic.
-           // Example: "Okay.", "I see.", "Done." - these are unlikely from perplexity for this task but used as an example of short unhelpful text.
-           // For now, we will be a bit more aggressive and if it's very short, and not caught by specific errors,
-           // it might still be a generic "I can't do that" that wasn't in our list.
-           // We will only return the generic error if it's short AND contains a phrase like "unable", "cannot", "can't"
-           // to avoid flagging valid short summaries.
            if (lowercasedText.includes("unable") || lowercasedText.includes("cannot") || lowercasedText.includes("can't")) {
              console.warn("Perplexity returned very short and potentially unhelpful response for URL:", data.generatedText);
-             return { generatedText: genericErrorMessage, sourceUrls: [] };
+             return genericErrorMessage;
            }
         }
       }
       
-      try {
-        const parsedResponse = JSON.parse(data.generatedText);
-        if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
-          // Additional check: if the parsed text is one of the failure patterns, use generic error message
-          const parsedLowercasedText = parsedResponse.generatedText.toLowerCase();
-          for (const pattern of failurePatterns) {
-            if (parsedLowercasedText.includes(pattern)) {
-              console.warn("Perplexity returned vague/error for URL (after parsing):", parsedResponse.generatedText);
-              return { generatedText: genericErrorMessage, sourceUrls: parsedResponse.sourceUrls || [] };
-            }
-          }
-          // Check for very short responses after parsing
-          if (parsedResponse.generatedText.length < 30) {
-            if (parsedLowercasedText.includes("unable") || parsedLowercasedText.includes("cannot") || parsedLowercasedText.includes("can't")) {
-              console.warn("Perplexity returned very short and potentially unhelpful response for URL (after parsing):", parsedResponse.generatedText);
-              return { generatedText: genericErrorMessage, sourceUrls: parsedResponse.sourceUrls || [] };
-            }
-          }
-          return parsedResponse;
-        } else {
-          console.error("AI response JSON structure incorrect:", parsedResponse);
-          // If structure is incorrect, but we have some text, return it. Otherwise, use a generic error.
-          const fallbackText = typeof parsedResponse.generatedText === 'string' ? parsedResponse.generatedText : "Error: AI response format unexpected.";
-          return { generatedText: fallbackText, sourceUrls: [] };
-        }
-      } catch (parseError) {
-        console.error("Failed to parse AI response JSON (analyzeUrl):", parseError, data.generatedText);
-        // If parsing fails, the original data.generatedText is likely not JSON.
-        // We've already checked for failure patterns in the raw string.
-        // So, we return the raw string as generatedText.
-        return { generatedText: data.generatedText, sourceUrls: [] };
-      }
+      return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
       
       // Provide a brief fallback response for URL analysis (for network/Supabase function errors)
-      return { 
-        generatedText: `I couldn't analyze that URL in detail. Would you like me to try again?`, 
-        sourceUrls: [] 
-      };
+      return `I couldn't analyze that URL in detail. Would you like me to try again?`;
     }
   },
   

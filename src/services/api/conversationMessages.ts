@@ -134,6 +134,7 @@ export const sendMessage = async (
     }
     
     let aiResponseContent = '';
+    let sourceUrls: string[] = [];
     
     // Handle file attachments if present
     if (attachments && attachments.length > 0) {
@@ -189,11 +190,13 @@ export const sendMessage = async (
     } else {
       // Generate AI response based on text prompt using our provider service
       console.log('Generating AI response using provider service');
-      aiResponseContent = await aiProviderService.generateResponse(
+      const structuredResponse = await aiProviderService.generateStructuredResponse(
         prompt, 
         conversationType,
         options
       );
+      aiResponseContent = structuredResponse.generatedText;
+      sourceUrls = structuredResponse.sourceUrls;
       console.log('AI response generated successfully');
     }
     
@@ -204,6 +207,7 @@ export const sendMessage = async (
         conversation_id: conversationId,
         role: 'assistant',
         content: aiResponseContent,
+        source_urls: sourceUrls,
         attachments: []
       })
       .select()
@@ -226,6 +230,7 @@ export const sendMessage = async (
       conversation_id: aiMessageData.conversation_id,
       role: 'assistant',
       content: aiMessageData.content,
+      sourceUrls: aiMessageData.source_urls || [],
       created_at: aiMessageData.created_at
     };
 

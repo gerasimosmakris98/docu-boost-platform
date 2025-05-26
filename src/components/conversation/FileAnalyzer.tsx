@@ -83,7 +83,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
         { model: 'gpt-4o-mini', temperature: 0.3 }
       );
       
-      if (!analysis) {
+      if (!analysis || typeof analysis !== 'string') {
         throw new Error("No analysis was returned");
       }
       

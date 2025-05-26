@@ -1,11 +1,22 @@
 
 import { aiProviderService } from './aiProviderService';
-import { ConversationType } from '../types/conversationTypes';
 
 /**
- * Analyze a LinkedIn profile by generating a response with LinkedIn-specific prompt
+ * LinkedIn profile optimization service
  */
-export const analyzeLinkedInProfile = async (profileData: any): Promise<string> => {
-  const prompt = `Analyze this LinkedIn profile and provide optimization suggestions: ${JSON.stringify(profileData)}`;
-  return await aiProviderService.generateResponse(prompt, "linkedin_analysis" as ConversationType);
+export const linkedInService = {
+  optimizeProfile: async (profileData: any): Promise<string> => {
+    const prompt = `
+      Optimize this LinkedIn profile for better visibility and engagement:
+      ${JSON.stringify(profileData, null, 2)}
+      
+      Provide specific recommendations for:
+      - Headline optimization
+      - Summary improvements
+      - Skills optimization
+      - Experience descriptions
+    `;
+    
+    return await aiProviderService.generateResponse(prompt, 'linkedin');
+  }
 };

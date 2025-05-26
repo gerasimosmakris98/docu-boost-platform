@@ -34,26 +34,3 @@ export const submitMessageFeedback = async (feedback: MessageFeedback): Promise<
     return false;
   }
 };
-
-/**
- * Get feedback for a message (if user wants to see their previous feedback)
- */
-export const getMessageFeedback = async (messageId: string): Promise<MessageFeedback | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('message_feedback')
-      .select('*')
-      .eq('message_id', messageId)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-      console.error('Error fetching feedback:', error);
-      return null;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching feedback:', error);
-    return null;
-  }
-};
