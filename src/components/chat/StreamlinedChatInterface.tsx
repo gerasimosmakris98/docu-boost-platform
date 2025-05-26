@@ -95,48 +95,36 @@ const StreamlinedChatInterface = ({
       console.log('Response received:', response);
       
       if (response && response.aiResponse) {
-        console.log('Adding real AI response to UI');
+        console.log('StreamlinedChatInterface: Adding real AI response to UI');
         setMessages(prev => 
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
         );
       } else {
-        console.error('No AI response received');
-        const errorAiMessage: Message = {
-          id: `error-${Date.now()}`,
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: "I apologize, but I couldn't process your request at the moment. Please try again or rephrase your question.",
-          created_at: new Date().toISOString()
-        };
-        
+        // This case handles when conversationService.sendMessage returns null
+        // (indicating it handled the error and toast)
+        // or if it threw an error that was caught by the outer catch block.
+        console.warn('StreamlinedChatInterface: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic AI message.');
         setMessages(prev => 
-          prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
+          prev.filter(msg => msg.id !== optimisticAiMessage.id)
         );
-        
-        toast.error("Couldn't get a response. Please try again.");
+        // No additional toast or chat message here as the service layer is responsible.
       }
     } catch (error: any) {
-      console.error("Error sending message:", error);
+      // This catch block is primarily for unexpected errors *within StreamlinedChatInterface itself*
+      // or if conversationService.sendMessage throws an error that it didn't handle with a toast.
+      // Given the service refactoring, it should ideally handle its own errors and return null.
+      console.error("StreamlinedChatInterface: Error sending message or processing response:", error);
       
-      let displayErrorMessage = "I'm experiencing technical difficulties. Please try again in a moment.";
-      if (error && typeof error.message === 'string' && error.message.length > 0) {
-        if (!error.message.toLowerCase().includes("internal server error") && error.message.length < 150) {
-          displayErrorMessage = `I encountered an issue: ${error.message}`;
-        }
-      }
-      
-      const errorAiMessage: Message = {
-        id: `error-${Date.now()}`,
-        conversation_id: conversationId,
-        role: 'assistant',
-        content: displayErrorMessage,
-        created_at: new Date().toISOString()
-      };
-      
-      setMessages(prev => 
-        prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(errorAiMessage)
+      // Remove both the optimistic user message and the "Thinking..." AI message
+      setMessages(prev =>
+        prev.filter(msg => msg.id !== optimisticUserMessage.id && msg.id !== optimisticAiMessage.id)
       );
+      
+      // Show a generic error toast if the service didn't (though it should have).
+      // This toast signifies a failure that might be local to this component's execution
+      // or an unhandled one from the service.
       toast.error("Failed to send message. Please try again.");
+      
     } finally {
       setIsSending(false);
     }
