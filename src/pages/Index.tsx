@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import AppLayout from "@/layouts/AppLayout"; // Changed
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import StatsSection from "@/components/dashboard/StatsSection";
 import RecentDocumentsSection from "@/components/dashboard/RecentDocumentsSection";
@@ -9,9 +9,11 @@ import TemplatesSection from "@/components/dashboard/TemplatesSection";
 import AssessmentSection from "@/components/dashboard/AssessmentSection";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { documentService } from "@/services/documentService";
+import { conversationService } from "@/services/conversationService"; // Added
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare, FileText, PenBox, User } from "lucide-react";
+import { toast } from "sonner"; // Added
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,7 +39,28 @@ const Index = () => {
       navigate('/auth');
       return;
     }
-    navigate(`/conversations?type=${type}`);
+    if (!isAuthenticated) {
+      toast.error("Please log in to start a new conversation.");
+      navigate('/auth', { state: { from: location.pathname } });
+      return;
+    }
+    
+    toast.promise(
+      async () => {
+        const conversation = await conversationService.createSpecializedConversation(type);
+        if (conversation && conversation.id) {
+          navigate(`/chat/${conversation.id}`);
+          return conversation; // Return value for success toast
+        } else {
+          throw new Error("Failed to create conversation.");
+        }
+      },
+      {
+        loading: `Creating ${type.replace(/_/g, ' ')} session...`,
+        success: (conversation) => `Successfully started ${type.replace(/_/g, ' ')} session! Redirecting...`,
+        error: (err) => err.message || "Could not start session.",
+      }
+    );
   };
 
   useEffect(() => {
@@ -53,8 +76,8 @@ const Index = () => {
   }, [isAuthenticated]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <AppLayout> {/* Changed */}
+      <div className="space-y-6 p-4 md:p-6 lg:p-8"> {/* Added padding for content within AppLayout */}
         <WelcomeSection 
           username={user?.user_metadata?.full_name || "there"} 
           isAuthenticated={isAuthenticated}
@@ -81,9 +104,7 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Create and customize your professional resume with AI guidance
                   </p>
-                  <Button className="mt-2 w-full" variant="outline" onClick={() => navigate("/conversations")}>
-                    Get Started
-                  </Button>
+                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -102,9 +123,7 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Create tailored cover letters for specific job positions
                   </p>
-                  <Button className="mt-2 w-full" variant="outline" onClick={() => navigate("/conversations")}>
-                    Get Started
-                  </Button>
+                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -123,9 +142,7 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Practice for interviews with AI-generated questions and feedback
                   </p>
-                  <Button className="mt-2 w-full" variant="outline" onClick={() => navigate("/conversations")}>
-                    Get Started
-                  </Button>
+                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -138,7 +155,7 @@ const Index = () => {
         
         <AssessmentSection />
       </div>
-    </DashboardLayout>
+    </AppLayout> /* Changed */
   );
 };
 

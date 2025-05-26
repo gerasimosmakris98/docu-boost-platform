@@ -138,6 +138,14 @@ const FileUpload = ({
       onDrop={handleFileDrop}
       onClick={() => fileInputRef.current?.click()}
       onPaste={handlePaste}
+      role="button" // Added role
+      tabIndex={0} // Added tabIndex
+      onKeyDown={(e) => { // Allow activation with Space or Enter
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInputRef.current?.click();
+        }
+      }}
     >
       <input 
         type="file" 

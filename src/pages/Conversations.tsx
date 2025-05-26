@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useNavigate, Link } from "react-router-dom"; // Removed useParams
+import AppLayout from "@/layouts/AppLayout"; // Changed
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   FilePlus, MessageSquare, FileText, PenBox, User, Plus, 
-  Trash2, Calendar, MoreVertical, ArrowLeft 
+  Trash2, Calendar, MoreVertical // Removed ArrowLeft
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Removed Tabs imports
 import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
@@ -17,14 +17,14 @@ import {
   ConversationType, 
   conversationService 
 } from "@/services/conversationService";
-import ConversationChat from "@/components/conversation/ConversationChat";
+// Removed ConversationChat import
 
 const Conversations = () => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  // Removed id and useParams
   const { isAuthenticated, profile } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<string>(id ? "chat" : "list");
+  // Removed currentTab state
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -37,9 +37,7 @@ const Conversations = () => {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    setCurrentTab(id ? "chat" : "list");
-  }, [id]);
+  // Removed useEffect for currentTab
 
   const fetchConversations = async () => {
     try {
@@ -86,8 +84,8 @@ const Conversations = () => {
       
       if (newConversation) {
         toast.success("Conversation created");
-        await fetchConversations();
-        navigate(`/conversations/${newConversation.id}`);
+        await fetchConversations(); // Refresh list
+        navigate(`/chat/${newConversation.id}`); // Changed
       }
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -106,8 +104,10 @@ const Conversations = () => {
         await fetchConversations();
         
         // If we're currently viewing the deleted conversation, go back to the list
-        if (window.location.pathname.includes(id)) {
-          navigate("/conversations");
+        // If we're currently viewing a chat page that corresponds to the deleted conversation,
+        // navigate to the general conversations list. This check is more generic now.
+        if (location.pathname.startsWith("/chat/") && location.pathname.endsWith(id)) {
+          navigate("/conversations"); 
         }
       }
     } catch (error) {
@@ -131,9 +131,10 @@ const Conversations = () => {
   };
 
   return (
-    <DashboardLayout>
-      {!isAuthenticated ? (
-        <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
+    <AppLayout> {/* Changed */}
+      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8"> {/* Added padding and container */}
+        {!isAuthenticated ? (
+          <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
           <h2 className="text-xl font-semibold mb-2">Sign in to access conversations</h2>
           <p className="text-muted-foreground mb-4">
             Create an account or sign in to start new conversations and access your existing ones
@@ -143,31 +144,14 @@ const Conversations = () => {
             isOpen={loginDialogOpen}
             onClose={() => setLoginDialogOpen(false)}
           />
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      <div className="space-y-6">
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger 
-              value="list" 
-              onClick={() => navigate("/conversations")}
-            >
-              Conversations
-            </TabsTrigger>
-            <TabsTrigger 
-              value="chat" 
-              disabled={!id}
-            >
-              Current Chat
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Conversations List Tab */}
-          <TabsContent value="list" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold tracking-tight">Your Conversations</h2>
-              <Button onClick={() => handleCreateConversation("general")} disabled={creating || !isAuthenticated}>
+        {/* Content directly in AppLayout, Tabs removed */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+            <Button onClick={() => handleCreateConversation("general")} disabled={creating || !isAuthenticated}>
                 <Plus className="mr-2 h-4 w-4" /> New Conversation
               </Button>
             </div>
@@ -240,12 +224,12 @@ const Conversations = () => {
               ) : (
                 <div className="space-y-3">
                   {conversations.map((conversation) => (
-                    <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors"> {/* Adjusted hover background */}
                       <Link 
-                        to={`/conversations/${conversation.id}`} 
+                        to={`/chat/${conversation.id}`} // Changed
                         className="flex items-center flex-1"
                       >
-                        <div className="p-2 rounded-full bg-gray-100 mr-3">
+                        <div className="p-2 rounded-full bg-muted mr-3"> {/* Adjusted background */}
                           {getConversationIcon(conversation.type)}
                         </div>
                         <div>
@@ -265,29 +249,17 @@ const Conversations = () => {
                           handleDeleteConversation(conversation.id);
                         }}
                       >
-                        <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" /> {/* Adjusted text color */}
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </TabsContent>
-          
-          {/* Current Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            {id && (
-              <div className="flex items-center mb-4">
-                <Button variant="ghost" onClick={() => navigate("/conversations")} className="mr-2">
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back to Conversations
-                </Button>
-              </div>
-            )}
-            {id && <ConversationChat conversationId={id} />}
-          </TabsContent>
-        </Tabs>
+          {/* Removed TabsContent for "chat" */}
+        </div>
       </div>
-    </DashboardLayout>
+    </AppLayout> /* Changed */
   );
 };
 

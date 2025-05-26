@@ -12,9 +12,10 @@ import ProfileTab from '@/components/profile/ProfileTab';
 import SettingsTab from '@/components/profile/SettingsTab';
 import { useAuth } from '@/contexts/auth/useAuth';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/ui/Logo';
+// import { X } from 'lucide-react'; // No longer needed
+// import { Button } from '@/components/ui/button'; // No longer needed
+// import Logo from '@/components/ui/Logo'; // No longer needed
+import AppLayout from '@/layouts/AppLayout'; // Added
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -43,20 +44,9 @@ const ProfilePage = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-950 text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <Logo size="md" withLink={false} />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBackToChat}
-              className="text-gray-400 hover:text-white"
-              title="Back to Chat"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+      <AppLayout> {/* Added */}
+        <div className="container mx-auto px-4 py-8"> {/* Original container and padding */}
+          {/* Removed header with Logo and Back button */}
           
           {user && <ProfileHeader profileData={profileData} />}
           
@@ -94,7 +84,7 @@ const ProfilePage = () => {
             </Tabs>
           </div>
         </div>
-      </div>
+      </AppLayout> {/* Added */}
     </ProtectedRoute>
   );
 };

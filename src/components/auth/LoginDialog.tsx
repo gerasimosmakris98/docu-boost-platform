@@ -146,6 +146,7 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
                       size="icon"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
+                      aria-label={showPassword ? "Hide password" : "Show password"} // Added dynamic aria-label
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>

@@ -98,8 +98,16 @@ const NewChat = () => {
         {advisorOptions.map((advisor) => (
           <Card 
             key={advisor.id}
-            className="overflow-hidden transition-colors hover:bg-accent/10 cursor-pointer"
+            className="overflow-hidden transition-colors hover:bg-accent/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" // Added focus styles
             onClick={() => startConversation(advisor)}
+            tabIndex={0} // Make it focusable
+            role="button" // Indicate its role
+            onKeyDown={(e) => { // Make it operable with Enter/Space
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                startConversation(advisor);
+              }
+            }}
           >
             <CardHeader className="p-4 pb-2">
               <div className="flex items-center gap-3">

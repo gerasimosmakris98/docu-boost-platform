@@ -160,6 +160,8 @@ const StreamlinedChatInterface = ({
       <div 
         className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
         style={{ WebkitOverflowScrolling: 'touch' }}
+        role="log" // Added role
+        aria-live="polite" // Added aria-live
       >
         {messages.length === 0 ? (
           <motion.div 

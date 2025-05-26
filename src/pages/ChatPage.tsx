@@ -59,21 +59,9 @@ const ChatPage = () => {
 
       try {
         if (!id) {
-          console.log("No conversation ID, attempting to create new conversation.");
-          const newConversation = await conversationService.createDefaultConversation();
-          if (newConversation) {
-            console.log("New conversation created successfully, navigating to:", newConversation.id);
-            navigate(`/chat/${newConversation.id}`, { replace: true });
-            // Return immediately after navigation to prevent further execution with potentially stale state
-            // setIsInitializing will be handled by the next run of the effect after navigation
-            return;
-          } else {
-            console.error("Failed to create new conversation (returned null or undefined).");
-            setInitializationError("Failed to create a new chat session.");
-            setIsLoading(false); // Stop loading indicator for current view
-            navigate("/"); // Fallback to home
-            return;
-          }
+          console.log("No conversation ID, navigating to /new-chat.");
+          navigate("/new-chat", { replace: true });
+          return;
         }
 
         console.log("Attempting to load conversation with ID:", id);
@@ -164,6 +152,7 @@ const ChatPage = () => {
               size="icon" 
               onClick={toggleSidebar}
               className="text-white"
+              aria-label="Open chat navigation" // Added aria-label
             >
               <Menu className="h-6 w-6" />
             </Button>

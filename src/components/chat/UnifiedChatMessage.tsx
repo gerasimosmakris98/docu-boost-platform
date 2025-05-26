@@ -122,15 +122,25 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       processedContent = `<p class="mb-3">${processedContent}</p>`;
     }
     
-    // Handle **bold** text
-    processedContent = processedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Handle ```code``` blocks
+    processedContent = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const languageClass = lang ? `language-${lang}` : '';
+      // Escape HTML entities within the code block to prevent rendering as HTML
+      const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<pre class="${languageClass}" tabIndex="0"><code>${escapedCode}</code></pre>`;
+    });
     
-    // Handle *italic* text
-    processedContent = processedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Handle **bold** text (ensure it doesn't interfere with code blocks already processed)
+    // This regex needs to be careful not to match inside <pre> tags if they are already there.
+    // However, since we process code blocks first and they become <pre>, this should be okay.
+    processedContent = processedContent.replace(/(?<!<pre><code>)\*\*(.*?)\*\*(?!<\/code><\/pre>)/g, '<strong>$1</strong>');
+    
+    // Handle *italic* text (similar caution)
+    processedContent = processedContent.replace(/(?<!<pre><code>)\*(.*?)\*(?!<\/code><\/pre>)/g, '<em>$1</em>');
     
     // Make URLs clickable
     processedContent = processedContent.replace(
-      /(?<!href="|src=")(https?:\/\/[^\s<>"]+)/g,
+      /(?<!href="|src="|<code>)(https?:\/\/[^\s<>"]+)/g, // Avoid matching URLs inside <a>, <img> or <code>
       '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
     );
     
@@ -165,6 +175,11 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
         "flex gap-4 max-w-4xl mx-auto p-4",
         isUserMessage ? "flex-row" : "flex-row"
       )}
+      aria-label={
+        isThinking
+          ? `AI Career Advisor is thinking...`
+          : `Message from ${isUserMessage ? "You" : "AI Career Advisor"} sent at ${formatDateTime(message.created_at)}`
+      }
     >
       <Avatar className={cn(
         "h-8 w-8 mt-1 border",
@@ -190,7 +205,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       <div className="flex-1 space-y-2">
         <div className="flex justify-between items-center">
           <div className="font-medium text-sm text-gray-300">
-            {isUserMessage ? "You" : "AI Career Advisor"}
+            <span className="sr-only">Sender: </span>{isUserMessage ? "You" : "AI Career Advisor"}
           </div>
           <div className="text-xs text-gray-500">
             {formatDateTime(message.created_at)}
@@ -229,6 +244,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setIsExpanded(!isExpanded)}
                       className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      aria-expanded={isExpanded} // Added aria-expanded
                     >
                       {isExpanded ? "Show less" : "Show more"}
                     </motion.button>
@@ -243,14 +259,14 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           variant={liked === true ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-6 w-6 transition-all",
+                            "h-8 w-8 transition-all", // Increased size
                             liked === true && "bg-green-600 hover:bg-green-700 text-white",
                             liked !== null && liked !== true && "opacity-50",
                           )}
                           onClick={() => handleFeedback(true)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsUp className="h-3 w-3" />
+                          <ThumbsUp className="h-4 w-4" /> {/* Increased icon size */}
                         </Button>
                       </motion.div>
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -258,14 +274,14 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           variant={liked === false ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-6 w-6 transition-all",
+                            "h-8 w-8 transition-all", // Increased size
                             liked === false && "bg-red-600 hover:bg-red-700 text-white",
                             liked !== null && liked !== false && "opacity-50",
                           )}
                           onClick={() => handleFeedback(false)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsDown className="h-3 w-3" />
+                          <ThumbsDown className="h-4 w-4" /> {/* Increased icon size */}
                         </Button>
                       </motion.div>
                     </div>
@@ -278,29 +294,29 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                       <Button
                         variant={contentFormat === 'normal' ? "default" : "ghost"}
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-8 w-8" // Increased size
                         onClick={() => setContentFormat('normal')}
                         title="Normal text"
                       >
-                        <span className="text-xs font-mono">T</span>
+                        <span className="text-sm font-mono">T</span> {/* Adjusted icon size for T */}
                       </Button>
                       <Button
                         variant={contentFormat === 'bullets' ? "default" : "ghost"}
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-8 w-8" // Increased size
                         onClick={() => setContentFormat('bullets')}
                         title="Bullet points"
                       >
-                        <List className="h-3 w-3" />
+                        <List className="h-4 w-4" /> {/* Increased icon size */}
                       </Button>
                       <Button
                         variant={contentFormat === 'numbered' ? "default" : "ghost"}
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-8 w-8" // Increased size
                         onClick={() => setContentFormat('numbered')}
                         title="Numbered list"
                       >
-                        <ListOrdered className="h-3 w-3" />
+                        <ListOrdered className="h-4 w-4" /> {/* Increased icon size */}
                       </Button>
                     </div>
                     
@@ -312,11 +328,11 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-8 w-8" // Increased size
                         onClick={handleCopyText}
                         title="Copy text"
                       >
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-4 w-4" /> {/* Increased icon size */}
                       </Button>
                     </motion.div>
                   </div>
