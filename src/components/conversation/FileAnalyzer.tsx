@@ -39,7 +39,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
     });
     setError(null);
     
-    // Auto-analyze immediately on successful upload for better UX
+    // Auto-analyze for specific conversation types
     if (conversationType === 'resume' || conversationType === 'cover_letter') {
       handleAnalyze(url, fileName, fileType);
     }
@@ -91,7 +91,7 @@ const FileAnalyzer = ({ onAnalysisComplete, conversationType = 'general' }: File
       onAnalysisComplete(analysis);
       toast.success("File analysis complete");
       
-      // Clear the file after successful analysis for a cleaner UX
+      // Clear the file after successful analysis
       setTimeout(() => {
         setUploadedFile(null);
       }, 1500);

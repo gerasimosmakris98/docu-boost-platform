@@ -11,44 +11,32 @@ import {
 import { getModelOptions } from "../ai/providerConfigs";
 import { getProfileDataForAdvisor } from "./profileUtils";
 
-/**
- * Extract URLs from a message
- */
+// Extract URLs from a message
 const extractUrls = (text: string): string[] => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.match(urlRegex) || [];
 };
 
-/**
- * Determine if message is brief or requires detailed response
- * based on content and length
- */
+// Determine if message should be brief
 const shouldBeBrief = (message: string): boolean => {
-  // Messages with these keywords likely want brief responses
   const briefKeywords = ['help', 'tip', 'quick', 'start', 'hello', 'hi'];
-  
   const lowerMessage = message.toLowerCase();
   
-  // If message is short (less than 15 words)
   if (message.split(' ').length < 15) {
-    // Check if it contains any brief keywords
     return briefKeywords.some(keyword => lowerMessage.includes(keyword));
   }
   
-  // Longer messages typically need more detailed responses
   return false;
 };
 
-/**
- * Send a message to the conversation and get an AI response
- */
+// Send a message and get AI response
 export const sendMessage = async (
   conversationId: string, 
   content: string,
   attachments: string[] = []
 ): Promise<{ aiResponse: Message } | null> => {
   try {
-    // Get conversation data to determine the type
+    // Get conversation data
     const { data: conversationData, error: convError } = await supabase
       .from('conversations')
       .select('*')
@@ -57,7 +45,6 @@ export const sendMessage = async (
     
     if (convError) throw convError;
     
-    // Parse conversation type
     const conversationType = asConversationType(conversationData.type);
     const userId = conversationData.user_id;
     
@@ -79,7 +66,7 @@ export const sendMessage = async (
     
     console.log('User message saved successfully:', userMessageData.id);
     
-    // Get previous messages to provide context (limit to 5 for more focused context)
+    // Get previous messages for context
     const { data: previousMessages, error: prevMsgError } = await supabase
       .from('messages')
       .select('role, content')
@@ -89,29 +76,24 @@ export const sendMessage = async (
     
     if (prevMsgError) throw prevMsgError;
     
-    // Build context from previous messages using the utility function
     const contextMessages = previousMessages ? 
       formatConversationContext(previousMessages.reverse()) : '';
     
     console.log('Context built with message count:', previousMessages?.length);
     
-    // Get profile data for this advisor type to enhance context
+    // Get profile context
     const profileContext = await getProfileDataForAdvisor(userId, conversationType);
     console.log('Profile context retrieved for advisor type:', conversationType);
     
-    // Determine if response should be brief based on message content
     const brief = shouldBeBrief(content);
     console.log('Response should be brief:', brief);
     
-    // Extract any URLs from the message for analysis
     const urls = extractUrls(content);
     const hasUrls = urls.length > 0;
     console.log('URLs detected:', urls.length);
     
-    // Get model options based on conversation type
     const modelOptions = getModelOptions(conversationType);
     
-    // Add required properties for ProgressiveResponseOptions
     const options = {
       ...modelOptions,
       brief: brief,
@@ -120,7 +102,6 @@ export const sendMessage = async (
     
     console.log('Using model options:', options);
     
-    // Create prompt based on conversation type and include context and profile data
     let prompt = getChatPromptForType(
       conversationType, 
       content, 
@@ -128,7 +109,6 @@ export const sendMessage = async (
       { brief, depth: brief ? 'low' : 'medium' }
     );
     
-    // Add profile context to prompt if available
     if (profileContext) {
       prompt = `${profileContext}\n\n${prompt}`;
     }
@@ -136,13 +116,11 @@ export const sendMessage = async (
     let aiResponseContent = '';
     let sourceUrls: string[] = [];
     
-    // Handle file attachments if present
+    // Handle file attachments
     if (attachments && attachments.length > 0) {
       console.log('Processing attachments:', attachments);
-      // For simplicity, we'll just analyze the first attachment
       const fileUrl = attachments[0];
       const fileName = fileUrl.split('/').pop() || 'file';
-      // Determine file type from URL/name
       const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
       let fileType = 'application/octet-stream';
       
@@ -155,32 +133,29 @@ export const sendMessage = async (
       }
       
       try {
-        // Analyze file with our provider service
         aiResponseContent = await aiProviderService.analyzeFile(
           fileUrl, 
           fileName, 
           fileType,
-          profileContext // Pass profile context for better file analysis
+          profileContext
         );
         console.log('File analysis complete');
       } catch (fileError) {
         console.error('Error analyzing file:', fileError);
-        aiResponseContent = `I couldn't analyze the file you provided. ${fileError.message || 'Please try again with a different file or format.'}`;
+        aiResponseContent = `I couldn't analyze the file you provided. Please try again with a different file or format.`;
       }
     } else if (hasUrls) {
-      // If there are URLs in the message, analyze the first one
+      // Handle URL analysis
       const urlToAnalyze = urls[0];
       const urlType = extractUrlType(urlToAnalyze);
       
       console.log('Analyzing URL:', urlToAnalyze, 'Type:', urlType);
       
       try {
-        // Use the URL analysis method
         aiResponseContent = await aiProviderService.analyzeUrl(urlToAnalyze, urlType, profileContext);
         console.log('URL analysis complete');
       } catch (urlError) {
         console.error('Error analyzing URL:', urlError);
-        // Fall back to regular text generation
         aiResponseContent = await aiProviderService.generateResponse(
           prompt, 
           conversationType,
@@ -188,7 +163,7 @@ export const sendMessage = async (
         );
       }
     } else {
-      // Generate AI response based on text prompt using our provider service
+      // Generate regular AI response
       console.log('Generating AI response using provider service');
       const structuredResponse = await aiProviderService.generateStructuredResponse(
         prompt, 

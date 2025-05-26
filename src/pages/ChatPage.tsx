@@ -4,7 +4,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import ModernChatSidebar from "@/components/chat/ModernChatSidebar";
-import ModernChatInterface from "@/components/chat/ModernChatInterface";
+import StreamlinedChatInterface from "@/components/chat/StreamlinedChatInterface";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
@@ -24,7 +24,6 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Auto-collapse sidebar on mobile
     setSidebarCollapsed(isMobile);
   }, [isMobile]);
   
@@ -32,19 +31,16 @@ const ChatPage = () => {
     const initChat = async () => {
       setIsLoading(true);
       
-      // Don't proceed if auth is still loading
       if (authLoading) {
         return;
       }
       
       if (!isAuthenticated) {
-        // For non-authenticated users, redirect to auth
         navigate("/auth", { state: { from: location.pathname } });
         return;
       }
       
       try {
-        // Case 1: No conversation ID provided - create a new default conversation
         if (!id) {
           console.log('No conversation ID provided, creating new conversation');
           const newConversation = await conversationService.createDefaultConversation();
@@ -57,7 +53,6 @@ const ChatPage = () => {
           }
         }
         
-        // Case 2: Conversation ID provided - try to load it
         console.log('Loading conversation with ID:', id);
         const { conversation: loadedConversation, messages: loadedMessages } = 
           await conversationService.getConversation(id);
@@ -67,7 +62,6 @@ const ChatPage = () => {
           setConversation(loadedConversation);
           setMessages(loadedMessages);
         } else {
-          // Conversation not found, create a new one
           console.log('Conversation not found, creating new one');
           toast.error("Conversation not found, creating a new one");
           const defaultConversation = await conversationService.createDefaultConversation();
@@ -81,13 +75,12 @@ const ChatPage = () => {
       } catch (error) {
         console.error("Error initializing chat:", error);
         toast.error("Failed to load conversation");
-        // Try to create a fallback conversation
         try {
           const fallbackConversation = await conversationService.createDefaultConversation();
           if (fallbackConversation) {
             navigate(`/chat/${fallbackConversation.id}`, { replace: true });
           } else {
-            navigate("/"); // Last resort - go to homepage
+            navigate("/");
           }
         } catch (fallbackError) {
           console.error("Error creating fallback conversation:", fallbackError);
@@ -105,7 +98,6 @@ const ChatPage = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
   
-  // Show loading state while auth is loading
   if (authLoading) {
     return (
       <div className="flex h-screen bg-black text-white items-center justify-center">
@@ -119,7 +111,7 @@ const ChatPage = () => {
   
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Header for mobile - only visible when sidebar is collapsed */}
+      {/* Header for mobile */}
       {isMobile && sidebarCollapsed && (
         <div className="absolute top-0 left-0 z-10 p-2">
           <Button 
@@ -133,7 +125,7 @@ const ChatPage = () => {
         </div>
       )}
       
-      {/* Modern sidebar with AI Advisors */}
+      {/* Sidebar */}
       <ModernChatSidebar 
         activeConversationId={id} 
         isCollapsed={sidebarCollapsed}
@@ -145,7 +137,7 @@ const ChatPage = () => {
         "flex-1 flex flex-col h-full",
         isMobile && sidebarCollapsed && "pl-12 md:pl-0"
       )}>
-        <ModernChatInterface 
+        <StreamlinedChatInterface 
           key={id}
           conversationId={id}
           conversation={conversation}

@@ -1,12 +1,11 @@
 
-import { AIModelOptions, ProgressiveResponseOptions, ConversationType } from './types';
+import { AIModelOptions, ProgressiveResponseOptions, ConversationType, StructuredResponse } from './types';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { getSystemPrompt } from '@/services/utils/conversationUtils';
 
-// Enhanced version of the AI provider service with more conversational responses
+// Streamlined AI provider service with consistent response handling
 const aiProviderService = {
-  // Generate a response using the AI provider
+  // Generate a simple text response
   generateResponse: async (
     prompt: string, 
     conversationType: ConversationType,
@@ -16,28 +15,24 @@ const aiProviderService = {
     
     try {
       const systemPromptForType = getSystemPrompt(conversationType);
-      // Create a more conversational prompt that encourages brief, natural responses
       const enhancedPrompt = `
         ${systemPromptForType}
         
         Guidelines:
-        - Be extremely brief and conversational (max 2 short paragraphs)
+        - Be conversational and helpful (max 2-3 paragraphs)
         - Only respond directly to what was asked
         - Use a friendly, supportive tone
-        - Personalize based on any context about the user's background
         - Avoid introductions or conclusions
-        - Respond like you're texting a friend
         
         User message: ${prompt}
       `;
       
-      // Call Supabase Edge Function to generate AI response
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
-          maxTokens: 200, // Limit token count for brevity
-          brief: true
+          maxTokens: options?.maxTokens || 200,
+          brief: options?.brief || true
         }
       });
       
@@ -51,54 +46,45 @@ const aiProviderService = {
         throw new Error(data.message || 'AI service error');
       }
       
-      if (!data.generatedText) {
-        throw new Error('No response received from AI service');
+      if (!data.generatedText || typeof data.generatedText !== 'string') {
+        throw new Error('No valid response received from AI service');
       }
       
       return data.generatedText;
     } catch (error) {
       console.error('Error in generateResponse:', error);
-      
-      // Provide a brief, helpful fallback response
-      return `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`;
+      return `I'm having trouble responding right now. Could you try rephrasing your question?`;
     }
   },
   
-  // Generate a structured response with sources (new method)
+  // Generate a structured response with citations
   generateStructuredResponse: async (
     prompt: string, 
     conversationType: ConversationType,
     options?: AIModelOptions & ProgressiveResponseOptions
-  ): Promise<{ generatedText: string, sourceUrls: string[] }> => {
+  ): Promise<StructuredResponse> => {
     console.log('Generating structured response for:', conversationType);
     
     try {
       const systemPromptForType = getSystemPrompt(conversationType);
-      // Create a more conversational prompt that encourages brief, natural responses with citations
       const enhancedPrompt = `
         ${systemPromptForType}
         
         Guidelines:
-        - Be extremely brief and conversational (max 2 short paragraphs)
-        - Only respond directly to what was asked
-        - Use a friendly, supportive tone
-        - If referring to sources, use numbered citations like [1], [2]
-        - Personalize based on any context about the user's background
-        - Avoid introductions or conclusions
-        - Respond like you're texting a friend
+        - Be conversational and helpful (max 2-3 paragraphs)
+        - If using sources, cite them as [1], [2], etc.
+        - Respond in JSON format: {"generatedText": "your response with [1] citations", "sourceUrls": ["url1", "url2"]}
+        - If no citations, use empty array for sourceUrls
         
         User message: ${prompt}
-
-        IMPORTANT: When you provide citations like [1], [2], please ensure your response is a JSON object with two keys: 'generatedText' for your textual answer with the citation markers, and 'sourceUrls' for an array of the corresponding source URL strings in the order of citation. For example: {"generatedText": "Text with [1] and [2]...", "sourceUrls": ["http://url1.com", "http://url2.com"]}. If no citations are used, respond with the same JSON structure, where 'sourceUrls' is an empty array.
       `;
       
-      // Call Supabase Edge Function to generate AI response
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: enhancedPrompt,
           type: conversationType,
-          maxTokens: 200, // Limit token count for brevity
-          brief: true
+          maxTokens: options?.maxTokens || 200,
+          brief: options?.brief || true
         }
       });
       
@@ -116,60 +102,56 @@ const aiProviderService = {
         throw new Error('No response received from AI service');
       }
       
+      // Try to parse as JSON, fallback to plain text
       try {
         const parsedResponse = JSON.parse(data.generatedText);
         if (typeof parsedResponse.generatedText === 'string' && Array.isArray(parsedResponse.sourceUrls)) {
           return parsedResponse;
-        } else {
-          console.error("AI response JSON structure incorrect:", parsedResponse);
-          return { generatedText: "Error: AI response format unexpected.", sourceUrls: [] };
         }
       } catch (parseError) {
-        console.error("Failed to parse AI response JSON:", parseError, data.generatedText);
-        // Fallback: return the original string if it's not JSON, or an error message.
-        return { generatedText: data.generatedText, sourceUrls: [] }; 
+        console.warn("Response not in JSON format, treating as plain text");
       }
+      
+      // Fallback: return as plain text response
+      return { 
+        generatedText: data.generatedText, 
+        sourceUrls: [] 
+      };
     } catch (error) {
       console.error('Error in generateStructuredResponse:', error);
-      
-      // Provide a brief, helpful fallback response
       return { 
-        generatedText: `I'm having trouble responding right now. Let me know if you'd like some quick tips while I recover.`, 
+        generatedText: `I'm having trouble responding right now. Could you try rephrasing your question?`, 
         sourceUrls: [] 
       };
     }
   },
   
-  // Analyze a file using the AI provider
+  // Analyze a file
   analyzeFile: async (
     fileUrl: string,
     fileName: string,
     fileType: string,
-    profileContext?: string,
+    systemPrompt?: string,
     options?: AIModelOptions
   ): Promise<string> => {
     console.log('Analyzing file:', fileName, fileType);
     
     try {
-      // Create concise file analysis prompt
-      const fileAnalysisPrompt = `
+      const analysisPrompt = systemPrompt || `
         Analyze this ${fileType} file: ${fileName}
         
-        ${profileContext ? `Context: ${profileContext}` : ''}
-        
         Guidelines:
-        - Keep your response brief and focused
+        - Provide specific, actionable feedback
         - Highlight 2-3 key strengths
         - Suggest 2-3 specific improvements
         - Be conversational and supportive
       `;
       
-      // Call Supabase Edge Function to analyze file
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
-          prompt: fileAnalysisPrompt,
+          prompt: analysisPrompt,
           type: 'file_analysis',
-          maxTokens: 250
+          maxTokens: options?.maxTokens || 300
         }
       });
       
@@ -183,20 +165,18 @@ const aiProviderService = {
         throw new Error(data.message || 'AI service error');
       }
       
-      if (!data.generatedText) {
+      if (!data.generatedText || typeof data.generatedText !== 'string') {
         throw new Error('No analysis received from AI service');
       }
       
       return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeFile:', error);
-      
-      // Provide a brief fallback response for file analysis
-      return `I couldn't analyze your file in detail right now. Would you like to try again in a moment?`;
+      return `I couldn't analyze your file in detail right now. Please try again in a moment.`;
     }
   },
   
-  // Analyze a URL using the AI provider
+  // Analyze a URL
   analyzeUrl: async (
     url: string, 
     type: string, 
@@ -205,20 +185,17 @@ const aiProviderService = {
     console.log('Analyzing URL:', url, type);
     
     try {
-      // Create concise URL analysis prompt
       const urlAnalysisPrompt = `
         Analyze this ${type} URL: ${url}
         
         ${profileContext ? `Context: ${profileContext}` : ''}
         
         Guidelines:
-        - Keep your response conversational and brief
-        - Focus on 2-3 key takeaways
+        - Provide 2-3 key takeaways
         - Give specific, actionable advice
-        - Be supportive and helpful
+        - Be conversational and helpful
       `;
       
-      // Call Supabase Edge Function to analyze URL
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: urlAnalysisPrompt,
@@ -237,64 +214,40 @@ const aiProviderService = {
         throw new Error(data.message || 'AI service error');
       }
       
-      if (!data.generatedText) {
+      if (!data.generatedText || typeof data.generatedText !== 'string') {
         throw new Error('No analysis received from AI service');
       }
 
-      // Define failure patterns for URL analysis
+      // Check for failure patterns
       const failurePatterns = [
         "i cannot access this url",
         "i can't access that link",
         "i am unable to access external websites",
-        "please provide content from the url",
         "could not retrieve content",
-        "unable to fetch",
-        "failed to load",
-        "error processing the url",
-        "i do not have the capability to access external urls",
-        "i'm sorry, but i cannot directly access external urls",
-        "i am unable to directly access the content of urls"
+        "unable to fetch"
       ];
 
-      const genericErrorMessage = "I tried to analyze the URL, but I couldn't get specific information from it. This can happen if the website blocks automated access, requires a login, or if the content isn't in a format I can easily read. You could try summarizing the key points from the URL yourself and asking me about those.";
-
-      if (typeof data.generatedText === 'string') {
-        const lowercasedText = data.generatedText.toLowerCase();
-        
-        // Check for explicit failure patterns
-        for (const pattern of failurePatterns) {
-          if (lowercasedText.includes(pattern)) {
-            console.warn("Perplexity returned vague/error for URL:", data.generatedText);
-            return genericErrorMessage;
-          }
-        }
-        
-        // Check for very short responses (e.g., less than 30 characters)
-        if (data.generatedText.length < 30) {
-           if (lowercasedText.includes("unable") || lowercasedText.includes("cannot") || lowercasedText.includes("can't")) {
-             console.warn("Perplexity returned very short and potentially unhelpful response for URL:", data.generatedText);
-             return genericErrorMessage;
-           }
-        }
+      const lowercaseText = data.generatedText.toLowerCase();
+      const hasFailurePattern = failurePatterns.some(pattern => lowercaseText.includes(pattern));
+      
+      if (hasFailurePattern || data.generatedText.length < 30) {
+        return "I tried to analyze the URL, but couldn't access the content. This can happen if the website blocks automated access or requires login. You could try summarizing the key points from the URL and asking me about those.";
       }
       
       return data.generatedText;
     } catch (error) {
       console.error('Error in analyzeUrl:', error);
-      
-      // Provide a brief fallback response for URL analysis (for network/Supabase function errors)
-      return `I couldn't analyze that URL in detail. Would you like me to try again?`;
+      return `I couldn't analyze that URL right now. Would you like to try again?`;
     }
   },
   
-  // Generate title for a conversation based on its messages
+  // Generate conversation title
   generateTitle: async (
     messages: {role: string, content: string}[]
   ): Promise<string> => {
     if (messages.length === 0) return "New Conversation";
     
     try {
-      // Extract first few user messages for context
       const messageContext = messages
         .filter(msg => msg.role === 'user')
         .slice(0, 2)
@@ -304,13 +257,12 @@ const aiProviderService = {
       if (!messageContext) return "New Conversation";
       
       const titlePrompt = `
-        Generate a very short, concise title (4-5 words max) for a conversation that starts with:
+        Generate a short title (4-5 words max) for a conversation starting with:
         "${messageContext.substring(0, 100)}${messageContext.length > 100 ? '...' : ''}"
         
-        Return ONLY the title with no quotes or additional text.
+        Return ONLY the title, no quotes or extra text.
       `;
       
-      // Call Supabase Edge Function to generate title
       const { data, error } = await supabase.functions.invoke('perplexity-ai-response', {
         body: { 
           prompt: titlePrompt,
@@ -324,10 +276,9 @@ const aiProviderService = {
         return "New Conversation";
       }
       
-      // Clean up the title - remove quotes and limit length
       const title = data.generatedText
-        .replace(/^["']|["']$/g, '') // Remove surrounding quotes
-        .replace(/^Title: /i, '')    // Remove "Title:" prefix if present
+        .replace(/^["']|["']$/g, '')
+        .replace(/^Title: /i, '')
         .trim();
         
       return title || "New Conversation";

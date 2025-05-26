@@ -1,6 +1,4 @@
 
-// This file is just a re-export to maintain backward compatibility
-import { aiProviderService } from './ai/aiProviderService';
-// Use "export type" syntax to fix isolatedModules issue
-export type { AIProvider } from './ai/types';
-export { aiProviderService };
+// Simplified re-export to maintain backward compatibility
+export { aiProviderService } from './ai/aiProviderService';
+export type { AIProvider, ConversationType, AIModelOptions, ProgressiveResponseOptions, StructuredResponse } from './ai/types';
