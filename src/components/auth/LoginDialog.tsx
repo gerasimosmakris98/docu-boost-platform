@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/auth/useAuth';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
+import OAuthButtons from '@/components/auth/OAuthButtons';
+import { AuthProviderType } from '@/contexts/auth/types';
 
 interface LoginDialogProps {
   children?: React.ReactNode;
@@ -28,6 +30,7 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
     fullName: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<AuthProviderType | null>(null);
   
   const { loginWithEmail, signUpWithEmail } = useAuth();
   
@@ -54,6 +57,11 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleProviderSelect = (provider: AuthProviderType) => {
+    setSelectedProvider(provider);
+    setIsLoading(true);
   };
 
   // Handle controlled open state
@@ -95,6 +103,21 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* OAuth Buttons */}
+              <OAuthButtons 
+                isLoading={isLoading && selectedProvider !== null}
+                onProviderSelect={handleProviderSelect}
+              />
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gray-900 px-2 text-gray-400">Or continue with email</span>
+                </div>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                   <div className="space-y-2">
@@ -146,7 +169,7 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
                       size="icon"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-white"
-                      aria-label={showPassword ? "Hide password" : "Show password"} // Added dynamic aria-label
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
@@ -176,7 +199,7 @@ const LoginDialog = ({ children, isOpen, onClose }: LoginDialogProps) => {
                   disabled={isLoading}
                   className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-semibold py-2.5"
                 >
-                  {isLoading ? (
+                  {isLoading && !selectedProvider ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
                       Processing...

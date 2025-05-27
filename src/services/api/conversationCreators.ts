@@ -28,12 +28,19 @@ export const createSpecializedConversation = async (
       throw conversationError;
     }
 
+    // Cast the type to ConversationType
+    const conversation: Conversation = {
+      ...conversationData,
+      type: conversationData.type as ConversationType,
+      metadata: conversationData.metadata || {}
+    };
+
     // Insert welcome message
     const welcomeMessage = getWelcomeMessageForType(type);
     const { error: messageError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationData.id,
+        conversation_id: conversation.id,
         role: 'assistant',
         content: welcomeMessage,
         attachments: [],
@@ -45,8 +52,8 @@ export const createSpecializedConversation = async (
       // Don't fail the conversation creation if welcome message fails
     }
 
-    console.log(`Created ${type} conversation with welcome message:`, conversationData.id);
-    return conversationData;
+    console.log(`Created ${type} conversation with welcome message:`, conversation.id);
+    return conversation;
   } catch (error) {
     console.error("Error creating specialized conversation:", error);
     return null;
@@ -92,6 +99,13 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
       throw conversationError;
     }
 
+    // Cast the type to ConversationType
+    const conversation: Conversation = {
+      ...conversationData,
+      type: conversationData.type as ConversationType,
+      metadata: conversationData.metadata || {}
+    };
+
     // Insert a special first-time welcome message
     const firstTimeWelcome = `Welcome to AI Career Advisor! 🎉
 
@@ -113,7 +127,7 @@ I'm excited to help you achieve your professional goals!`;
     const { error: messageError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: conversationData.id,
+        conversation_id: conversation.id,
         role: 'assistant',
         content: firstTimeWelcome,
         attachments: [],
@@ -124,10 +138,18 @@ I'm excited to help you achieve your professional goals!`;
       console.error('Error inserting first-time welcome message:', messageError);
     }
 
-    console.log('Created default conversation with first-time welcome:', conversationData.id);
-    return conversationData;
+    console.log('Created default conversation with first-time welcome:', conversation.id);
+    return conversation;
   } catch (error) {
     console.error("Error creating default conversation:", error);
     return null;
   }
+};
+
+export const createConversation = async (
+  title: string,
+  type: ConversationType,
+  metadata: Record<string, any> = {}
+): Promise<Conversation | null> => {
+  return await createSpecializedConversation(type, { ...metadata, title });
 };

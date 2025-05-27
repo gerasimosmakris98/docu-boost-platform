@@ -43,7 +43,13 @@ export const buildUserContext = async (
       .eq('id', conversationId)
       .single();
 
-    const userPreferences = conversation?.metadata || {};
+    // Safely handle metadata type conversion
+    let userPreferences: Record<string, any> = {};
+    if (conversation?.metadata) {
+      if (typeof conversation.metadata === 'object' && conversation.metadata !== null) {
+        userPreferences = conversation.metadata as Record<string, any>;
+      }
+    }
 
     // Get recent conversation history for context
     const { data: recentMessages } = await supabase

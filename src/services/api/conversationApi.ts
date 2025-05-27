@@ -33,11 +33,11 @@ export {
   fetchConversations,
   fetchConversation,
   createConversation,
+  createSpecializedConversation,
+  createDefaultConversation,
   updateConversation,
   deleteConversation,
   sendMessage,
-  createSpecializedConversation,
-  createDefaultConversation,
   asConversationType,
   parseMetadata
 };

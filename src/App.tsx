@@ -15,10 +15,10 @@ import ChatPage from '@/pages/ChatPage';
 import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
-// import Profile from '@/pages/Profile'; // Replaced by lazy loaded ProfilePage
+import NewChat from '@/pages/NewChat';
 
 // Lazy loaded pages for better performance
-const ProfilePage = lazy(() => import('@/pages/ProfilePage')); // This is the correct one
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
 const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
@@ -68,10 +68,18 @@ function App() {
                   } 
                 />
                 <Route 
+                  path="/new-chat" 
+                  element={
+                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
+                      <NewChat />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/profile" 
                   element={
                     <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <ProfilePage /> {/* Changed to ProfilePage */}
+                      <ProfilePage />
                     </ProtectedRoute>
                   } 
                 />
