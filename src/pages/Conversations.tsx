@@ -121,135 +121,135 @@ const Conversations = () => {
     }
   };
 
-  return (
-    <AppLayout>
-      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
-        {!isAuthenticated && (
-          <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
-            <h2 className="text-xl font-semibold mb-2">Sign in to access conversations</h2>
-            <p className="text-muted-foreground mb-4">
-              Create an account or sign in to start new conversations and access your existing ones
-            </p>
-            <Button onClick={handleLogin}>Sign In</Button>
-            <LoginDialog
-              isOpen={loginDialogOpen}
-              onClose={() => setLoginDialogOpen(false)}
-            />
-          </div>
-        )}
+  const pageContent = (
+    <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
+      {!isAuthenticated && (
+        <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
+          <h2 className="text-xl font-semibold mb-2">Sign in to access conversations</h2>
+          <p className="text-muted-foreground mb-4">
+            Create an account or sign in to start new conversations and access your existing ones
+          </p>
+          <Button onClick={handleLogin}>Sign In</Button>
+          <LoginDialog
+            isOpen={loginDialogOpen}
+            onClose={() => setLoginDialogOpen(false)}
+          />
+        </div>
+      )}
 
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
-            <Button onClick={() => handleCreateConversation("general")} disabled={creating || !isAuthenticated}>
-              <Plus className="mr-2 h-4 w-4" /> New Conversation
-            </Button>
-          </div>
-            
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Resume Builder Card */}
-            <Card className="border border-blue-200 hover:border-blue-300 transition-all cursor-pointer">
-              <CardContent className="p-6">
-                <div 
-                  className="flex flex-col items-center justify-center h-full space-y-4" 
-                  onClick={() => handleCreateConversation("resume")}
-                >
-                  <div className="p-3 rounded-full bg-blue-100">
-                    <FileText className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Resume Builder</h3>
-                  <p className="text-center text-gray-500 text-sm">
-                    Create and customize your professional resume with AI guidance
-                  </p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+          <Button onClick={() => handleCreateConversation("general")} disabled={creating || !isAuthenticated}>
+            <Plus className="mr-2 h-4 w-4" /> New Conversation
+          </Button>
+        </div>
+          
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Resume Builder Card */}
+          <Card className="border border-blue-200 hover:border-blue-300 transition-all cursor-pointer">
+            <CardContent className="p-6">
+              <div 
+                className="flex flex-col items-center justify-center h-full space-y-4" 
+                onClick={() => handleCreateConversation("resume")}
+              >
+                <div className="p-3 rounded-full bg-blue-100">
+                  <FileText className="h-8 w-8 text-blue-600" />
                 </div>
-              </CardContent>
-            </Card>
-            
-            {/* Cover Letter Assistant Card */}
-            <Card className="border border-green-200 hover:border-green-300 transition-all cursor-pointer">
-              <CardContent className="p-6">
-                <div 
-                  className="flex flex-col items-center justify-center h-full space-y-4"
-                  onClick={() => handleCreateConversation("cover_letter")}
-                >
-                  <div className="p-3 rounded-full bg-green-100">
-                    <PenBox className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Cover Letter Assistant</h3>
-                  <p className="text-center text-gray-500 text-sm">
-                    Create tailored cover letters for specific job positions
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Interview Preparation Card */}
-            <Card className="border border-purple-200 hover:border-purple-300 transition-all cursor-pointer">
-              <CardContent className="p-6">
-                <div 
-                  className="flex flex-col items-center justify-center h-full space-y-4"
-                  onClick={() => handleCreateConversation("interview_prep")}
-                >
-                  <div className="p-3 rounded-full bg-purple-100">
-                    <User className="h-8 w-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Interview Preparation</h3>
-                  <p className="text-center text-gray-500 text-sm">
-                    Practice for interviews with AI-generated questions and feedback
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-            
-          {/* Recent Conversations */}
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Recent Conversations</h3>
-            {loading ? (
-              <div className="text-center py-8">Loading your conversations...</div>
-            ) : conversations.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                You have no conversations yet. Start a new one!
+                <h3 className="text-lg font-semibold">Resume Builder</h3>
+                <p className="text-center text-gray-500 text-sm">
+                  Create and customize your professional resume with AI guidance
+                </p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {conversations.map((conversation) => (
-                  <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                    <Link 
-                      to={`/chat/${conversation.id}`}
-                      className="flex items-center flex-1"
-                    >
-                      <div className="p-2 rounded-full bg-muted mr-3">
-                        {getConversationIcon(conversation.type)}
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{conversation.title}</h4>
-                        <p className="text-sm text-gray-500 flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(conversation.updated_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDeleteConversation(conversation.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-                    </Button>
-                  </div>
-                ))}
+            </CardContent>
+          </Card>
+          
+          {/* Cover Letter Assistant Card */}
+          <Card className="border border-green-200 hover:border-green-300 transition-all cursor-pointer">
+            <CardContent className="p-6">
+              <div 
+                className="flex flex-col items-center justify-center h-full space-y-4"
+                onClick={() => handleCreateConversation("cover_letter")}
+              >
+                <div className="p-3 rounded-full bg-green-100">
+                  <PenBox className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold">Cover Letter Assistant</h3>
+                <p className="text-center text-gray-500 text-sm">
+                  Create tailored cover letters for specific job positions
+                </p>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+          
+          {/* Interview Preparation Card */}
+          <Card className="border border-purple-200 hover:border-purple-300 transition-all cursor-pointer">
+            <CardContent className="p-6">
+              <div 
+                className="flex flex-col items-center justify-center h-full space-y-4"
+                onClick={() => handleCreateConversation("interview_prep")}
+              >
+                <div className="p-3 rounded-full bg-purple-100">
+                  <User className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold">Interview Preparation</h3>
+                <p className="text-center text-gray-500 text-sm">
+                  Practice for interviews with AI-generated questions and feedback
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+          
+        {/* Recent Conversations */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Recent Conversations</h3>
+          {loading ? (
+            <div className="text-center py-8">Loading your conversations...</div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              You have no conversations yet. Start a new one!
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {conversations.map((conversation) => (
+                <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                  <Link 
+                    to={`/chat/${conversation.id}`}
+                    className="flex items-center flex-1"
+                  >
+                    <div className="p-2 rounded-full bg-muted mr-3">
+                      {getConversationIcon(conversation.type)}
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{conversation.title}</h4>
+                      <p className="text-sm text-gray-500 flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {new Date(conversation.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteConversation(conversation.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
+
+  return <AppLayout>{pageContent}</AppLayout>;
 };
 
 export default Conversations;
