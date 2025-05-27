@@ -1,11 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ConversationType } from "../types/conversationTypes";
+import { ConversationType, ConversationMetadata } from "../types/conversationTypes";
 
 export interface UserContext {
   profileInfo: string | null;
   conversationHistory: string;
-  userPreferences: Record<string, any>;
+  userPreferences: ConversationMetadata;
   conversationType: ConversationType;
 }
 
@@ -44,10 +44,10 @@ export const buildUserContext = async (
       .single();
 
     // Safely handle metadata type conversion
-    let userPreferences: Record<string, any> = {};
+    let userPreferences: ConversationMetadata = {};
     if (conversation?.metadata) {
       if (typeof conversation.metadata === 'object' && conversation.metadata !== null) {
-        userPreferences = conversation.metadata as Record<string, any>;
+        userPreferences = conversation.metadata as ConversationMetadata;
       }
     }
 

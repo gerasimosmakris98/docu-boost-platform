@@ -1,11 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Conversation, ConversationType, Message } from "../types/conversationTypes";
+import { Conversation, ConversationType, ConversationMetadata } from "../types/conversationTypes";
 import { getWelcomeMessageForType } from "../utils/welcomeMessages";
 
 export const createSpecializedConversation = async (
   type: ConversationType, 
-  metadata: Record<string, any> = {}
+  metadata: ConversationMetadata = {}
 ): Promise<Conversation | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -28,11 +28,11 @@ export const createSpecializedConversation = async (
       throw conversationError;
     }
 
-    // Cast the type to ConversationType
+    // Cast the type to ConversationType and handle metadata properly
     const conversation: Conversation = {
       ...conversationData,
       type: conversationData.type as ConversationType,
-      metadata: conversationData.metadata || {}
+      metadata: (conversationData.metadata as ConversationMetadata) || {}
     };
 
     // Insert welcome message
@@ -99,11 +99,11 @@ export const createDefaultConversation = async (): Promise<Conversation | null> 
       throw conversationError;
     }
 
-    // Cast the type to ConversationType
+    // Cast the type to ConversationType and handle metadata properly
     const conversation: Conversation = {
       ...conversationData,
       type: conversationData.type as ConversationType,
-      metadata: conversationData.metadata || {}
+      metadata: (conversationData.metadata as ConversationMetadata) || {}
     };
 
     // Insert a special first-time welcome message
@@ -149,7 +149,7 @@ I'm excited to help you achieve your professional goals!`;
 export const createConversation = async (
   title: string,
   type: ConversationType,
-  metadata: Record<string, any> = {}
+  metadata: ConversationMetadata = {}
 ): Promise<Conversation | null> => {
   return await createSpecializedConversation(type, { ...metadata, title });
 };

@@ -12,10 +12,7 @@ import ProfileTab from '@/components/profile/ProfileTab';
 import SettingsTab from '@/components/profile/SettingsTab';
 import { useAuth } from '@/contexts/auth/useAuth';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-// import { X } from 'lucide-react'; // No longer needed
-// import { Button } from '@/components/ui/button'; // No longer needed
-// import Logo from '@/components/ui/Logo'; // No longer needed
-import AppLayout from '@/layouts/AppLayout'; // Added
+import AppLayout from '@/layouts/AppLayout';
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -44,10 +41,8 @@ const ProfilePage = () => {
 
   return (
     <ProtectedRoute>
-      <AppLayout> {/* Added */}
-        <div className="container mx-auto px-4 py-8"> {/* Original container and padding */}
-          {/* Removed header with Logo and Back button */}
-          
+      <AppLayout>
+        <div className="container mx-auto px-4 py-8">
           {user && <ProfileHeader profileData={profileData} />}
           
           <div className="flex justify-between items-center mb-4">
@@ -84,7 +79,7 @@ const ProfilePage = () => {
             </Tabs>
           </div>
         </div>
-      </AppLayout> {/* Added */}
+      </AppLayout>
     </ProtectedRoute>
   );
 };

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AppLayout from "@/layouts/AppLayout"; // Changed
+import AppLayout from "@/layouts/AppLayout";
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import StatsSection from "@/components/dashboard/StatsSection";
 import RecentDocumentsSection from "@/components/dashboard/RecentDocumentsSection";
@@ -9,11 +9,12 @@ import TemplatesSection from "@/components/dashboard/TemplatesSection";
 import AssessmentSection from "@/components/dashboard/AssessmentSection";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { documentService } from "@/services/documentService";
-import { conversationService } from "@/services/conversationService"; // Added
+import { conversationService } from "@/services/conversationService";
+import { ConversationType } from "@/services/types/conversationTypes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare, FileText, PenBox, User } from "lucide-react";
-import { toast } from "sonner"; // Added
+import { toast } from "sonner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -34,14 +35,9 @@ const Index = () => {
     reader.readAsText(file);
   };
 
-  const handleNavigateToConversationType = (type: string) => {
+  const handleNavigateToConversationType = (type: ConversationType) => {
     if (!isAuthenticated) {
       navigate('/auth');
-      return;
-    }
-    if (!isAuthenticated) {
-      toast.error("Please log in to start a new conversation.");
-      navigate('/auth', { state: { from: location.pathname } });
       return;
     }
     
@@ -50,7 +46,7 @@ const Index = () => {
         const conversation = await conversationService.createSpecializedConversation(type);
         if (conversation && conversation.id) {
           navigate(`/chat/${conversation.id}`);
-          return conversation; // Return value for success toast
+          return conversation;
         } else {
           throw new Error("Failed to create conversation.");
         }
@@ -76,8 +72,8 @@ const Index = () => {
   }, [isAuthenticated]);
 
   return (
-    <AppLayout> {/* Changed */}
-      <div className="space-y-6 p-4 md:p-6 lg:p-8"> {/* Added padding for content within AppLayout */}
+    <AppLayout>
+      <div className="space-y-6 p-4 md:p-6 lg:p-8">
         <WelcomeSection 
           username={user?.user_metadata?.full_name || "there"} 
           isAuthenticated={isAuthenticated}
@@ -104,7 +100,6 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Create and customize your professional resume with AI guidance
                   </p>
-                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -123,7 +118,6 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Create tailored cover letters for specific job positions
                   </p>
-                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -142,7 +136,6 @@ const Index = () => {
                   <p className="text-center text-gray-500 text-sm">
                     Practice for interviews with AI-generated questions and feedback
                   </p>
-                  {/* Removed Button, click handled by Card's div */}
                 </div>
               </CardContent>
             </Card>
@@ -155,7 +148,7 @@ const Index = () => {
         
         <AssessmentSection />
       </div>
-    </AppLayout> /* Changed */
+    </AppLayout>
   );
 };
 

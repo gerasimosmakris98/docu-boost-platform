@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -6,8 +7,7 @@ import {
   MessageSquare, 
   LogOut,
   Plus,
-  X,
-  Users // Assuming Users icon for Advisors or similar
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth/useAuth";
@@ -17,7 +17,7 @@ import AdvisorList from '@/components/advisor/AdvisorList';
 import ConversationHistoryList from '@/components/common/ConversationHistoryList.tsx';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { toast } from "sonner";
-import { conversationService } from "@/services/conversationService"; // For fetching conversations
+import { conversationService } from "@/services/conversationService";
 import { useEffect, useState } from "react";
 import { Conversation } from "@/services/conversationService";
 
@@ -39,7 +39,7 @@ const AppSidebar = ({ setSidebarOpen }: AppSidebarProps) => {
       if (!user) return;
       setIsLoadingConversations(true);
       try {
-        const userConversations = await conversationService.getUserConversations();
+        const userConversations = await conversationService.getConversations();
         setConversations(userConversations || []);
       } catch (error) {
         console.error("Failed to fetch conversations:", error);
@@ -103,7 +103,7 @@ const AppSidebar = ({ setSidebarOpen }: AppSidebarProps) => {
       {/* Sidebar Header */}
       <div className="flex h-14 items-center border-b px-4">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <MessageSquare className="h-6 w-6 text-primary" /> {/* Placeholder Icon */}
+          <MessageSquare className="h-6 w-6 text-primary" />
           <span className="">AI Platform</span>
         </Link>
         {isDesktop && (
@@ -143,7 +143,7 @@ const AppSidebar = ({ setSidebarOpen }: AppSidebarProps) => {
             to="/conversations"
             className={cn(
               "flex items-center px-3 py-2 rounded-md text-sm font-medium",
-              isActive("/conversations") || isActive("/chat") // Keep conversations active for /chat/:id
+              isActive("/conversations") || isActive("/chat")
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
@@ -180,11 +180,10 @@ const AppSidebar = ({ setSidebarOpen }: AppSidebarProps) => {
           {isLoadingConversations ? (
             <p className="px-3 text-sm text-muted-foreground">Loading conversations...</p>
           ) : (
-            <ConversationList
+            <ConversationHistoryList
               conversations={conversations}
-              activeConversationId={location.pathname.split("/").pop()} // Basic active ID detection
+              activeConversationId={location.pathname.split("/").pop()}
               onCreateNew={handleNewChat}
-              // isCollapsed will be handled by ConversationHistoryList itself if needed, or via prop
             />
           )}
         </div>

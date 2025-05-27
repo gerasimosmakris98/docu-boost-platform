@@ -100,19 +100,12 @@ const StreamlinedChatInterface = ({
           prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
         );
       } else {
-        // This case handles when conversationService.sendMessage returns null
-        // (indicating it handled the error and toast)
-        // or if it threw an error that was caught by the outer catch block.
         console.warn('StreamlinedChatInterface: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic AI message.');
         setMessages(prev => 
           prev.filter(msg => msg.id !== optimisticAiMessage.id)
         );
-        // No additional toast or chat message here as the service layer is responsible.
       }
     } catch (error: any) {
-      // This catch block is primarily for unexpected errors *within StreamlinedChatInterface itself*
-      // or if conversationService.sendMessage throws an error that it didn't handle with a toast.
-      // Given the service refactoring, it should ideally handle its own errors and return null.
       console.error("StreamlinedChatInterface: Error sending message or processing response:", error);
       
       // Remove both the optimistic user message and the "Thinking..." AI message
@@ -120,9 +113,6 @@ const StreamlinedChatInterface = ({
         prev.filter(msg => msg.id !== optimisticUserMessage.id && msg.id !== optimisticAiMessage.id)
       );
       
-      // Show a generic error toast if the service didn't (though it should have).
-      // This toast signifies a failure that might be local to this component's execution
-      // or an unhandled one from the service.
       toast.error("Failed to send message. Please try again.");
       
     } finally {
@@ -160,8 +150,8 @@ const StreamlinedChatInterface = ({
       <div 
         className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
         style={{ WebkitOverflowScrolling: 'touch' }}
-        role="log" // Added role
-        aria-live="polite" // Added aria-live
+        role="log"
+        aria-live="polite"
       >
         {messages.length === 0 ? (
           <motion.div 
@@ -206,7 +196,6 @@ const StreamlinedChatInterface = ({
           onSendMessage={handleSendMessage}
           isDisabled={!isAuthenticated || isSending || !conversationId}
           isSending={isSending}
-          isModern={true}
         />
       </div>
     </div>

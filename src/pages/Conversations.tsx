@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom"; // Removed useParams
-import AppLayout from "@/layouts/AppLayout"; // Changed
+import { useNavigate, Link } from "react-router-dom";
+import AppLayout from "@/layouts/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   FilePlus, MessageSquare, FileText, PenBox, User, Plus, 
-  Trash2, Calendar, MoreVertical // Removed ArrowLeft
+  Trash2, Calendar, MoreVertical
 } from "lucide-react";
-// Removed Tabs imports
 import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "sonner";
 import LoginDialog from "@/components/auth/LoginDialog";
@@ -17,14 +16,11 @@ import {
   ConversationType, 
   conversationService 
 } from "@/services/conversationService";
-// Removed ConversationChat import
 
 const Conversations = () => {
   const navigate = useNavigate();
-  // Removed id and useParams
   const { isAuthenticated, profile } = useAuth();
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-  // Removed currentTab state
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -36,8 +32,6 @@ const Conversations = () => {
       setLoading(false);
     }
   }, [isAuthenticated]);
-
-  // Removed useEffect for currentTab
 
   const fetchConversations = async () => {
     try {
@@ -85,7 +79,7 @@ const Conversations = () => {
       if (newConversation) {
         toast.success("Conversation created");
         await fetchConversations(); // Refresh list
-        navigate(`/chat/${newConversation.id}`); // Changed
+        navigate(`/chat/${newConversation.id}`);
       }
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -103,9 +97,6 @@ const Conversations = () => {
         toast.success("Conversation deleted");
         await fetchConversations();
         
-        // If we're currently viewing the deleted conversation, go back to the list
-        // If we're currently viewing a chat page that corresponds to the deleted conversation,
-        // navigate to the general conversations list. This check is more generic now.
         if (location.pathname.startsWith("/chat/") && location.pathname.endsWith(id)) {
           navigate("/conversations"); 
         }
@@ -131,8 +122,8 @@ const Conversations = () => {
   };
 
   return (
-    <AppLayout> {/* Changed */}
-      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8"> {/* Added padding and container */}
+    <AppLayout>
+      <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8">
         {!isAuthenticated ? (
           <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
           <h2 className="text-xl font-semibold mb-2">Sign in to access conversations</h2>
@@ -147,7 +138,6 @@ const Conversations = () => {
           </div>
         ) : null}
 
-        {/* Content directly in AppLayout, Tabs removed */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
@@ -224,12 +214,12 @@ const Conversations = () => {
               ) : (
                 <div className="space-y-3">
                   {conversations.map((conversation) => (
-                    <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors"> {/* Adjusted hover background */}
+                    <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
                       <Link 
-                        to={`/chat/${conversation.id}`} // Changed
+                        to={`/chat/${conversation.id}`}
                         className="flex items-center flex-1"
                       >
-                        <div className="p-2 rounded-full bg-muted mr-3"> {/* Adjusted background */}
+                        <div className="p-2 rounded-full bg-muted mr-3">
                           {getConversationIcon(conversation.type)}
                         </div>
                         <div>
@@ -249,17 +239,16 @@ const Conversations = () => {
                           handleDeleteConversation(conversation.id);
                         }}
                       >
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" /> {/* Adjusted text color */}
+                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
                       </Button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          {/* Removed TabsContent for "chat" */}
         </div>
       </div>
-    </AppLayout> /* Changed */
+    </AppLayout>
   );
 };
 

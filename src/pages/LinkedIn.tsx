@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppLayout from "@/layouts/AppLayout"; // Changed
+import AppLayout from "@/layouts/AppLayout";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -107,7 +107,7 @@ const LinkedInPage = () => {
       
       if (conversation) {
         // Navigate to the conversation
-        navigate(`/chat/${conversation.id}`); // Changed
+        navigate(`/chat/${conversation.id}`);
       } else {
         throw new Error("Failed to create conversation");
       }
@@ -118,8 +118,8 @@ const LinkedInPage = () => {
   };
 
   return (
-    <AppLayout> {/* Changed */}
-      <div className="container mx-auto py-10 px-4 md:px-6 lg:px-8"> {/* Added padding */}
+    <AppLayout>
+      <div className="container mx-auto py-10 px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* LinkedIn Import Section */}
           <Card className="bg-gray-900 border-gray-800">
@@ -247,7 +247,7 @@ const LinkedInPage = () => {
       </div>
 
       <LoginDialog isOpen={showLoginDialog} onClose={() => setShowLoginDialog(false)} />
-    </AppLayout> /* Changed */
+    </AppLayout>
   );
 };
 
