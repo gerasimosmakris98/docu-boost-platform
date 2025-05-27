@@ -9,18 +9,14 @@ import { lazy, Suspense } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import CookieConsent from '@/components/legal/CookieConsent';
 
-// Eager loaded pages
+// Core chat pages
 import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
 import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
-import NewChat from '@/pages/NewChat';
-import Index from '@/pages/Index';
-import Conversations from '@/pages/Conversations';
-import LinkedIn from '@/pages/LinkedIn';
 
-// Lazy loaded pages for better performance
+// Lazy loaded pages
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
@@ -40,14 +36,14 @@ function App() {
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Dashboard/Home Route */}
-                <Route path="/" element={<Index />} />
+                {/* Home/Dashboard */}
+                <Route path="/" element={<HomePage />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
                 
-                {/* Protected routes */}
+                {/* Chat routes - the core functionality */}
                 <Route 
                   path="/chat" 
                   element={
@@ -64,30 +60,8 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/new-chat" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <NewChat />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/conversations" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <Conversations />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/linkedin" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <LinkedIn />
-                    </ProtectedRoute>
-                  } 
-                />
+                
+                {/* Profile */}
                 <Route 
                   path="/profile" 
                   element={

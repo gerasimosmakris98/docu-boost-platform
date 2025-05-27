@@ -1,129 +1,118 @@
 
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Users, Zap, TrendingUp } from 'lucide-react';
-import Logo from '@/components/ui/Logo';
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { MessageSquare, Plus, User, LogIn } from "lucide-react";
+import { toast } from "sonner";
+import { conversationService } from "@/services/conversationService";
 
 const HomePage = () => {
-  const features = [
-    {
-      icon: <CheckCircle className="h-6 w-6" />,
-      title: "Smart Resume Builder",
-      description: "Create professional resumes tailored to your industry and role with AI-powered suggestions."
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Interview Preparation",
-      description: "Practice with realistic interview scenarios and get personalized feedback to ace your interviews."
-    },
-    {
-      icon: <Zap className="h-6 w-6" />,
-      title: "Career Guidance",
-      description: "Get strategic advice on career moves, skill development, and professional growth opportunities."
-    },
-    {
-      icon: <TrendingUp className="h-6 w-6" />,
-      title: "Job Search Strategy",
-      description: "Optimize your job search with targeted strategies and networking recommendations."
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  const handleStartChat = async () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
     }
-  ];
+    
+    try {
+      toast.loading('Starting new chat...');
+      const conversation = await conversationService.createSpecializedConversation('general');
+      
+      if (conversation) {
+        toast.dismiss();
+        navigate(`/chat/${conversation.id}`);
+      } else {
+        toast.error('Failed to create chat');
+      }
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast.error('Failed to create chat');
+    }
+  };
+
+  const handleViewChats = () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
+    }
+    navigate('/chat');
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="border-b border-gray-800">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Logo size="md" />
-          <div className="flex gap-4">
-            <Link to="/auth">
-              <Button variant="ghost" className="text-white hover:text-green-400">
+      <header className="border-b border-gray-800 p-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-8 w-8 text-green-500" />
+            <h1 className="text-xl font-bold">AI Chat</h1>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Button>
+                <Button onClick={handleViewChats}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  My Chats
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => navigate('/auth')}>
+                <LogIn className="h-4 w-4 mr-2" />
                 Sign In
               </Button>
-            </Link>
-            <Link to="/auth">
-              <Button className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700">
-                Get Started
-              </Button>
-            </Link>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-            Your AI-Powered Career Companion
-          </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Unlock your professional potential with personalized career guidance, resume optimization, 
-            and interview preparation powered by advanced AI technology.
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-4xl font-bold mb-6">AI Chat Assistant</h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Chat with AI, save your conversations, and get intelligent responses.
           </p>
-          <Link to="/auth">
-            <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-8 py-4 text-lg">
-              Start Your Career Journey
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-gray-900/50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Transform Your Career with AI</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="text-center p-6 rounded-lg bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
-                <div className="flex justify-center mb-4 text-green-400">
-                  {feature.icon}
+          <div className="grid gap-4 max-w-md mx-auto">
+            <Card className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer" onClick={handleStartChat}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center gap-3">
+                  <Plus className="h-6 w-6 text-green-500" />
+                  <span className="text-lg font-semibold">Start New Chat</span>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-gray-300">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              </CardContent>
+            </Card>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Advance Your Career?</h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of professionals who've accelerated their career growth with AI Career Advisor.
-          </p>
-          <Link to="/auth">
-            <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white px-8 py-4 text-lg">
-              Get Started Free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
-      </section>
+            {isAuthenticated && (
+              <Card className="bg-gray-900 border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer" onClick={handleViewChats}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center gap-3">
+                    <MessageSquare className="h-6 w-6 text-blue-500" />
+                    <span className="text-lg font-semibold">View My Chats</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-800 py-12 px-4">
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <Logo size="md" />
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <Link to="/legal/terms" className="text-gray-400 hover:text-white transition-colors">
-                Terms of Service
-              </Link>
-              <Link to="/legal/privacy" className="text-gray-400 hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/legal/cookies" className="text-gray-400 hover:text-white transition-colors">
-                Cookie Policy
-              </Link>
-            </div>
-          </div>
-          <div className="text-center text-gray-400">
-            <p>&copy; 2024 AI Career Advisor. All rights reserved.</p>
-          </div>
+          {!isAuthenticated && (
+            <p className="text-gray-500 mt-6">
+              <Button variant="link" onClick={() => navigate('/auth')}>
+                Sign in
+              </Button> 
+              to save your conversations
+            </p>
+          )}
         </div>
-      </footer>
+      </main>
     </div>
   );
 };
