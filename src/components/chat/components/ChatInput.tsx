@@ -11,14 +11,12 @@ interface ChatInputProps {
   onSendMessage: (message: string, attachments: string[]) => Promise<void>;
   isDisabled: boolean;
   isSending: boolean;
-  // isModern prop removed
 }
 
 const ChatInput = ({ 
   onSendMessage, 
   isDisabled, 
   isSending
-  // isModern prop removed from destructuring
 }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<{ url: string; type: string; name: string }[]>([]);
@@ -28,11 +26,11 @@ const ChatInput = ({
   
   // Auto-resize textarea as user types
   useEffect(() => {
-    if (textareaRef.current) { // Removed isModern condition
+    if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [input]); // Removed isModern from dependencies
+  }, [input]);
   
   const handleSend = async () => {
     if (!input.trim() && attachments.length === 0) return;
@@ -44,7 +42,7 @@ const ChatInput = ({
     setAttachments([]);
     setShowAttachments(false);
     
-    if (textareaRef.current) { // Removed isModern condition
+    if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
     
@@ -72,7 +70,6 @@ const ChatInput = ({
     setAttachments(prev => [...prev, { url, type, name: fileName }]);
   };
 
-  // Modern design (now the only design)
   return (
     <div className="p-4 border-t border-gray-800 bg-gray-900/30">
       {showAttachments && (
@@ -105,11 +102,11 @@ const ChatInput = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 ml-1 hover:bg-gray-700 rounded-full p-0" // Increased button size
+                className="h-6 w-6 ml-1 hover:bg-gray-700 rounded-full p-0"
                 onClick={() => setAttachments(prev => prev.filter((_, i) => i !== index))}
               >
                 <span className="sr-only">Remove</span>
-                <X className="h-4 w-4" /> {/* Increased icon size */}
+                <X className="h-4 w-4" />
               </Button>
             </div>
           ))}
@@ -119,8 +116,8 @@ const ChatInput = ({
       <div className="flex items-end gap-2 bg-gray-800/30 rounded-lg border border-gray-700/50 focus-within:border-green-500/50">
         <Button
           variant="ghost"
-          size="icon" // size="icon" usually implies h-10 w-10 by default for Button component
-          className="rounded-full h-10 w-10 flex-shrink-0 text-gray-400 hover:text-gray-300" // Explicitly set h-10 w-10
+          size="icon"
+          className="rounded-full h-10 w-10 flex-shrink-0 text-gray-400 hover:text-gray-300"
           onClick={() => setShowAttachments(!showAttachments)}
           disabled={isSending}
         >
@@ -137,13 +134,13 @@ const ChatInput = ({
           onKeyDown={handleKeyDown}
           disabled={isDisabled || isSending}
           rows={1}
-          aria-label="Type your message to AI Career Advisor" // Added aria-label
+          aria-label="Type your message to AI Career Advisor"
         />
         
         <Button
-          size="icon" // Ensure it uses icon sizing which is h-10 w-10
+          size="icon"
           className={cn(
-            "rounded-full h-10 w-10 flex-shrink-0 mr-1", // Explicitly set h-10 w-10
+            "rounded-full h-10 w-10 flex-shrink-0 mr-1",
             input.trim() || attachments.length > 0 
               ? "bg-green-600 hover:bg-green-700 text-white" 
               : "bg-gray-700 text-gray-400"
@@ -152,9 +149,9 @@ const ChatInput = ({
           onClick={handleSend}
         >
           {isSending ? (
-            <Loader2 className="h-5 w-5 animate-spin" /> {/* Icon size can be adjusted if needed */}
+            <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <Send className="h-5 w-5" /> {/* Icon size can be adjusted if needed */}
+            <Send className="h-5 w-5" />
           )}
           <span className="sr-only">Send</span>
         </Button>
@@ -165,7 +162,6 @@ const ChatInput = ({
       </div>
     </div>
   );
-// Classic design removed
 };
 
 export default ChatInput;
