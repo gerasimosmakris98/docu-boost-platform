@@ -19,7 +19,6 @@ const ProfilePage = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  // Create a profile data object for the components
   const profileData = {
     name: profile?.full_name || user?.user_metadata?.full_name || 'Anonymous User',
     title: profile?.title || 'Professional',
@@ -34,54 +33,50 @@ const ProfilePage = () => {
   };
 
   const handleSaveChanges = async (updates: any) => {
-    // Handle saving profile changes
     console.log('Saving changes:', updates);
-    // Add actual implementation here
   };
-
-  const pageContent = (
-    <div className="container mx-auto px-4 py-8">
-      {user && <ProfileHeader profileData={profileData} />}
-      
-      <div className="flex justify-between items-center mb-4">
-        <Tabs
-          defaultValue="profile"
-          className="w-full"
-          value={activeTab}
-          onValueChange={setActiveTab}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <TabsList className="bg-gray-800">
-              <TabsTrigger value="profile">Personal Info</TabsTrigger>
-              <TabsTrigger value="settings">Account Settings</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="profile">
-            <ProfileTab 
-              profileData={profileData}
-              resumeData={{ summary: profile?.summary || '' }}
-              onSaveChanges={handleSaveChanges}
-            />
-          </TabsContent>
-          
-          <TabsContent value="settings">
-            <SettingsTab 
-              profileData={{
-                name: profileData.name,
-                email: profileData.email,
-              }}
-              onSaveChanges={handleSaveChanges}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
 
   return (
     <ProtectedRoute>
-      <AppLayout>{pageContent}</AppLayout>
+      <AppLayout>
+        <div className="container mx-auto px-4 py-8">
+          {user && <ProfileHeader profileData={profileData} />}
+          
+          <div className="flex justify-between items-center mb-4">
+            <Tabs
+              defaultValue="profile"
+              className="w-full"
+              value={activeTab}
+              onValueChange={setActiveTab}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <TabsList className="bg-gray-800">
+                  <TabsTrigger value="profile">Personal Info</TabsTrigger>
+                  <TabsTrigger value="settings">Account Settings</TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="profile">
+                <ProfileTab 
+                  profileData={profileData}
+                  resumeData={{ summary: profile?.summary || '' }}
+                  onSaveChanges={handleSaveChanges}
+                />
+              </TabsContent>
+              
+              <TabsContent value="settings">
+                <SettingsTab 
+                  profileData={{
+                    name: profileData.name,
+                    email: profileData.email,
+                  }}
+                  onSaveChanges={handleSaveChanges}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </AppLayout>
     </ProtectedRoute>
   );
 };

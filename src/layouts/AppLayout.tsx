@@ -1,13 +1,17 @@
+
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
-import AppSidebar from '@/components/layout/AppSidebar'; // This will be created next
+import AppSidebar from '@/components/layout/AppSidebar';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-const AppLayout = () => {
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+const AppLayout = ({ children }: AppLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -16,17 +20,16 @@ const AppLayout = () => {
       {/* Desktop Sidebar */}
       {isDesktop ? (
         <div
-          id="desktop-sidebar" // Added ID
-          aria-hidden={!sidebarOpen} // Added aria-hidden
+          id="desktop-sidebar"
+          aria-hidden={!sidebarOpen}
           className={cn(
             "hidden md:block transition-all duration-200 ease-in-out border-r",
-            sidebarOpen ? "w-80" : "w-0" // Adjust width as needed
+            sidebarOpen ? "w-80" : "w-0"
           )}
         >
           {sidebarOpen && <AppSidebar setSidebarOpen={setSidebarOpen} />}
         </div>
       ) : (
-        // Mobile Sidebar (Sheet)
         <Sheet open={sidebarOpen && !isDesktop} onOpenChange={(open) => { if (!open) setSidebarOpen(false)}}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="absolute left-4 top-3 z-50 md:hidden" onClick={() => setSidebarOpen(true)}>
@@ -49,20 +52,19 @@ const AppLayout = () => {
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              aria-controls="desktop-sidebar" // Added
-              aria-expanded={sidebarOpen} // Added
-              aria-label="Open navigation menu" // Added
+              aria-controls="desktop-sidebar"
+              aria-expanded={sidebarOpen}
+              aria-label="Open navigation menu"
             >
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          {/* Header content can be added here if needed later */}
           <div className="flex-1" />
         </header>
         
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
