@@ -50,8 +50,17 @@ const StreamlinedChatInterface = ({
     }
     
     if (!conversationId) {
-      toast.error("No conversation available. Please try refreshing the page.");
-      return;
+      // Create a new conversation first
+      try {
+        const newConversation = await conversationService.createSpecializedConversation('general');
+        if (newConversation) {
+          navigate(`/chat/${newConversation.id}`, { replace: true });
+          return;
+        }
+      } catch (error) {
+        toast.error("Failed to create conversation");
+        return;
+      }
     }
     
     if (!messageText.trim() && attachmentUrls.length === 0) {
@@ -142,7 +151,9 @@ const StreamlinedChatInterface = ({
       {/* Conversation title for mobile */}
       {isMobile && conversation && (
         <div className="p-3 border-b border-gray-800 flex items-center">
-          <h1 className="text-lg font-medium truncate">{conversation.title}</h1>
+          <h1 className="text-lg font-medium truncate bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+            {conversation.title}
+          </h1>
         </div>
       )}
       
@@ -160,15 +171,18 @@ const StreamlinedChatInterface = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="rounded-full bg-green-500/10 p-6 border border-green-500/20 mb-6">
+            <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-6 border border-green-500/20 mb-6">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="text-4xl"
               >
                 🤖
               </motion.div>
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white">Welcome to AI Career Advisor</h3>
+            <h3 className="text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+              Welcome to AI Career Advisor
+            </h3>
             <p className="text-gray-400 mb-4 max-w-md">
               I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
             </p>
@@ -194,7 +208,7 @@ const StreamlinedChatInterface = ({
       <div>
         <ChatInput
           onSendMessage={handleSendMessage}
-          isDisabled={!isAuthenticated || isSending || !conversationId}
+          isDisabled={!isAuthenticated || isSending}
           isSending={isSending}
         />
       </div>

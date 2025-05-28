@@ -9,10 +9,9 @@ import { lazy, Suspense } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import CookieConsent from '@/components/legal/CookieConsent';
 
-// Core chat pages
+// Core pages
 import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
-import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 
@@ -36,14 +35,14 @@ function App() {
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Home/Dashboard */}
-                <Route path="/" element={<HomePage />} />
+                {/* Redirect root to chat */}
+                <Route path="/" element={<Navigate to="/chat" replace />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
                 
-                {/* Chat routes - the core functionality */}
+                {/* Main chat interface - the core of the app */}
                 <Route 
                   path="/chat" 
                   element={
@@ -61,7 +60,7 @@ function App() {
                   } 
                 />
                 
-                {/* Profile */}
+                {/* Profile page with unified sidebar */}
                 <Route 
                   path="/profile" 
                   element={
