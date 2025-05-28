@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/auth/useAuth";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import StreamlinedChatInterface from "@/components/chat/StreamlinedChatInterface";
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
+import KeyboardShortcuts from "@/components/chat/KeyboardShortcuts";
+import ChatSuggestions from "@/components/chat/ChatSuggestions";
 import { toast } from "sonner";
 
 const ChatPage = () => {
@@ -17,6 +19,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   useEffect(() => {
     const initChat = async () => {
@@ -43,6 +46,7 @@ const ChatPage = () => {
           if (loadedConversation) {
             setConversation(loadedConversation);
             setMessages(loadedMessages);
+            setShowSuggestions(loadedMessages.length === 0);
           } else {
             toast.error("Conversation not found");
             navigate("/chat", { replace: true });
@@ -71,6 +75,30 @@ const ChatPage = () => {
     initChat();
   }, [id, isAuthenticated, authLoading, navigate, location.pathname]);
 
+  const handleNewChat = async () => {
+    try {
+      const newConversation = await conversationService.createSpecializedConversation('general');
+      if (newConversation) {
+        navigate(`/chat/${newConversation.id}`);
+        toast.success("New conversation started");
+      }
+    } catch (error) {
+      console.error("Error creating new chat:", error);
+      toast.error("Failed to create new conversation");
+    }
+  };
+
+  const handleSearch = () => {
+    // This would focus the search input in the chat interface
+    toast.info("Use the search bar in the chat header");
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setShowSuggestions(false);
+    // This would set the message in the input and potentially send it
+    console.log("Suggestion clicked:", suggestion);
+  };
+
   if (isInitializing || authLoading) {
     return (
       <UnifiedLayout>
@@ -86,13 +114,29 @@ const ChatPage = () => {
   
   return (
     <UnifiedLayout activeConversationId={id}>
-      <StreamlinedChatInterface 
-        key={id}
-        conversationId={id}
-        conversation={conversation}
-        messages={messages}
-        isLoading={isLoading}
+      <KeyboardShortcuts
+        onNewChat={handleNewChat}
+        onSearch={handleSearch}
+        onToggleSidebar={() => {}}
       />
+      
+      <div className="flex flex-col h-full">
+        <StreamlinedChatInterface 
+          key={id}
+          conversationId={id}
+          conversation={conversation}
+          messages={messages}
+          isLoading={isLoading}
+        />
+        
+        {/* Show suggestions for empty conversations */}
+        {showSuggestions && messages.length === 0 && !isLoading && (
+          <ChatSuggestions
+            onSuggestionClick={handleSuggestionClick}
+            conversationType={conversation?.type}
+          />
+        )}
+      </div>
     </UnifiedLayout>
   );
 };

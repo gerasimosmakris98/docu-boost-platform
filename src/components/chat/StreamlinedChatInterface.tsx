@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import UnifiedChatMessage from "./UnifiedChatMessage";
 import ChatInput from "./components/ChatInput";
-import { motion } from "framer-motion";
+import ChatHeader from "./ChatHeader";
+import MessageSearch from "./MessageSearch";
+import TypingIndicator from "./TypingIndicator";
+import MessageActions from "./MessageActions";
+import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface StreamlinedChatInterfaceProps {
@@ -29,19 +33,35 @@ const StreamlinedChatInterface = ({
   
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isSending, setIsSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   
   // Update messages when initialMessages changes
   useEffect(() => {
     console.log('Updating messages in StreamlinedChatInterface:', initialMessages.length, 'messages');
     setMessages(initialMessages);
+    setFilteredMessages(initialMessages);
   }, [initialMessages]);
+
+  // Filter messages based on search
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = messages.filter(message =>
+        message.content.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredMessages(filtered);
+    } else {
+      setFilteredMessages(messages);
+    }
+  }, [messages, searchQuery]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [filteredMessages]);
   
   const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
@@ -76,17 +96,9 @@ const StreamlinedChatInterface = ({
       return [...prev, optimisticUserMessage];
     });
     
-    // Add AI thinking message
-    const optimisticAiMessage: Message = {
-      id: `temp-ai-${Date.now()}`,
-      conversation_id: conversationId,
-      role: 'assistant',
-      content: "Thinking...",
-      created_at: new Date().toISOString()
-    };
-    
+    // Show typing indicator
+    setIsTyping(true);
     setIsSending(true);
-    setMessages(prev => [...prev, optimisticAiMessage]);
     
     try {
       console.log('Calling conversationService.sendMessage');
@@ -96,28 +108,63 @@ const StreamlinedChatInterface = ({
       
       if (response && response.aiResponse) {
         console.log('StreamlinedChatInterface: Adding real AI response to UI');
-        setMessages(prev => 
-          prev.filter(msg => msg.id !== optimisticAiMessage.id).concat(response.aiResponse)
-        );
+        setMessages(prev => [...prev, response.aiResponse]);
       } else {
-        console.warn('StreamlinedChatInterface: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic AI message.');
+        console.warn('StreamlinedChatInterface: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic user message.');
         setMessages(prev => 
-          prev.filter(msg => msg.id !== optimisticAiMessage.id)
+          prev.filter(msg => msg.id !== optimisticUserMessage.id)
         );
       }
     } catch (error: any) {
       console.error("StreamlinedChatInterface: Error sending message or processing response:", error);
       
-      // Remove both the optimistic user message and the "Thinking..." AI message
+      // Remove the optimistic user message
       setMessages(prev =>
-        prev.filter(msg => msg.id !== optimisticUserMessage.id && msg.id !== optimisticAiMessage.id)
+        prev.filter(msg => msg.id !== optimisticUserMessage.id)
       );
       
       toast.error("Failed to send message. Please try again.");
       
     } finally {
       setIsSending(false);
+      setIsTyping(false);
     }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!conversationId) return;
+    
+    try {
+      await conversationService.deleteConversation(conversationId);
+      toast.success("Conversation deleted");
+      navigate("/chat");
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      toast.error("Failed to delete conversation");
+    }
+  };
+
+  const handleRenameConversation = (newTitle: string) => {
+    // Update conversation title in parent component if needed
+    // This would typically be handled by a callback prop
+    console.log("Conversation renamed to:", newTitle);
+  };
+
+  const handleRegenerateMessage = async (messageIndex: number) => {
+    // Implementation for regenerating AI responses
+    console.log("Regenerating message at index:", messageIndex);
+    toast.info("Regeneration feature coming soon!");
+  };
+
+  const handleEditMessage = (messageIndex: number) => {
+    // Implementation for editing user messages
+    console.log("Editing message at index:", messageIndex);
+    toast.info("Message editing feature coming soon!");
+  };
+
+  const handleMessageFeedback = (messageId: string, isPositive: boolean) => {
+    // Implementation for message feedback
+    console.log("Feedback for message:", messageId, "positive:", isPositive);
   };
 
   // Show loading state
@@ -139,14 +186,20 @@ const StreamlinedChatInterface = ({
   
   return (
     <div className="flex flex-col h-full bg-black">
-      {/* Conversation title for mobile */}
-      {isMobile && conversation && (
-        <div className="p-3 border-b border-gray-800 flex items-center">
-          <h1 className="text-lg font-medium truncate bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-            {conversation.title}
-          </h1>
-        </div>
-      )}
+      {/* Chat Header */}
+      <ChatHeader
+        conversation={conversation}
+        onDelete={handleDeleteConversation}
+        onRename={handleRenameConversation}
+      />
+
+      {/* Search Bar */}
+      <div className="p-2 border-b border-gray-800">
+        <MessageSearch
+          onSearch={setSearchQuery}
+          onClear={() => setSearchQuery("")}
+        />
+      </div>
       
       {/* Messages area */}
       <div 
@@ -155,7 +208,7 @@ const StreamlinedChatInterface = ({
         role="log"
         aria-live="polite"
       >
-        {messages.length === 0 ? (
+        {filteredMessages.length === 0 ? (
           <motion.div 
             className="flex flex-col items-center justify-center h-full text-center p-6"
             initial={{ opacity: 0, y: 20 }}
@@ -182,14 +235,35 @@ const StreamlinedChatInterface = ({
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-1">
-            {messages.map((message, index) => (
-              <UnifiedChatMessage
-                key={message.id || `msg-${index}-${message.created_at}`}
-                message={message}
-                isLoading={message.id?.startsWith('temp')}
-              />
-            ))}
+          <div className="space-y-4">
+            <AnimatePresence>
+              {filteredMessages.map((message, index) => (
+                <motion.div
+                  key={message.id || `msg-${index}-${message.created_at}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="group"
+                >
+                  <UnifiedChatMessage
+                    message={message}
+                    isLoading={message.id?.startsWith('temp')}
+                  />
+                  <div className="mt-2">
+                    <MessageActions
+                      message={message}
+                      onRegenerate={() => handleRegenerateMessage(index)}
+                      onEdit={() => handleEditMessage(index)}
+                      onFeedback={(isPositive) => handleMessageFeedback(message.id || '', isPositive)}
+                    />
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            
+            {/* Typing indicator */}
+            {isTyping && <TypingIndicator />}
           </div>
         )}
         <div ref={messagesEndRef} />
