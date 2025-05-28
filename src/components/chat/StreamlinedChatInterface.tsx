@@ -50,17 +50,8 @@ const StreamlinedChatInterface = ({
     }
     
     if (!conversationId) {
-      // Create a new conversation first
-      try {
-        const newConversation = await conversationService.createSpecializedConversation('general');
-        if (newConversation) {
-          navigate(`/chat/${newConversation.id}`, { replace: true });
-          return;
-        }
-      } catch (error) {
-        toast.error("Failed to create conversation");
-        return;
-      }
+      toast.error("No conversation selected");
+      return;
     }
     
     if (!messageText.trim() && attachmentUrls.length === 0) {
@@ -129,7 +120,7 @@ const StreamlinedChatInterface = ({
     }
   };
 
-  // Show empty state
+  // Show loading state
   if (isLoading && messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">

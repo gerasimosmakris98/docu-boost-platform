@@ -1,76 +1,74 @@
 
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import Logo from '@/components/ui/Logo';
+import { Helmet } from 'react-helmet-async';
+import UnifiedLayout from '@/components/layout/UnifiedLayout';
 
 const TermsPage = () => {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-gray-800">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Logo size="md" />
-          <div className="flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="ghost" className="text-white hover:text-green-400">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/auth">
-              <Button className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white">
-                Get Started
-              </Button>
-            </Link>
+    <>
+      <Helmet>
+        <title>Terms of Use - AI Career Advisor</title>
+        <meta name="description" content="Terms of Use for AI Career Advisor" />
+      </Helmet>
+      
+      <UnifiedLayout showFooter={true}>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+            Terms of Use
+          </h1>
+          
+          <div className="prose prose-invert max-w-none space-y-6">
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">1. Acceptance of Terms</h2>
+              <p className="text-gray-300 leading-relaxed">
+                By accessing and using AI Career Advisor, you accept and agree to be bound by the terms and provision of this agreement.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">2. Use License</h2>
+              <p className="text-gray-300 leading-relaxed">
+                Permission is granted to temporarily use AI Career Advisor for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">3. Disclaimer</h2>
+              <p className="text-gray-300 leading-relaxed">
+                The materials on AI Career Advisor are provided on an 'as is' basis. AI Career Advisor makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">4. AI-Generated Content</h2>
+              <p className="text-gray-300 leading-relaxed">
+                AI Career Advisor provides AI-generated career advice and content. While we strive for accuracy, all advice should be considered as suggestions and not professional career counseling. Users should verify information and make their own informed decisions.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">5. User Data</h2>
+              <p className="text-gray-300 leading-relaxed">
+                We respect your privacy and handle your data according to our Privacy Policy. By using our service, you agree to the collection and use of information in accordance with our Privacy Policy.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">6. Limitations</h2>
+              <p className="text-gray-300 leading-relaxed">
+                In no event shall AI Career Advisor or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use AI Career Advisor.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4 text-white">7. Contact Information</h2>
+              <p className="text-gray-300 leading-relaxed">
+                If you have any questions about these Terms of Use, please contact us through our support channels.
+              </p>
+            </section>
           </div>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
-          Terms of Service
-        </h1>
-        
-        <div className="prose prose-invert max-w-none">
-          <p className="text-lg text-gray-300 mb-8">
-            Last updated: {new Date().toLocaleDateString()}
-          </p>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">1. Acceptance of Terms</h2>
-            <p className="text-gray-300 leading-relaxed">
-              By accessing and using AI Career Advisor, you accept and agree to be bound by the terms and provision of this agreement.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">2. Use License</h2>
-            <p className="text-gray-300 leading-relaxed">
-              Permission is granted to temporarily use AI Career Advisor for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">3. Service Description</h2>
-            <p className="text-gray-300 leading-relaxed">
-              AI Career Advisor provides AI-powered career guidance, resume building, interview preparation, and job search assistance. The service is provided "as is" without warranties of any kind.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">4. Privacy and Data</h2>
-            <p className="text-gray-300 leading-relaxed">
-              Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service, to understand our practices.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">5. Contact Information</h2>
-            <p className="text-gray-300 leading-relaxed">
-              If you have any questions about these Terms of Service, please contact us through our support channels.
-            </p>
-          </section>
-        </div>
-      </div>
-    </div>
+      </UnifiedLayout>
+    </>
   );
 };
 

@@ -21,7 +21,7 @@ const Logo = ({ size = "md", withLink = true, className, showIcon = true }: Logo
       {showIcon && (
         <div className="relative">
           <Bot className={cn(
-            "text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500",
+            "text-green-400",
             size === "sm" ? "h-5 w-5" : size === "lg" ? "h-8 w-8" : "h-6 w-6"
           )} />
         </div>
@@ -37,7 +37,7 @@ const Logo = ({ size = "md", withLink = true, className, showIcon = true }: Logo
 
   if (withLink) {
     return (
-      <Link to="/" className="hover:opacity-90 transition duration-200">
+      <Link to="/chat" className="hover:opacity-90 transition duration-200">
         {logoContent}
       </Link>
     );

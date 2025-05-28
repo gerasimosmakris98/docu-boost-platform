@@ -14,6 +14,7 @@ import AuthPage from '@/pages/AuthPage';
 import ChatPage from '@/pages/ChatPage';
 import NotFound from '@/pages/NotFound';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import WelcomePage from '@/pages/WelcomePage';
 
 // Lazy loaded pages
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
@@ -35,8 +36,8 @@ function App() {
           <Router>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Redirect root to chat */}
-                <Route path="/" element={<Navigate to="/chat" replace />} />
+                {/* Welcome/Home page */}
+                <Route path="/" element={<WelcomePage />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<AuthPage />} />
@@ -60,7 +61,7 @@ function App() {
                   } 
                 />
                 
-                {/* Profile page with unified sidebar */}
+                {/* Profile page */}
                 <Route 
                   path="/profile" 
                   element={
