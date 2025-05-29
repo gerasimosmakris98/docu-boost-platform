@@ -9,7 +9,8 @@ import {
   ThumbsDown,
   Copy,
   List,
-  ListOrdered
+  ListOrdered,
+  RotateCcw
 } from "lucide-react";
 import { Message } from "@/services/conversationService";
 import { cn } from "@/lib/utils";
@@ -23,9 +24,11 @@ import { supabase } from '@/integrations/supabase/client';
 interface UnifiedChatMessageProps {
   message: Message;
   isLoading?: boolean;
+  onRegenerate?: () => void;
+  onEdit?: () => void;
 }
 
-const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessageProps) => {
+const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }: UnifiedChatMessageProps) => {
   const { user } = useAuth();
   const isUserMessage = message.role === 'user';
   const isThinking = message.id?.startsWith('temp-ai') || isLoading;
@@ -125,22 +128,19 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
     // Handle ```code``` blocks
     processedContent = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const languageClass = lang ? `language-${lang}` : '';
-      // Escape HTML entities within the code block to prevent rendering as HTML
       const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<pre class="${languageClass}" tabIndex="0"><code>${escapedCode}</code></pre>`;
+      return `<pre class="${languageClass} bg-gray-800 rounded-lg p-4 overflow-x-auto my-4" tabIndex="0"><code>${escapedCode}</code></pre>`;
     });
     
-    // Handle **bold** text (ensure it doesn't interfere with code blocks already processed)
-    // This regex needs to be careful not to match inside <pre> tags if they are already there.
-    // However, since we process code blocks first and they become <pre>, this should be okay.
+    // Handle **bold** text
     processedContent = processedContent.replace(/(?<!<pre><code>)\*\*(.*?)\*\*(?!<\/code><\/pre>)/g, '<strong>$1</strong>');
     
-    // Handle *italic* text (similar caution)
+    // Handle *italic* text
     processedContent = processedContent.replace(/(?<!<pre><code>)\*(.*?)\*(?!<\/code><\/pre>)/g, '<em>$1</em>');
     
     // Make URLs clickable
     processedContent = processedContent.replace(
-      /(?<!href="|src="|<code>)(https?:\/\/[^\s<>"]+)/g, // Avoid matching URLs inside <a>, <img> or <code>
+      /(?<!href="|src="|<code>)(https?:\/\/[^\s<>"]+)/g,
       '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
     );
     
@@ -172,8 +172,8 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-4 max-w-4xl mx-auto p-4",
-        isUserMessage ? "flex-row" : "flex-row"
+        "flex gap-3 sm:gap-4 max-w-4xl mx-auto p-3 sm:p-4 group",
+        isUserMessage ? "flex-row-reverse" : "flex-row"
       )}
       aria-label={
         isThinking
@@ -182,38 +182,38 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
       }
     >
       <Avatar className={cn(
-        "h-8 w-8 mt-1 border",
+        "h-7 w-7 sm:h-8 sm:w-8 mt-1 border flex-shrink-0",
         isUserMessage ? "bg-green-500/10 border-green-500/20" : "bg-gray-700/50 border-gray-600/30"
       )}>
         {isUserMessage ? (
           <>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback className="text-white bg-green-700">
-              <UserIcon className="h-4 w-4" />
+              <UserIcon className="h-3 w-3 sm:h-4 sm:w-4" />
             </AvatarFallback>
           </>
         ) : (
           <>
             <AvatarImage src="" />
             <AvatarFallback className="text-white bg-gradient-to-r from-green-400 to-blue-500">
-              <Bot className="h-4 w-4" />
+              <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
             </AvatarFallback>
           </>
         )}
       </Avatar>
       
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-2 min-w-0">
         <div className="flex justify-between items-center">
-          <div className="font-medium text-sm text-gray-300">
+          <div className="font-medium text-xs sm:text-sm text-gray-300">
             <span className="sr-only">Sender: </span>{isUserMessage ? "You" : "AI Career Advisor"}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 flex-shrink-0">
             {formatDateTime(message.created_at)}
           </div>
         </div>
         
         <div className={cn(
-          "text-sm text-white",
+          "text-sm text-white break-words",
           isThinking && "text-gray-400"
         )}>
           {isThinking ? (
@@ -228,13 +228,13 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
           ) : (
             <div className="space-y-3">
               {isUserMessage ? (
-                <div className="whitespace-pre-wrap bg-green-900/20 rounded-lg p-3 border border-green-500/20">
+                <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/20 whitespace-pre-wrap">
                   {finalContentToRender}
                 </div>
               ) : (
                 <>
                   <div 
-                    className="prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-2 prose-headings:mt-4"
+                    className="prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-2 prose-headings:mt-4 prose-pre:bg-gray-800 prose-pre:border prose-pre:border-gray-700"
                     dangerouslySetInnerHTML={{ __html: finalContentToRender }}
                   />
                   
@@ -244,7 +244,7 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setIsExpanded(!isExpanded)}
                       className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                      aria-expanded={isExpanded} // Added aria-expanded
+                      aria-expanded={isExpanded}
                     >
                       {isExpanded ? "Show less" : "Show more"}
                     </motion.button>
@@ -259,14 +259,14 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           variant={liked === true ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-8 w-8 transition-all", // Increased size
+                            "h-8 w-8 transition-all",
                             liked === true && "bg-green-600 hover:bg-green-700 text-white",
                             liked !== null && liked !== true && "opacity-50",
                           )}
                           onClick={() => handleFeedback(true)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsUp className="h-4 w-4" /> {/* Increased icon size */}
+                          <ThumbsUp className="h-4 w-4" />
                         </Button>
                       </motion.div>
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -274,14 +274,14 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                           variant={liked === false ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-8 w-8 transition-all", // Increased size
+                            "h-8 w-8 transition-all",
                             liked === false && "bg-red-600 hover:bg-red-700 text-white",
                             liked !== null && liked !== false && "opacity-50",
                           )}
                           onClick={() => handleFeedback(false)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsDown className="h-4 w-4" /> {/* Increased icon size */}
+                          <ThumbsDown className="h-4 w-4" />
                         </Button>
                       </motion.div>
                     </div>
@@ -294,47 +294,63 @@ const UnifiedChatMessage = ({ message, isLoading = false }: UnifiedChatMessagePr
                       <Button
                         variant={contentFormat === 'normal' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8" // Increased size
+                        className="h-8 w-8"
                         onClick={() => setContentFormat('normal')}
                         title="Normal text"
                       >
-                        <span className="text-sm font-mono">T</span> {/* Adjusted icon size for T */}
+                        <span className="text-sm font-mono">T</span>
                       </Button>
                       <Button
                         variant={contentFormat === 'bullets' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8" // Increased size
+                        className="h-8 w-8"
                         onClick={() => setContentFormat('bullets')}
                         title="Bullet points"
                       >
-                        <List className="h-4 w-4" /> {/* Increased icon size */}
+                        <List className="h-4 w-4" />
                       </Button>
                       <Button
                         variant={contentFormat === 'numbered' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8" // Increased size
+                        className="h-8 w-8"
                         onClick={() => setContentFormat('numbered')}
                         title="Numbered list"
                       >
-                        <ListOrdered className="h-4 w-4" /> {/* Increased icon size */}
+                        <ListOrdered className="h-4 w-4" />
                       </Button>
                     </div>
                     
                     {/* Separator */}
                     <div className="h-4 w-px bg-gray-700 mx-1" />
                     
-                    {/* Copy button */}
-                    <motion.div whileTap={{ scale: 0.9 }}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8" // Increased size
-                        onClick={handleCopyText}
-                        title="Copy text"
-                      >
-                        <Copy className="h-4 w-4" /> {/* Increased icon size */}
-                      </Button>
-                    </motion.div>
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1">
+                      <motion.div whileTap={{ scale: 0.9 }}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={handleCopyText}
+                          title="Copy text"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                      
+                      {onRegenerate && (
+                        <motion.div whileTap={{ scale: 0.9 }}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={onRegenerate}
+                            title="Regenerate response"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}

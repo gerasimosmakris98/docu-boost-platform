@@ -1,6 +1,6 @@
 
 import { RefObject, useMemo } from "react";
-import ChatMessage from "@/components/conversation/ChatMessage";
+import UnifiedChatMessage from "@/components/chat/UnifiedChatMessage";
 import { Message } from "@/services/conversationService";
 import { Loader2 } from "lucide-react";
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from "date-fns";
@@ -9,6 +9,8 @@ interface ChatMessagesListProps {
   messages: Message[];
   loading: boolean;
   messagesEndRef: RefObject<HTMLDivElement>;
+  onRegenerate?: (messageId: string) => void;
+  onEdit?: (messageId: string) => void;
 }
 
 interface MessageGroup {
@@ -16,7 +18,7 @@ interface MessageGroup {
   messages: Message[];
 }
 
-const ChatMessagesList = ({ messages, loading, messagesEndRef }: ChatMessagesListProps) => {
+const ChatMessagesList = ({ messages, loading, messagesEndRef, onRegenerate, onEdit }: ChatMessagesListProps) => {
   // Group messages by time periods
   const groupedMessages = useMemo(() => {
     if (messages.length === 0) return [];
@@ -51,7 +53,7 @@ const ChatMessagesList = ({ messages, loading, messagesEndRef }: ChatMessagesLis
     return groups;
   }, [messages]);
   
-  if (loading) {
+  if (loading && messages.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -70,23 +72,10 @@ const ChatMessagesList = ({ messages, loading, messagesEndRef }: ChatMessagesLis
     );
   }
   
-  // Format long messages for better readability
-  const formatMessageContent = (content: string) => {
-    // Keep the character limit reasonable
-    const maxPreviewLength = 1000;
-    
-    // If the message is too long, truncate it and add an ellipsis
-    if (content.length > maxPreviewLength) {
-      return content.substring(0, maxPreviewLength) + "...";
-    }
-    
-    return content;
-  };
-  
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {groupedMessages.map((group, groupIndex) => (
-        <div key={`group-${groupIndex}`} className="space-y-4">
+        <div key={`group-${groupIndex}`} className="space-y-3 sm:space-y-4">
           <div className="sticky top-0 z-10 flex items-center gap-2 py-1">
             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800"></div>
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950 px-2 py-0.5 rounded-full">
@@ -95,29 +84,24 @@ const ChatMessagesList = ({ messages, loading, messagesEndRef }: ChatMessagesLis
             <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800"></div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {group.messages.map((message, index) => {
-              // Format the message content for better display
-              const formattedContent = formatMessageContent(message.content);
-              
-              // Clone the message and update its content
-              const displayMessage = {
-                ...message,
-                content: formattedContent
-              };
+              const isLoadingMessage = message.id === undefined || message.id?.startsWith('temp');
               
               return (
-                <ChatMessage 
-                  key={message.id || `${group.label}-${index}`}
-                  message={displayMessage}
-                  isLoading={message.id === undefined || message.id?.startsWith('temp')}
+                <UnifiedChatMessage 
+                  key={message.id || `${group.label}-${index}-${message.created_at}`}
+                  message={message}
+                  isLoading={isLoadingMessage}
+                  onRegenerate={onRegenerate ? () => onRegenerate(message.id || '') : undefined}
+                  onEdit={onEdit ? () => onEdit(message.id || '') : undefined}
                 />
               );
             })}
           </div>
         </div>
       ))}
-      <div ref={messagesEndRef} />
+      <div ref={messagesEndRef} className="h-4" />
     </div>
   );
 };
