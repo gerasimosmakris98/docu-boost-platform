@@ -8,7 +8,7 @@ import Logo from '@/components/ui/Logo';
 import ActionButton from '@/components/ui/ActionButton';
 import ModernCard from '@/components/ui/ModernCard';
 import GradientBackground from '@/components/ui/GradientBackground';
-import LoginDialog from '@/components/auth/LoginDialog';
+import AuthForm from '@/components/auth/AuthForm';
 
 const AuthPage = () => {
   const { isAuthenticated } = useAuth();
@@ -106,7 +106,7 @@ const AuthPage = () => {
               </motion.div>
             </div>
             
-            <LoginDialog isOpen={true} />
+            <AuthForm />
             
             <motion.div
               initial={{ opacity: 0 }}

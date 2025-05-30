@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import { unifiedMessageService } from "@/services/unifiedMessageService";
-import UnifiedChatMessage from "./UnifiedChatMessage";
+import ModernChatBubble from "./ModernChatBubble";
 import ModernChatInput from "./ModernChatInput";
 import ChatHeader from "./ChatHeader";
 import MessageSearch from "./MessageSearch";
@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import GradientBackground from "@/components/ui/GradientBackground";
 import ModernCard from "@/components/ui/ModernCard";
+import { Bot } from "lucide-react";
 
 interface StreamlinedChatInterfaceProps {
   conversationId?: string;
@@ -202,7 +203,7 @@ const StreamlinedChatInterface = ({
   // Show loading state
   if (isLoading && messages.length === 0) {
     return (
-      <GradientBackground className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-violet-900 via-blue-900 to-indigo-900">
         <motion.div 
           className="text-center space-y-4"
           initial={{ opacity: 0 }}
@@ -212,29 +213,41 @@ const StreamlinedChatInterface = ({
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent mx-auto"></div>
           <p className="text-white/70">Loading AI Career Advisor...</p>
         </motion.div>
-      </GradientBackground>
+      </div>
     );
   }
   
   return (
     <ErrorBoundary>
-      <GradientBackground className="flex flex-col h-full">
+      <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,_white_2px,_transparent_2px)] bg-[length:60px_60px] animate-pulse"></div>
+        </div>
+        
+        {/* Floating gradient orbs */}
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+
         {/* Network status indicator */}
         {!isOnline && (
-          <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm">
+          <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm z-10">
             No internet connection - messages will be sent when reconnected
           </div>
         )}
 
         {/* Chat Header */}
-        <ChatHeader
-          conversation={conversation}
-          onDelete={handleDeleteConversation}
-          onRename={handleRenameConversation}
-        />
+        <div className="z-10">
+          <ChatHeader
+            conversation={conversation}
+            onDelete={handleDeleteConversation}
+            onRename={handleRenameConversation}
+          />
+        </div>
 
         {/* Search Bar */}
-        <div className="p-2 border-b border-white/10">
+        <div className="p-2 border-b border-white/10 z-10">
           <MessageSearch
             onSearch={setSearchQuery}
             onClear={() => setSearchQuery("")}
@@ -243,25 +256,31 @@ const StreamlinedChatInterface = ({
         
         {/* Messages area */}
         <div 
-          className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
+          className="flex-1 overflow-y-auto p-4 overscroll-contain min-h-0 z-10"
           style={{ WebkitOverflowScrolling: 'touch' }}
           role="log"
           aria-live="polite"
         >
           {filteredMessages.length === 0 ? (
             <motion.div 
-              className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6"
+              className="flex flex-col items-center justify-center h-full text-center p-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <ModernCard className="p-8 text-center max-w-md" gradient>
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="text-4xl mb-4"
+                  animate={{ 
+                    rotate: 360,
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  className="text-4xl mb-4 relative"
                 >
-                  🤖
+                  <Bot className="h-16 w-16 mx-auto text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" />
                 </motion.div>
                 <h3 className="text-xl font-semibold mb-3 text-white bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                   Welcome to AI Career Advisor
@@ -270,29 +289,24 @@ const StreamlinedChatInterface = ({
                   I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
                 </p>
                 <p className="text-sm text-white/60">
-                  Start by typing a message below.
+                  Start by typing a message below or choose a suggestion.
                 </p>
               </ModernCard>
             </motion.div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-6">
               <AnimatePresence>
                 {filteredMessages.map((message, index) => (
-                  <motion.div
+                  <ModernChatBubble
                     key={message.id || `msg-${index}-${message.created_at}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="group"
+                    isUser={message.role === 'user'}
+                    isLoading={message.id?.startsWith('temp')}
+                    onRegenerate={message.role === 'assistant' ? () => handleRegenerateMessage(index) : undefined}
+                    onEdit={message.role === 'user' ? () => handleEditMessage(index) : undefined}
+                    timestamp={new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   >
-                    <UnifiedChatMessage
-                      message={message}
-                      isLoading={message.id?.startsWith('temp')}
-                      onRegenerate={() => handleRegenerateMessage(index)}
-                      onEdit={() => handleEditMessage(index)}
-                    />
-                  </motion.div>
+                    {message.content}
+                  </ModernChatBubble>
                 ))}
               </AnimatePresence>
               
@@ -304,14 +318,14 @@ const StreamlinedChatInterface = ({
         </div>
         
         {/* Input area */}
-        <div className="border-t border-white/10">
+        <div className="z-10">
           <ModernChatInput
             onSubmit={handleSendMessage}
             disabled={!isAuthenticated || isSending || !isOnline}
             placeholder="Ask me about your career..."
           />
         </div>
-      </GradientBackground>
+      </div>
     </ErrorBoundary>
   );
 };
