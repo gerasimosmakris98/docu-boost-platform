@@ -72,7 +72,7 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
+      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold truncate text-white">
@@ -91,26 +91,26 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
+          <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700">
+            <DropdownMenuItem onClick={() => setShowRenameDialog(true)} className="text-gray-300 hover:text-white hover:bg-gray-800">
               <Edit3 className="h-4 w-4 mr-2" />
               Rename
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleShare}>
+            <DropdownMenuItem onClick={handleShare} className="text-gray-300 hover:text-white hover:bg-gray-800">
               <Share className="h-4 w-4 mr-2" />
               Share
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExport}>
+            <DropdownMenuItem onClick={handleExport} className="text-gray-300 hover:text-white hover:bg-gray-800">
               <Download className="h-4 w-4 mr-2" />
               Export
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onDelete}
-              className="text-red-600 focus:text-red-600"
+              className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
