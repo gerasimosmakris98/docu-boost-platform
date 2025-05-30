@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -239,7 +238,7 @@ const UnifiedChatMessage = React.memo(({
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {isUserMessage ? (
-                <div className="bg-green-900/30 rounded-lg p-2 sm:p-3 border border-green-500/20 whitespace-pre-wrap">
+                <div className="bg-gradient-to-br from-blue-600/80 to-purple-600/80 rounded-lg p-2 sm:p-3 border border-blue-300/20 whitespace-pre-wrap">
                   {processedContent.finalContentToRender}
                 </div>
               ) : (

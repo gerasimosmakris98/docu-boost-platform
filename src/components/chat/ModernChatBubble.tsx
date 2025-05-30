@@ -46,7 +46,7 @@ const ModernChatBubble = ({
       {/* Avatar */}
       <div className="flex-shrink-0">
         <Avatar className={cn(
-          "h-10 w-10 border-2 shadow-lg backdrop-blur-sm",
+          "h-10 w-10 border-2 shadow-lg",
           isUser 
             ? "border-blue-300/50 bg-gradient-to-br from-blue-500/80 to-purple-500/80" 
             : "border-cyan-300/50 bg-gradient-to-br from-cyan-500/80 to-teal-500/80"
@@ -80,10 +80,10 @@ const ModernChatBubble = ({
           animate={{ scale: 1 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            "inline-block max-w-[85%] rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm border relative",
+            "inline-block max-w-[85%] rounded-2xl px-4 py-3 shadow-lg border relative",
             isUser
               ? "bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white border-blue-300/20 ml-auto"
-              : "bg-white/10 text-white border-white/20 mr-auto"
+              : "bg-transparent text-white border-white/20 mr-auto"
           )}
         >
           {isLoading ? (
