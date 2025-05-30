@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { AuthError, AppRole } from './types';
+import { AuthError, AppRole, Profile } from './types';
 
 /**
  * Clean up auth state to prevent limbo states
@@ -53,9 +53,38 @@ export const handleAuthError = (error: any): AuthError => {
 };
 
 /**
+ * Transform database profile to Profile type with proper type conversion
+ */
+export const transformDatabaseProfile = (dbProfile: any): Profile | null => {
+  if (!dbProfile) return null;
+  
+  return {
+    id: dbProfile.id,
+    username: dbProfile.username,
+    avatar_url: dbProfile.avatar_url,
+    full_name: dbProfile.full_name,
+    title: dbProfile.title,
+    location: dbProfile.location,
+    phone: dbProfile.phone,
+    website: dbProfile.website,
+    headline: dbProfile.headline,
+    summary: dbProfile.summary,
+    onboarding_completed: dbProfile.onboarding_completed,
+    career_level: dbProfile.career_level,
+    industry: dbProfile.industry,
+    goals: dbProfile.goals,
+    preferences: typeof dbProfile.preferences === 'object' && dbProfile.preferences !== null 
+      ? dbProfile.preferences as Record<string, any>
+      : {},
+    created_at: dbProfile.created_at,
+    updated_at: dbProfile.updated_at,
+  };
+};
+
+/**
  * Get the current user's profile from the database
  */
-export const fetchUserProfile = async (userId: string) => {
+export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -67,7 +96,7 @@ export const fetchUserProfile = async (userId: string) => {
       throw error;
     }
 
-    return data;
+    return transformDatabaseProfile(data);
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return null;
