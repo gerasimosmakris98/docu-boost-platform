@@ -127,7 +127,7 @@ const CookiePage = () => {
                   If you have questions about our use of cookies, please contact us through our platform's 
                   support system or reach out to our team.
                 </p>
-              </div>
+              </section>
             </div>
           </ModernCard>
         </motion.div>
