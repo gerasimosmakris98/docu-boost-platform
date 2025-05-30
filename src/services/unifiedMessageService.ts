@@ -40,7 +40,14 @@ export class UnifiedMessageService {
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        return data || [];
+        
+        // Properly cast the role field to match the Message type
+        return (data || []).map(message => ({
+          ...message,
+          role: message.role as 'user' | 'assistant',
+          attachments: message.attachments || [],
+          sourceUrls: message.source_urls || []
+        }));
       });
     } catch (error) {
       handleApiError(error, "Failed to load messages");

@@ -1,19 +1,17 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/auth/AuthProvider";
+import { AuthProvider } from "@/contexts/auth/AuthContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import Index from "./pages/Index";
+import WelcomePage from "./pages/WelcomePage";
 import "./App.css";
 import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import PricingPage from "./pages/PricingPage";
-import NotFoundPage from "./pages/NotFoundPage";
 import { useEffect, useState } from "react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
@@ -40,14 +38,12 @@ function App() {
                   </Helmet>
                   <Toaster />
                   <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<WelcomePage />} />
                     <Route path="/chat" element={<ChatPage />} />
                     <Route path="/chat/:id" element={<ChatPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="*" element={<NotFoundPage />} />
+                    <Route path="*" element={<WelcomePage />} />
                   </Routes>
                 </BrowserRouter>
               </AuthProvider>
