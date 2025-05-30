@@ -1,16 +1,19 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
+import { unifiedMessageService } from "@/services/unifiedMessageService";
 import UnifiedChatMessage from "./UnifiedChatMessage";
 import ChatInput from "./components/ChatInput";
 import ChatHeader from "./ChatHeader";
 import MessageSearch from "./MessageSearch";
 import TypingIndicator from "./TypingIndicator";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface StreamlinedChatInterfaceProps {
   conversationId?: string;
@@ -28,6 +31,7 @@ const StreamlinedChatInterface = ({
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isOnline, isReconnecting } = useNetworkStatus();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -35,12 +39,14 @@ const StreamlinedChatInterface = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredMessages, setFilteredMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Update messages when initialMessages changes
   useEffect(() => {
     console.log('Updating messages in StreamlinedChatInterface:', initialMessages.length, 'messages');
     setMessages(initialMessages);
     setFilteredMessages(initialMessages);
+    setRetryCount(0);
   }, [initialMessages]);
 
   // Filter messages based on search
@@ -61,8 +67,17 @@ const StreamlinedChatInterface = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [filteredMessages]);
+
+  // Network status handling
+  useEffect(() => {
+    if (!isOnline) {
+      toast.error("No internet connection. Messages will be sent when connection is restored.");
+    } else if (isReconnecting) {
+      toast.success("Connection restored");
+    }
+  }, [isOnline, isReconnecting]);
   
-  const handleSendMessage = async (messageText: string, attachmentUrls: string[]) => {
+  const handleSendMessage = useCallback(async (messageText: string, attachmentUrls: string[]) => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: location.pathname } });
       return;
@@ -75,6 +90,11 @@ const StreamlinedChatInterface = ({
     
     if (!messageText.trim() && attachmentUrls.length === 0) {
       toast.error("Please enter a message or attach a file.");
+      return;
+    }
+
+    if (!isOnline) {
+      toast.error("Cannot send message while offline");
       return;
     }
     
@@ -100,37 +120,44 @@ const StreamlinedChatInterface = ({
     setIsSending(true);
     
     try {
-      console.log('Calling conversationService.sendMessage');
-      const response = await conversationService.sendMessage(conversationId, messageText, attachmentUrls);
+      console.log('Calling unifiedMessageService.sendMessage');
+      const response = await unifiedMessageService.sendMessage(conversationId, messageText, attachmentUrls);
       
       console.log('Response received:', response);
       
       if (response && response.aiResponse) {
         console.log('StreamlinedChatInterface: Adding real AI response to UI');
         setMessages(prev => [...prev, response.aiResponse]);
+        setRetryCount(0);
       } else {
-        console.warn('StreamlinedChatInterface: No AI response received or sendMessage failed. Service should have toasted. Removing optimistic user message.');
+        console.warn('StreamlinedChatInterface: No AI response received. Removing optimistic user message.');
         setMessages(prev => 
           prev.filter(msg => msg.id !== optimisticUserMessage.id)
         );
       }
     } catch (error: any) {
-      console.error("StreamlinedChatInterface: Error sending message or processing response:", error);
+      console.error("StreamlinedChatInterface: Error sending message:", error);
       
       // Remove the optimistic user message
       setMessages(prev =>
         prev.filter(msg => msg.id !== optimisticUserMessage.id)
       );
       
-      toast.error("Failed to send message. Please try again.");
+      setRetryCount(prev => prev + 1);
+      
+      if (retryCount < 3) {
+        toast.error(`Failed to send message. Retry attempt ${retryCount + 1}/3`);
+      } else {
+        toast.error("Failed to send message after multiple attempts. Please check your connection.");
+      }
       
     } finally {
       setIsSending(false);
       setIsTyping(false);
     }
-  };
+  }, [isAuthenticated, conversationId, navigate, isOnline, retryCount]);
 
-  const handleDeleteConversation = async () => {
+  const handleDeleteConversation = useCallback(async () => {
     if (!conversationId) return;
     
     try {
@@ -141,21 +168,34 @@ const StreamlinedChatInterface = ({
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");
     }
-  };
+  }, [conversationId, navigate]);
 
-  const handleRenameConversation = (newTitle: string) => {
+  const handleRenameConversation = useCallback((newTitle: string) => {
     console.log("Conversation renamed to:", newTitle);
-  };
+  }, []);
 
-  const handleRegenerateMessage = async (messageIndex: number) => {
-    console.log("Regenerating message at index:", messageIndex);
-    toast.info("Regeneration feature coming soon!");
-  };
+  const handleRegenerateMessage = useCallback(async (messageIndex: number) => {
+    const message = filteredMessages[messageIndex];
+    if (!message) return;
+    
+    try {
+      const regenerated = await unifiedMessageService.regenerateMessage(message.id || '');
+      if (regenerated) {
+        setMessages(prev => 
+          prev.map(msg => msg.id === message.id ? regenerated : msg)
+        );
+        toast.success("Message regenerated");
+      }
+    } catch (error) {
+      console.error("Error regenerating message:", error);
+      toast.error("Failed to regenerate message");
+    }
+  }, [filteredMessages]);
 
-  const handleEditMessage = (messageIndex: number) => {
+  const handleEditMessage = useCallback((messageIndex: number) => {
     console.log("Editing message at index:", messageIndex);
     toast.info("Message editing feature coming soon!");
-  };
+  }, []);
 
   // Show loading state
   if (isLoading && messages.length === 0) {
@@ -175,93 +215,102 @@ const StreamlinedChatInterface = ({
   }
   
   return (
-    <div className="flex flex-col h-full bg-black">
-      {/* Chat Header */}
-      <ChatHeader
-        conversation={conversation}
-        onDelete={handleDeleteConversation}
-        onRename={handleRenameConversation}
-      />
-
-      {/* Search Bar */}
-      <div className="p-2 border-b border-gray-800">
-        <MessageSearch
-          onSearch={setSearchQuery}
-          onClear={() => setSearchQuery("")}
-        />
-      </div>
-      
-      {/* Messages area */}
-      <div 
-        className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-        role="log"
-        aria-live="polite"
-      >
-        {filteredMessages.length === 0 ? (
-          <motion.div 
-            className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-4 sm:p-6 border border-green-500/20 mb-4 sm:mb-6">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="text-2xl sm:text-4xl"
-              >
-                🤖
-              </motion.div>
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-              Welcome to AI Career Advisor
-            </h3>
-            <p className="text-gray-400 mb-3 sm:mb-4 max-w-md text-sm sm:text-base">
-              I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500">
-              Start by typing a message below.
-            </p>
-          </motion.div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            <AnimatePresence>
-              {filteredMessages.map((message, index) => (
-                <motion.div
-                  key={message.id || `msg-${index}-${message.created_at}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="group"
-                >
-                  <UnifiedChatMessage
-                    message={message}
-                    isLoading={message.id?.startsWith('temp')}
-                    onRegenerate={() => handleRegenerateMessage(index)}
-                    onEdit={() => handleEditMessage(index)}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            
-            {/* Typing indicator */}
-            {isTyping && <TypingIndicator />}
+    <ErrorBoundary>
+      <div className="flex flex-col h-full bg-black">
+        {/* Network status indicator */}
+        {!isOnline && (
+          <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm">
+            No internet connection - messages will be sent when reconnected
           </div>
         )}
-        <div ref={messagesEndRef} />
-      </div>
-      
-      {/* Input area */}
-      <div>
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          isDisabled={!isAuthenticated || isSending}
-          isSending={isSending}
+
+        {/* Chat Header */}
+        <ChatHeader
+          conversation={conversation}
+          onDelete={handleDeleteConversation}
+          onRename={handleRenameConversation}
         />
+
+        {/* Search Bar */}
+        <div className="p-2 border-b border-gray-800">
+          <MessageSearch
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+          />
+        </div>
+        
+        {/* Messages area */}
+        <div 
+          className="flex-1 overflow-y-auto p-2 sm:p-4 overscroll-contain min-h-0"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+          role="log"
+          aria-live="polite"
+        >
+          {filteredMessages.length === 0 ? (
+            <motion.div 
+              className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-4 sm:p-6 border border-green-500/20 mb-4 sm:mb-6">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="text-2xl sm:text-4xl"
+                >
+                  🤖
+                </motion.div>
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                Welcome to AI Career Advisor
+              </h3>
+              <p className="text-gray-400 mb-3 sm:mb-4 max-w-md text-sm sm:text-base">
+                I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Start by typing a message below.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              <AnimatePresence>
+                {filteredMessages.map((message, index) => (
+                  <motion.div
+                    key={message.id || `msg-${index}-${message.created_at}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="group"
+                  >
+                    <UnifiedChatMessage
+                      message={message}
+                      isLoading={message.id?.startsWith('temp')}
+                      onRegenerate={() => handleRegenerateMessage(index)}
+                      onEdit={() => handleEditMessage(index)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Typing indicator */}
+              {isTyping && <TypingIndicator />}
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+        
+        {/* Input area */}
+        <div>
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isDisabled={!isAuthenticated || isSending || !isOnline}
+            isSending={isSending}
+          />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

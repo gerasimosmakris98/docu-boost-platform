@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   Bot, 
@@ -29,36 +29,113 @@ interface UnifiedChatMessageProps {
   onEdit?: () => void;
 }
 
-const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }: UnifiedChatMessageProps) => {
+const UnifiedChatMessage = React.memo(({ 
+  message, 
+  isLoading = false, 
+  onRegenerate, 
+  onEdit 
+}: UnifiedChatMessageProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const isUserMessage = message.role === 'user';
   const isThinking = message.id?.startsWith('temp-ai') || isLoading;
+  
   const [liked, setLiked] = useState<boolean | null>(null);
   const [contentFormat, setContentFormat] = useState<'normal' | 'bullets' | 'numbered'>('normal');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Process citations and make them clickable
-  const processContentWithCitations = (content: string, sourceUrls?: string[]) => {
-    return content.replace(/\[(\d+)\]/g, (match, numberStr) => {
-      const originalNumber = numberStr;
-      const index = parseInt(numberStr, 10) - 1;
+  // Memoized content processing
+  const processedContent = useMemo(() => {
+    const processContentWithCitations = (content: string, sourceUrls?: string[]) => {
+      return content.replace(/\[(\d+)\]/g, (match, numberStr) => {
+        const originalNumber = numberStr;
+        const index = parseInt(numberStr, 10) - 1;
 
-      if (sourceUrls && Array.isArray(sourceUrls) && index >= 0 && index < sourceUrls.length && sourceUrls[index]) {
-        const url = sourceUrls[index];
-        return `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 font-medium underline transition-colors">[${originalNumber}]</a>`;
-      } else {
-        return `<span class="font-semibold text-sky-400">[${originalNumber}]</span>`;
+        if (sourceUrls && Array.isArray(sourceUrls) && index >= 0 && index < sourceUrls.length && sourceUrls[index]) {
+          const url = sourceUrls[index];
+          return `<a href="${url.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 font-medium underline transition-colors">[${originalNumber}]</a>`;
+        } else {
+          return `<span class="font-semibold text-sky-400">[${originalNumber}]</span>`;
+        }
+      });
+    };
+
+    const formatContent = (content: string) => {
+      if (contentFormat === 'normal') return content;
+      
+      const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim() !== '');
+      
+      if (contentFormat === 'bullets') {
+        return paragraphs.map(p => `• ${p}`).join('\n\n');
+      } else if (contentFormat === 'numbered') {
+        return paragraphs.map((p, i) => `${i + 1}. ${p}`).join('\n\n');
       }
-    });
-  };
+      
+      return content;
+    };
+
+    const processContentWithFormatting = (plainText: string) => {
+      let processedContent = plainText;
+      
+      // Add proper paragraph breaks
+      processedContent = processedContent.replace(/\n\n/g, '</p><p class="mb-3">');
+      processedContent = processedContent.replace(/\n/g, '<br />');
+      
+      // Wrap in paragraph tags
+      if (!processedContent.startsWith('<p')) {
+        processedContent = `<p class="mb-3">${processedContent}</p>`;
+      }
+      
+      // Handle ```code``` blocks
+      processedContent = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        const languageClass = lang ? `language-${lang}` : '';
+        const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre class="${languageClass} bg-gray-800 rounded-lg p-3 sm:p-4 overflow-x-auto my-3 sm:my-4 text-xs sm:text-sm" tabIndex="0"><code>${escapedCode}</code></pre>`;
+      });
+      
+      // Handle **bold** text
+      processedContent = processedContent.replace(/(?<!<pre><code>)\*\*(.*?)\*\*(?!<\/code><\/pre>)/g, '<strong>$1</strong>');
+      
+      // Handle *italic* text
+      processedContent = processedContent.replace(/(?<!<pre><code>)\*(.*?)\*(?!<\/code><\/pre>)/g, '<em>$1</em>');
+      
+      // Make URLs clickable
+      processedContent = processedContent.replace(
+        /(?<!href="|src="|<code>)(https?:\/\/[^\s<>"]+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
+      );
+      
+      return processedContent;
+    };
+
+    const isContentLong = message.content.length > 500;
+    const displayContent = isContentLong && !isExpanded ? 
+      message.content.substring(0, 500) + '...' : message.content;
+
+    let finalContentToRender: string;
+
+    if (isUserMessage) {
+      finalContentToRender = formatContent(displayContent);
+    } else {
+      const textAfterPossibleListFormatting = formatContent(displayContent);
+      let htmlWithBasicMarkdown = processContentWithFormatting(textAfterPossibleListFormatting);
+
+      if (message.sourceUrls && message.sourceUrls.length > 0) {
+        finalContentToRender = processContentWithCitations(htmlWithBasicMarkdown, message.sourceUrls);
+      } else {
+        finalContentToRender = htmlWithBasicMarkdown;
+      }
+    }
+
+    return { finalContentToRender, isContentLong };
+  }, [message.content, message.sourceUrls, contentFormat, isExpanded, isUserMessage]);
   
-  const handleCopyText = () => {
+  const handleCopyText = useCallback(() => {
     navigator.clipboard.writeText(message.content);
     toast.success("Message copied to clipboard");
-  };
+  }, [message.content]);
   
-  const handleFeedback = async (isPositive: boolean) => {
+  const handleFeedback = useCallback(async (isPositive: boolean) => {
     if (liked !== null) return;
 
     if (message.id?.startsWith('temp-') || message.id?.startsWith('error-')) {
@@ -89,84 +166,16 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       toast.error("Failed to submit feedback due to a network error. Please try again.");
       setLiked(null);
     }
-  };
+  }, [liked, message.id, message.conversation_id]);
   
-  const formatContent = (content: string) => {
-    if (contentFormat === 'normal') return content;
-    
-    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim() !== '');
-    
-    if (contentFormat === 'bullets') {
-      return paragraphs.map(p => `• ${p}`).join('\n\n');
-    } else if (contentFormat === 'numbered') {
-      return paragraphs.map((p, i) => `${i + 1}. ${p}`).join('\n\n');
-    }
-    
-    return content;
-  };
-  
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = useCallback((dateString: string) => {
     try {
       const date = new Date(dateString);
       return format(date, isMobile ? 'h:mm a' : 'MMM d, h:mm a');
     } catch (e) {
       return '';
     }
-  };
-  
-  // Process content for display
-  const processContentWithFormatting = (plainText: string) => {
-    let processedContent = plainText;
-    
-    // Add proper paragraph breaks
-    processedContent = processedContent.replace(/\n\n/g, '</p><p class="mb-3">');
-    processedContent = processedContent.replace(/\n/g, '<br />');
-    
-    // Wrap in paragraph tags
-    if (!processedContent.startsWith('<p')) {
-      processedContent = `<p class="mb-3">${processedContent}</p>`;
-    }
-    
-    // Handle ```code``` blocks
-    processedContent = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const languageClass = lang ? `language-${lang}` : '';
-      const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<pre class="${languageClass} bg-gray-800 rounded-lg p-3 sm:p-4 overflow-x-auto my-3 sm:my-4 text-xs sm:text-sm" tabIndex="0"><code>${escapedCode}</code></pre>`;
-    });
-    
-    // Handle **bold** text
-    processedContent = processedContent.replace(/(?<!<pre><code>)\*\*(.*?)\*\*(?!<\/code><\/pre>)/g, '<strong>$1</strong>');
-    
-    // Handle *italic* text
-    processedContent = processedContent.replace(/(?<!<pre><code>)\*(.*?)\*(?!<\/code><\/pre>)/g, '<em>$1</em>');
-    
-    // Make URLs clickable
-    processedContent = processedContent.replace(
-      /(?<!href="|src="|<code>)(https?:\/\/[^\s<>"]+)/g,
-      '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors">$1</a>'
-    );
-    
-    return processedContent;
-  };
-  
-  const isContentLong = message.content.length > 500;
-  const displayContent = isContentLong && !isExpanded ? 
-    message.content.substring(0, 500) + '...' : message.content;
-
-  let finalContentToRender: string;
-
-  if (isUserMessage) {
-    finalContentToRender = formatContent(displayContent);
-  } else {
-    const textAfterPossibleListFormatting = formatContent(displayContent);
-    let htmlWithBasicMarkdown = processContentWithFormatting(textAfterPossibleListFormatting);
-
-    if (message.sourceUrls && message.sourceUrls.length > 0) {
-      finalContentToRender = processContentWithCitations(htmlWithBasicMarkdown, message.sourceUrls);
-    } else {
-      finalContentToRender = htmlWithBasicMarkdown;
-    }
-  }
+  }, [isMobile]);
   
   return (
     <motion.div 
@@ -231,16 +240,16 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
             <div className="space-y-2 sm:space-y-3">
               {isUserMessage ? (
                 <div className="bg-green-900/30 rounded-lg p-2 sm:p-3 border border-green-500/20 whitespace-pre-wrap">
-                  {finalContentToRender}
+                  {processedContent.finalContentToRender}
                 </div>
               ) : (
                 <>
                   <div 
                     className="prose prose-invert max-w-none prose-p:my-1 sm:prose-p:my-2 prose-headings:mb-1 sm:prose-headings:mb-2 prose-headings:mt-2 sm:prose-headings:mt-4 prose-pre:bg-gray-800 prose-pre:border prose-pre:border-gray-700"
-                    dangerouslySetInnerHTML={{ __html: finalContentToRender }}
+                    dangerouslySetInnerHTML={{ __html: processedContent.finalContentToRender }}
                   />
                   
-                  {isContentLong && (
+                  {processedContent.isContentLong && (
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -379,6 +388,8 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       </div>
     </motion.div>
   );
-};
+});
+
+UnifiedChatMessage.displayName = 'UnifiedChatMessage';
 
 export default UnifiedChatMessage;

@@ -1,105 +1,61 @@
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/contexts/auth/AuthProvider";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import Index from "./pages/Index";
+import "./App.css";
+import ChatPage from "./pages/ChatPage";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import PricingPage from "./pages/PricingPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import { useEffect, useState } from "react";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/auth/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from 'sonner';
-import { HelmetProvider } from 'react-helmet-async';
-import { lazy, Suspense } from 'react';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import CookieConsent from '@/components/legal/CookieConsent';
-
-// Core pages
-import AuthPage from '@/pages/AuthPage';
-import ChatPage from '@/pages/ChatPage';
-import NotFound from '@/pages/NotFound';
-import ResetPasswordPage from '@/pages/ResetPasswordPage';
-import WelcomePage from '@/pages/WelcomePage';
-
-// Lazy loaded pages
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
-const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
-const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
-const CookiePage = lazy(() => import('@/pages/legal/CookiePage'));
-
-const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen bg-black">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-500 border-t-transparent"></div>
-  </div>
-);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
-    <HelmetProvider>
-      <ThemeProvider defaultTheme="dark">
-        <AuthProvider>
-          <Router>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Welcome/Home page */}
-                <Route path="/" element={<WelcomePage />} />
-                
-                {/* Auth routes */}
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
-                
-                {/* Main chat interface - the core of the app */}
-                <Route 
-                  path="/chat" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/chat/:id" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Profile page */}
-                <Route 
-                  path="/profile" 
-                  element={
-                    <ProtectedRoute fallback={<Navigate to="/auth" replace />}>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Legal Pages */}
-                <Route path="/legal/terms" element={<TermsPage />} />
-                <Route path="/legal/privacy" element={<PrivacyPage />} />
-                <Route path="/legal/cookies" element={<CookiePage />} />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-            
-            <CookieConsent />
-            <Toaster />
-            <SonnerToaster 
-              position="top-right" 
-              closeButton
-              richColors
-              expand
-              toastOptions={{
-                className: 'bg-gray-900 text-white border border-gray-800 shadow-lg',
-                duration: 4000,
-                style: {
-                  background: 'hsl(var(--background))',
-                  border: 'hsl(var(--border))'
-                }
-              }}
-            />
-          </Router>
-        </AuthProvider>
-      </ThemeProvider>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            <TooltipProvider>
+              <AuthProvider>
+                <BrowserRouter>
+                  <Helmet>
+                    <title>AI Career Advisor - Your Personal Career Assistant</title>
+                    <meta name="description" content="Get personalized career advice, resume optimization, interview preparation, and job search strategies from our AI-powered career advisor." />
+                  </Helmet>
+                  <Toaster />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/chat" element={<ChatPage />} />
+                    <Route path="/chat/:id" element={<ChatPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </BrowserRouter>
+              </AuthProvider>
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 
