@@ -64,7 +64,7 @@ const ChatSuggestions = ({ onSuggestionClick, conversationType = 'general' }: Ch
             transition={{ delay: index * 0.1 }}
           >
             <Card 
-              className="p-4 bg-gray-800/30 border-gray-700/50 hover:bg-gray-700/30 transition-all cursor-pointer group hover:border-green-500/30"
+              className="p-4 bg-transparent border-white/20 hover:bg-white/5 transition-all cursor-pointer group hover:border-green-500/30 min-h-[44px] touch-optimized"
               onClick={() => onSuggestionClick(suggestion.prompt)}
             >
               <div className="flex items-start gap-3">

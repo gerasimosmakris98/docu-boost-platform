@@ -165,18 +165,18 @@ const UnifiedSidebar = ({
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay - Completely transparent */}
       {isMobile && !isCollapsed && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          className="fixed inset-0 bg-transparent z-40 lg:hidden"
           onClick={onToggleCollapse}
         />
       )}
       
-      {/* Sidebar - Fixed responsive widths */}
+      {/* Sidebar - Fully transparent with subtle borders */}
       <motion.div 
         initial={false}
         animate={{ 
@@ -184,14 +184,14 @@ const UnifiedSidebar = ({
         }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen border-r border-white/10 transition-all duration-200 overflow-hidden",
+          "fixed left-0 top-0 z-50 h-screen border-r border-white/20 transition-all duration-200 overflow-hidden",
           "lg:relative lg:z-auto",
-          "bg-transparent backdrop-blur-sm",
+          "bg-transparent",
           isMobile && isCollapsed && "w-0"
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10 h-16">
+        {/* Header - Transparent */}
+        <div className="flex items-center justify-between p-4 border-b border-white/20 h-16 bg-transparent">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div
@@ -229,7 +229,7 @@ const UnifiedSidebar = ({
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="text-gray-300 hover:text-white hover:bg-white/10 h-9 w-9"
+            className="text-gray-300 hover:text-white hover:bg-white/10 h-11 w-11 min-h-[44px] min-w-[44px]"
           >
             {isMobile ? (
               isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />
@@ -239,8 +239,8 @@ const UnifiedSidebar = ({
           </Button>
         </div>
 
-        {/* Content */}
-        <div className="flex flex-col h-[calc(100vh-64px)]">
+        {/* Content - Transparent background */}
+        <div className="flex flex-col h-[calc(100vh-64px)] bg-transparent">
           {/* AI Advisors Section */}
           <div className="p-4">
             <div className={cn(
@@ -256,7 +256,7 @@ const UnifiedSidebar = ({
                   key={advisor.id}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-11 px-3 text-gray-200 hover:text-white hover:bg-white/10",
+                    "w-full justify-start gap-3 h-11 px-3 text-gray-200 hover:text-white hover:bg-white/10 min-h-[44px]",
                     isCollapsed && "justify-center px-0"
                   )}
                   onClick={() => handleCreateConversation(advisor)}
@@ -294,7 +294,7 @@ const UnifiedSidebar = ({
                       key={conversation.id}
                       to={`/chat/${conversation.id}`}
                       className={cn(
-                        "flex items-center px-3 py-3 rounded text-sm hover:bg-white/10 transition-all duration-200 min-h-[44px]",
+                        "flex items-center px-3 py-3 rounded text-sm hover:bg-white/10 transition-all duration-200 min-h-[44px] touch-optimized",
                         activeConversationId === conversation.id 
                           ? "bg-white/10 text-white" 
                           : "text-gray-300 hover:text-white",
@@ -320,8 +320,8 @@ const UnifiedSidebar = ({
             </ScrollArea>
           </div>
 
-          {/* User Info & Settings - Fixed dropdown z-index */}
-          <div className="mt-auto border-t border-white/10 p-4">
+          {/* User Info & Settings - Transparent with proper z-index */}
+          <div className="mt-auto border-t border-white/20 p-4 bg-transparent">
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30">
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold">
@@ -353,7 +353,7 @@ const UnifiedSidebar = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-11 w-11 text-gray-300 hover:text-white hover:bg-white/10"
+                    className="h-11 w-11 text-gray-300 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px] touch-optimized"
                     title="Settings"
                   >
                     <Settings className="h-4 w-4" />
@@ -361,19 +361,19 @@ const UnifiedSidebar = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-48 bg-gray-900/95 backdrop-blur-sm border-gray-600 z-[100] shadow-xl"
+                  className="w-48 bg-gray-900/98 backdrop-blur-sm border-gray-600 z-[100] shadow-xl"
                   sideOffset={8}
                 >
                   <DropdownMenuItem 
                     onClick={handleProfileSettings} 
-                    className="text-gray-200 hover:text-white hover:bg-gray-700/50 cursor-pointer h-11"
+                    className="text-gray-200 hover:text-white hover:bg-gray-700/50 cursor-pointer h-11 min-h-[44px] touch-optimized"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Profile Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleSignOut}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 cursor-pointer h-11"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 cursor-pointer h-11 min-h-[44px] touch-optimized"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
