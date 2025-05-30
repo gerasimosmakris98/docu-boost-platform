@@ -6,23 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import FileUpload from "@/components/common/FileUpload";
 
 interface ModernChatInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, attachments?: string[]) => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
 const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message..." }: ModernChatInputProps) => {
   const [message, setMessage] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = () => {
-    if (!message.trim() || disabled) return;
-    onSubmit(message);
+    if ((!message.trim() && attachments.length === 0) || disabled) return;
+    onSubmit(message, attachments);
     setMessage("");
+    setAttachments([]);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -36,14 +39,17 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   };
 
   const handleFileUpload = () => {
-    fileInputRef.current?.click();
+    setShowFileUpload(!showFileUpload);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      toast.success(`${files.length} file(s) selected`);
-    }
+  const handleFileUploaded = (url: string, fileName: string, fileType: string) => {
+    setAttachments(prev => [...prev, url]);
+    setShowFileUpload(false);
+    toast.success(`${fileName} uploaded successfully`);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleImageUpload = () => {
@@ -54,6 +60,10 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
     input.onchange = (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (files && files.length > 0) {
+        Array.from(files).forEach(file => {
+          const url = URL.createObjectURL(file);
+          setAttachments(prev => [...prev, url]);
+        });
         toast.success(`${files.length} image(s) selected`);
       }
     };
@@ -73,7 +83,6 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
     }
   };
 
-  // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     const textarea = e.target;
@@ -96,8 +105,44 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
         transition={{ duration: 0.3 }}
         className="max-w-4xl mx-auto"
       >
+        {/* File Upload Component */}
+        {showFileUpload && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <FileUpload onFileUploaded={handleFileUploaded} />
+          </motion.div>
+        )}
+
+        {/* Attachments Preview */}
+        {attachments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex flex-wrap gap-2"
+          >
+            {attachments.map((url, index) => (
+              <div key={index} className="relative bg-white/10 rounded-lg p-2 flex items-center gap-2">
+                <span className="text-sm text-white/80 truncate max-w-32">
+                  Attachment {index + 1}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeAttachment(index)}
+                  className="h-6 w-6 p-0 text-white/60 hover:text-red-400"
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
         {/* Suggestions */}
-        {message.length === 0 && (
+        {message.length === 0 && attachments.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -109,7 +154,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setMessage(suggestion)}
-                className="px-3 py-1.5 text-sm text-white/70 bg-white/10 rounded-full border border-white/20 hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
+                className="px-3 py-1.5 text-sm text-white/70 bg-white/10 rounded-full border border-white/20 hover:bg-white/20 transition-all duration-200"
               >
                 {suggestion}
               </motion.button>
@@ -118,7 +163,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
         )}
 
         {/* Input Container */}
-        <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl shadow-xl">
+        <div className="relative bg-white/10 border border-white/20 rounded-2xl">
           <div className="flex items-end gap-3 p-4">
             {/* Input Area */}
             <div className="flex-1 relative">
@@ -176,8 +221,8 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 className={cn(
                   "h-10 w-10 rounded-full transition-all duration-300",
                   isRecording
-                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                    : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-blue-600 hover:bg-blue-700"
                 )}
                 disabled={disabled}
               >
@@ -189,9 +234,9 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
             <motion.div whileTap={{ scale: 0.95 }}>
               <Button
                 onClick={handleSubmit}
-                disabled={!message.trim() || disabled}
+                disabled={(!message.trim() && attachments.length === 0) || disabled}
                 size="sm"
-                className="h-10 w-10 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -204,16 +249,6 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
           Press Enter to send, Shift+Enter for new line
         </p>
       </motion.div>
-
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={handleFileChange}
-        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
-      />
     </div>
   );
 };

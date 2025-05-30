@@ -78,7 +78,7 @@ const StreamlinedChatInterface = ({
     }
   }, [isOnline, isReconnecting]);
   
-  const handleSendMessage = useCallback(async (messageText: string) => {
+  const handleSendMessage = useCallback(async (messageText: string, attachments?: string[]) => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: location.pathname } });
       return;
@@ -89,8 +89,8 @@ const StreamlinedChatInterface = ({
       return;
     }
     
-    if (!messageText.trim()) {
-      toast.error("Please enter a message.");
+    if (!messageText.trim() && (!attachments || attachments.length === 0)) {
+      toast.error("Please enter a message or attach a file.");
       return;
     }
 
@@ -99,16 +99,16 @@ const StreamlinedChatInterface = ({
       return;
     }
     
-    console.log('Sending message:', messageText);
+    console.log('Sending message:', messageText, 'with attachments:', attachments);
     
     // Add user message to UI immediately
     const optimisticUserMessage: Message = {
       id: `temp-user-${Date.now()}`,
       conversation_id: conversationId,
       role: 'user',
-      content: messageText,
+      content: messageText || 'File attachment',
       created_at: new Date().toISOString(),
-      attachments: []
+      attachments: attachments || []
     };
     
     setMessages(prev => {
@@ -122,7 +122,7 @@ const StreamlinedChatInterface = ({
     
     try {
       console.log('Calling unifiedMessageService.sendMessage');
-      const response = await unifiedMessageService.sendMessage(conversationId, messageText, []);
+      const response = await unifiedMessageService.sendMessage(conversationId, messageText, attachments || []);
       
       console.log('Response received:', response);
       
@@ -201,7 +201,7 @@ const StreamlinedChatInterface = ({
   // Show loading state with improved spinner
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-900 via-blue-900 to-black">
+      <div className="flex items-center justify-center h-full">
         <motion.div 
           className="text-center space-y-4"
           initial={{ opacity: 0 }}
@@ -211,7 +211,7 @@ const StreamlinedChatInterface = ({
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-12 w-12 rounded-full border-4 border-cyan-500/30 border-t-cyan-500 mx-auto"
+            className="h-12 w-12 rounded-full border-4 border-blue-500/30 border-t-blue-500 mx-auto"
           />
           <p className="text-white/70 text-lg">Loading AI Career Advisor...</p>
         </motion.div>
@@ -221,7 +221,7 @@ const StreamlinedChatInterface = ({
   
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-blue-900 to-black">
+      <div className="flex flex-col h-full">
         {/* Network status indicator */}
         {!isOnline && (
           <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm z-10">
@@ -260,7 +260,7 @@ const StreamlinedChatInterface = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <ModernCard className="p-8 text-center max-w-md" gradient>
+              <ModernCard className="p-8 text-center max-w-md bg-white/10 border-white/20">
                 <motion.div
                   animate={{ 
                     rotate: 360,
@@ -272,9 +272,9 @@ const StreamlinedChatInterface = ({
                   }}
                   className="text-4xl mb-4 relative"
                 >
-                  <Bot className="h-16 w-16 mx-auto text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" />
+                  <Bot className="h-16 w-16 mx-auto text-blue-400" />
                 </motion.div>
-                <h3 className="text-xl font-semibold mb-3 text-white bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                <h3 className="text-xl font-semibold mb-3 text-white">
                   Welcome to AI Career Advisor
                 </h3>
                 <p className="text-white/80 mb-4 leading-relaxed">

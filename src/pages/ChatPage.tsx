@@ -8,6 +8,7 @@ import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import KeyboardShortcuts from "@/components/chat/KeyboardShortcuts";
 import ChatSuggestions from "@/components/chat/ChatSuggestions";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const ChatPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,10 +104,19 @@ const ChatPage = () => {
     return (
       <UnifiedLayout>
         <div className="flex items-center justify-center h-full">
-          <div className="text-center space-y-4">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-500 border-t-transparent mx-auto"></div>
-            <p className="text-gray-400">Loading AI Career Advisor...</p>
-          </div>
+          <motion.div 
+            className="text-center space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="h-12 w-12 rounded-full border-4 border-blue-500/30 border-t-blue-500 mx-auto"
+            />
+            <p className="text-white/70 text-lg">Loading AI Career Advisor...</p>
+          </motion.div>
         </div>
       </UnifiedLayout>
     );
