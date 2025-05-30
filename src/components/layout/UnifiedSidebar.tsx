@@ -184,14 +184,14 @@ const UnifiedSidebar = ({
         }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen border-r border-white/10 transition-all duration-200 overflow-hidden",
+          "fixed left-0 top-0 z-50 h-screen border-r border-white/20 transition-all duration-200 overflow-hidden",
           "lg:relative lg:z-auto",
-          "bg-black/20 backdrop-blur-xl",
+          "bg-white/5 backdrop-blur-xl",
           isMobile && isCollapsed && "w-0"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10 h-16">
+        <div className="flex items-center justify-between p-4 border-b border-white/20 h-16">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div
@@ -217,7 +217,7 @@ const UnifiedSidebar = ({
                   <h1 className="text-white font-semibold text-base">
                     AI Career Advisor
                   </h1>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-300 text-sm">
                     Your Career Assistant
                   </p>
                 </div>
@@ -229,7 +229,7 @@ const UnifiedSidebar = ({
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="text-gray-400 hover:text-white hover:bg-white/10 h-9 w-9"
+            className="text-gray-300 hover:text-white hover:bg-white/10 h-9 w-9"
           >
             {isMobile ? (
               isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />
@@ -244,7 +244,7 @@ const UnifiedSidebar = ({
           {/* AI Advisors Section */}
           <div className="p-4">
             <div className={cn(
-              "text-xs font-semibold text-gray-400 mb-3",
+              "text-xs font-semibold text-gray-300 mb-3",
               isCollapsed && "text-center"
             )}>
               {!isCollapsed ? "AI ADVISORS" : "AI"}
@@ -256,7 +256,7 @@ const UnifiedSidebar = ({
                   key={advisor.id}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-10 px-3 text-gray-300 hover:text-white hover:bg-white/10",
+                    "w-full justify-start gap-3 h-10 px-3 text-gray-200 hover:text-white hover:bg-white/10",
                     isCollapsed && "justify-center px-0"
                   )}
                   onClick={() => handleCreateConversation(advisor)}
@@ -272,7 +272,7 @@ const UnifiedSidebar = ({
           {/* Recent Chats Section */}
           <div className="flex-1 overflow-hidden">
             <div className={cn(
-              "px-4 py-2 text-xs font-semibold text-gray-400",
+              "px-4 py-2 text-xs font-semibold text-gray-300",
               isCollapsed && "text-center"
             )}>
               {!isCollapsed ? "RECENT CHATS" : "CHAT"}
@@ -281,11 +281,11 @@ const UnifiedSidebar = ({
             <ScrollArea className="flex-1 px-2">
               <div className="space-y-1 px-2">
                 {isLoading ? (
-                  <div className={cn("text-center py-4 text-gray-500 text-sm", isCollapsed && "hidden")}>
+                  <div className={cn("text-center py-4 text-gray-400 text-sm", isCollapsed && "hidden")}>
                     Loading...
                   </div>
                 ) : conversations.length === 0 ? (
-                  <div className={cn("text-center py-4 text-gray-500 text-sm", isCollapsed && "hidden")}>
+                  <div className={cn("text-center py-4 text-gray-400 text-sm", isCollapsed && "hidden")}>
                     No recent chats
                   </div>
                 ) : (
@@ -297,7 +297,7 @@ const UnifiedSidebar = ({
                         "flex items-center px-3 py-2 rounded text-sm hover:bg-white/10 transition-all duration-200",
                         activeConversationId === conversation.id 
                           ? "bg-white/10 text-white" 
-                          : "text-gray-400 hover:text-white",
+                          : "text-gray-300 hover:text-white",
                         isCollapsed && "justify-center"
                       )}
                       onClick={() => isMobile && onToggleCollapse()}
@@ -321,7 +321,7 @@ const UnifiedSidebar = ({
           </div>
 
           {/* User Info & Settings */}
-          <div className="mt-auto border-t border-white/10 p-4">
+          <div className="mt-auto border-t border-white/20 p-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30">
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold">
@@ -342,7 +342,7 @@ const UnifiedSidebar = ({
                       {user?.user_metadata?.full_name || user?.email}
                     </p>
                     {user?.email && (
-                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                      <p className="text-xs text-gray-300 truncate">{user.email}</p>
                     )}
                   </motion.div>
                 )}
@@ -353,14 +353,14 @@ const UnifiedSidebar = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-gray-400 hover:text-white hover:bg-white/10"
+                    className="h-9 w-9 text-gray-300 hover:text-white hover:bg-white/10"
                     title="Settings"
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700">
-                  <DropdownMenuItem onClick={handleProfileSettings} className="text-gray-300 hover:text-white hover:bg-gray-800">
+                <DropdownMenuContent align="end" className="w-48 bg-gray-800 border-gray-600 z-[100]">
+                  <DropdownMenuItem onClick={handleProfileSettings} className="text-gray-200 hover:text-white hover:bg-gray-700">
                     <User className="h-4 w-4 mr-2" />
                     Profile Settings
                   </DropdownMenuItem>

@@ -72,7 +72,7 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/20 bg-transparent">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold truncate text-white">
@@ -82,7 +82,7 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
               <Badge variant={badge.variant} className="text-xs">
                 {badge.label} Advisor
               </Badge>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-300">
                 {new Date(conversation.updated_at).toLocaleDateString()}
               </span>
             </div>
@@ -91,20 +91,20 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white hover:bg-white/10">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700 z-50">
-            <DropdownMenuItem onClick={() => setShowRenameDialog(true)} className="text-gray-300 hover:text-white hover:bg-gray-800">
+          <DropdownMenuContent align="end" className="w-48 bg-gray-800 border-gray-600 z-[100]">
+            <DropdownMenuItem onClick={() => setShowRenameDialog(true)} className="text-gray-200 hover:text-white hover:bg-gray-700">
               <Edit3 className="h-4 w-4 mr-2" />
               Rename
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleShare} className="text-gray-300 hover:text-white hover:bg-gray-800">
+            <DropdownMenuItem onClick={handleShare} className="text-gray-200 hover:text-white hover:bg-gray-700">
               <Share className="h-4 w-4 mr-2" />
               Share
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExport} className="text-gray-300 hover:text-white hover:bg-gray-800">
+            <DropdownMenuItem onClick={handleExport} className="text-gray-200 hover:text-white hover:bg-gray-700">
               <Download className="h-4 w-4 mr-2" />
               Export
             </DropdownMenuItem>

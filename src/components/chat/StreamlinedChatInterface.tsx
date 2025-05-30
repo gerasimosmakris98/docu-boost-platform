@@ -12,7 +12,6 @@ import TypingIndicator from "./TypingIndicator";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import ModernCard from "@/components/ui/ModernCard";
 import { Bot } from "lucide-react";
 
 interface StreamlinedChatInterfaceProps {

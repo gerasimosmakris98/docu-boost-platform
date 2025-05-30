@@ -65,7 +65,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   const canSend = (message.trim().length > 0 || files.length > 0) && !disabled;
 
   return (
-    <div className="border-t border-white/10 bg-black/20 backdrop-blur-sm p-4">
+    <div className="border-t border-white/20 bg-transparent p-4">
       <div className="max-w-4xl mx-auto">
         {/* File Attachments Preview */}
         {files.length > 0 && (
@@ -89,7 +89,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
         )}
 
         {/* Input Container */}
-        <div className="relative bg-white/10 border border-white/20 rounded-2xl backdrop-blur-sm">
+        <div className="relative bg-white/10 border border-white/30 rounded-2xl backdrop-blur-sm">
           <div className="flex items-end gap-3 p-4">
             {/* File Upload Button */}
             <Button
