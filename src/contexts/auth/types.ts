@@ -3,6 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 
 export type AuthProviderType = 'google' | 'linkedin_oidc' | 'twitter';
 
+export type AppRole = 'admin' | 'moderator' | 'user';
+
 export interface Profile {
   id: string;
   username?: string;
@@ -14,6 +16,21 @@ export interface Profile {
   website?: string;
   headline?: string;
   summary?: string;
+  onboarding_completed?: boolean;
+  career_level?: string;
+  industry?: string;
+  goals?: string[];
+  preferences?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: AppRole;
+  created_at: string;
+  updated_at: string;
 }
 
 interface SocialLinkType {
@@ -44,13 +61,21 @@ export interface LinkedInProfile {
   socialLinks?: SocialLinkType[];
 }
 
+export interface AuthError {
+  message: string;
+  code?: string;
+  details?: string;
+}
+
 export interface AuthContextType {
   user: User | null;
   profile: Profile | null;
+  userRoles: AppRole[];
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   linkedInProfile: LinkedInProfile | null;
+  authError: AuthError | null;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, fullName: string) => Promise<void>;
   loginWithProvider: (provider: AuthProviderType) => Promise<void>;
@@ -58,4 +83,9 @@ export interface AuthContextType {
   importLinkedInProfile: () => Promise<LinkedInProfile>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  hasRole: (role: AppRole) => boolean;
+  completeOnboarding: (onboardingData: Partial<Profile>) => Promise<void>;
+  clearAuthError: () => void;
 }

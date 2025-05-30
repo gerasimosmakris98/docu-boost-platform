@@ -12,6 +12,7 @@ import "./App.css";
 import EnhancedChatPage from "./pages/EnhancedChatPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import TermsPage from "./pages/legal/TermsPage";
 import PrivacyPage from "./pages/legal/PrivacyPage";
 import CookiePage from "./pages/legal/CookiePage";
@@ -47,6 +48,7 @@ function App() {
                     <Route path="/chat" element={<EnhancedChatPage />} />
                     <Route path="/chat/:id" element={<EnhancedChatPage />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/terms" element={<TermsPage />} />
                     <Route path="/privacy" element={<PrivacyPage />} />

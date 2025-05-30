@@ -1,16 +1,24 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { cleanupAuthState } from '@/integrations/supabase/client';
-import { AuthProviderType, LinkedInProfile } from './types';
-import { fetchUserProfile } from './authUtils';
+import { cleanupAuthState, handleAuthError, validateEmail, validatePassword } from './authUtils';
+import { AuthProviderType, LinkedInProfile, AuthError } from './types';
 
-// Login with email and password
+// Enhanced login with email and password
 export const loginWithEmail = async (email: string, password: string) => {
   try {
+    // Validate inputs
+    if (!validateEmail(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+    
+    if (!password || password.length < 6) {
+      throw new Error('Please enter your password');
+    }
+
     // Clean up existing auth state
     cleanupAuthState();
     
-    // Attempt global sign out
+    // Attempt global sign out first
     try {
       await supabase.auth.signOut({ scope: 'global' });
     } catch (err) {
@@ -18,7 +26,7 @@ export const loginWithEmail = async (email: string, password: string) => {
     }
     
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim().toLowerCase(),
       password
     });
     
@@ -26,22 +34,36 @@ export const loginWithEmail = async (email: string, password: string) => {
     return data;
   } catch (error) {
     console.error('Error in loginWithEmail:', error);
-    throw error;
+    throw handleAuthError(error);
   }
 };
 
-// Sign up with email and password
+// Enhanced sign up with email and password
 export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
   try {
+    // Validate inputs
+    if (!validateEmail(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+    
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.message);
+    }
+    
+    if (!fullName || fullName.trim().length < 2) {
+      throw new Error('Please enter your full name (at least 2 characters)');
+    }
+
     // Clean up existing auth state
     cleanupAuthState();
     
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim().toLowerCase(),
       password,
       options: {
         data: {
-          full_name: fullName
+          full_name: fullName.trim()
         }
       }
     });
@@ -50,11 +72,11 @@ export const signUpWithEmail = async (email: string, password: string, fullName:
     return data;
   } catch (error) {
     console.error('Error in signUpWithEmail:', error);
-    throw error;
+    throw handleAuthError(error);
   }
 };
 
-// Login with third-party provider
+// Enhanced OAuth login
 export const loginWithProvider = async (provider: AuthProviderType) => {
   try {
     // Clean up existing auth state
@@ -78,11 +100,11 @@ export const loginWithProvider = async (provider: AuthProviderType) => {
     return data;
   } catch (error) {
     console.error('Error in loginWithProvider:', error);
-    throw error;
+    throw handleAuthError(error);
   }
 };
 
-// Logout user
+// Enhanced logout
 export const logout = async () => {
   try {
     // Clean up auth state
@@ -93,26 +115,88 @@ export const logout = async () => {
     if (error) throw error;
   } catch (error) {
     console.error('Error in logout:', error);
-    throw error;
+    throw handleAuthError(error);
   }
 };
 
-// Update user profile
+// Password reset functionality
+export const resetPassword = async (email: string) => {
+  try {
+    if (!validateEmail(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      }
+    );
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    throw handleAuthError(error);
+  }
+};
+
+// Update password functionality
+export const updatePassword = async (newPassword: string) => {
+  try {
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.message);
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error in updatePassword:', error);
+    throw handleAuthError(error);
+  }
+};
+
+// Enhanced profile update
 export const updateProfile = async (updates: any, userId: string) => {
   try {
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', userId);
     
     if (error) throw error;
   } catch (error) {
     console.error('Error in updateProfile:', error);
-    throw error;
+    throw handleAuthError(error);
   }
 };
 
-// Mock LinkedIn import (in a real app, this would integrate with LinkedIn's API)
+// Complete onboarding
+export const completeOnboarding = async (onboardingData: any, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        ...onboardingData,
+        onboarding_completed: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error in completeOnboarding:', error);
+    throw handleAuthError(error);
+  }
+};
+
+// Mock LinkedIn import (enhanced version)
 export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
   // In a real implementation, this would use OAuth to pull real LinkedIn data
   const mockLinkedInProfile: LinkedInProfile = {
@@ -156,9 +240,7 @@ export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
   };
   
   try {
-    // Save profile data
     const user = (await supabase.auth.getUser()).data.user;
-    
     if (!user) throw new Error('No user found');
     
     // Update profile data
@@ -175,7 +257,6 @@ export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
     // Save social links
     if (mockLinkedInProfile.socialLinks && mockLinkedInProfile.socialLinks.length > 0) {
       for (const link of mockLinkedInProfile.socialLinks) {
-        // Check if link already exists
         const { data: existingLink } = await supabase
           .from('social_links')
           .select('*')
@@ -184,7 +265,6 @@ export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
           .single();
         
         if (existingLink) {
-          // Update existing link
           await supabase
             .from('social_links')
             .update({
@@ -193,7 +273,6 @@ export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
             })
             .eq('id', existingLink.id);
         } else {
-          // Insert new link
           await supabase
             .from('social_links')
             .insert({
@@ -208,6 +287,6 @@ export const importLinkedInProfile = async (): Promise<LinkedInProfile> => {
     return mockLinkedInProfile;
   } catch (error) {
     console.error('Error saving LinkedIn profile:', error);
-    return mockLinkedInProfile; // Return the data even if save fails
+    throw handleAuthError(error);
   }
 };
