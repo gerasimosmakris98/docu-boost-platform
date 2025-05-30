@@ -1,76 +1,138 @@
 
-import { Helmet } from 'react-helmet-async';
-import UnifiedLayout from '@/components/layout/UnifiedLayout';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Cookie } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Logo from '@/components/ui/Logo';
+import ActionButton from '@/components/ui/ActionButton';
+import ModernCard from '@/components/ui/ModernCard';
+import GradientBackground from '@/components/ui/GradientBackground';
 
 const CookiePage = () => {
+  const navigate = useNavigate();
+
   return (
-    <>
-      <Helmet>
-        <title>Cookie Policy - AI Career Advisor</title>
-        <meta name="description" content="Cookie Policy for AI Career Advisor" />
-      </Helmet>
-      
-      <UnifiedLayout showFooter={true}>
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-            Cookie Policy
-          </h1>
-          
-          <div className="prose prose-invert max-w-none space-y-6">
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">1. What Are Cookies</h2>
-              <p className="text-gray-300 leading-relaxed">
-                Cookies are small text files that are stored on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and improving our services.
-              </p>
-            </section>
+    <GradientBackground className="min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex justify-between items-center mb-8"
+        >
+          <Logo size="md" withLink={false} />
+          <ActionButton
+            variant="outline"
+            size="sm"
+            icon={<ArrowLeft className="h-4 w-4" />}
+            onClick={() => navigate('/')}
+          >
+            Back to Home
+          </ActionButton>
+        </motion.div>
 
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">2. How We Use Cookies</h2>
-              <p className="text-gray-300 leading-relaxed">
-                We use cookies to maintain your login session, remember your preferences, analyze website traffic, and improve our AI career advisory services. This helps us provide personalized career advice and maintain service quality.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">3. Types of Cookies We Use</h2>
-              <div className="text-gray-300 leading-relaxed">
-                <p className="mb-3"><strong>Essential Cookies:</strong> Required for the website to function properly, including authentication and session management.</p>
-                <p className="mb-3"><strong>Analytics Cookies:</strong> Help us understand how users interact with our AI career tools to improve our services.</p>
-                <p className="mb-3"><strong>Preference Cookies:</strong> Remember your settings and preferences for a personalized experience.</p>
+        {/* Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-4xl mx-auto"
+        >
+          <ModernCard className="p-8" gradient>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-3 rounded-full bg-gradient-to-r from-orange-500 to-red-500">
+                <Cookie className="h-6 w-6 text-white" />
               </div>
-            </section>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Cookie Policy</h1>
+                <p className="text-white/70">Last updated: {new Date().toLocaleDateString()}</p>
+              </div>
+            </div>
 
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">4. Managing Cookies</h2>
-              <p className="text-gray-300 leading-relaxed">
-                You can control and manage cookies through your browser settings. However, disabling certain cookies may limit your ability to use some features of our AI career advisory platform.
-              </p>
-            </section>
+            <div className="prose prose-invert max-w-none space-y-6">
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">1. What Are Cookies</h2>
+                <p className="text-white/80 leading-relaxed">
+                  Cookies are small text files that are placed on your computer or mobile device when you visit our website. 
+                  They help Echo provide you with a better experience by remembering your preferences and improving our services.
+                </p>
+              </section>
 
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">5. Third-Party Cookies</h2>
-              <p className="text-gray-300 leading-relaxed">
-                We may use third-party services that set cookies to help us analyze usage patterns and improve our AI services. These third parties have their own privacy policies governing their use of cookies.
-              </p>
-            </section>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">2. How We Use Cookies</h2>
+                <p className="text-white/80 leading-relaxed mb-4">Echo uses cookies for the following purposes:</p>
+                <ul className="list-disc list-inside text-white/80 space-y-2 ml-4">
+                  <li><strong>Essential Cookies:</strong> Required for basic website functionality and security</li>
+                  <li><strong>Authentication Cookies:</strong> To keep you logged in and maintain your session</li>
+                  <li><strong>Preference Cookies:</strong> To remember your settings and personalization choices</li>
+                  <li><strong>Analytics Cookies:</strong> To understand how you use our platform and improve our services</li>
+                  <li><strong>AI Enhancement Cookies:</strong> To help our AI provide more personalized career guidance</li>
+                </ul>
+              </section>
 
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">6. Updates to This Policy</h2>
-              <p className="text-gray-300 leading-relaxed">
-                We may update this Cookie Policy from time to time. We will notify you of any significant changes by posting the new policy on this page.
-              </p>
-            </section>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">3. Types of Cookies We Use</h2>
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 className="text-lg font-semibold text-cyan-400 mb-2">Session Cookies</h3>
+                    <p className="text-white/80">Temporary cookies that expire when you close your browser</p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 className="text-lg font-semibold text-cyan-400 mb-2">Persistent Cookies</h3>
+                    <p className="text-white/80">Remain on your device for a set period or until you delete them</p>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <h3 className="text-lg font-semibold text-cyan-400 mb-2">Third-Party Cookies</h3>
+                    <p className="text-white/80">Set by external services we use to enhance your experience</p>
+                  </div>
+                </div>
+              </section>
 
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 text-white">7. Contact Us</h2>
-              <p className="text-gray-300 leading-relaxed">
-                If you have any questions about our use of cookies, please contact us through our support channels.
-              </p>
-            </section>
-          </div>
-        </div>
-      </UnifiedLayout>
-    </>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">4. Managing Your Cookie Preferences</h2>
+                <p className="text-white/80 leading-relaxed mb-4">
+                  You have control over cookies and can manage them in several ways:
+                </p>
+                <ul className="list-disc list-inside text-white/80 space-y-2 ml-4">
+                  <li>Use your browser settings to block or delete cookies</li>
+                  <li>Set your browser to notify you when cookies are being set</li>
+                  <li>Use our cookie preferences center (when available)</li>
+                  <li>Opt-out of specific tracking cookies through industry tools</li>
+                </ul>
+                <p className="text-white/80 leading-relaxed mt-4">
+                  Please note that disabling certain cookies may affect the functionality of Echo and your user experience.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">5. AI and Personalization</h2>
+                <p className="text-white/80 leading-relaxed">
+                  Some cookies help our AI system provide more personalized career advice by remembering your 
+                  preferences, career goals, and interaction patterns. This data is processed securely and 
+                  helps Echo deliver more relevant and useful guidance.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">6. Updates to This Policy</h2>
+                <p className="text-white/80 leading-relaxed">
+                  We may update this Cookie Policy from time to time to reflect changes in our practices or 
+                  applicable laws. We encourage you to review this policy periodically for any updates.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">7. Contact Us</h2>
+                <p className="text-white/80 leading-relaxed">
+                  If you have questions about our use of cookies, please contact us through our platform's 
+                  support system or reach out to our team.
+                </p>
+              </div>
+            </div>
+          </ModernCard>
+        </motion.div>
+      </div>
+    </GradientBackground>
   );
 };
 

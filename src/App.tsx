@@ -12,6 +12,9 @@ import "./App.css";
 import ChatPage from "./pages/ChatPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import TermsPage from "./pages/legal/TermsPage";
+import PrivacyPage from "./pages/legal/PrivacyPage";
+import CookiePage from "./pages/legal/CookiePage";
 import { useEffect, useState } from "react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
@@ -33,8 +36,12 @@ function App() {
               <AuthProvider>
                 <BrowserRouter>
                   <Helmet>
-                    <title>AI Career Advisor - Your Personal Career Assistant</title>
-                    <meta name="description" content="Get personalized career advice, resume optimization, interview preparation, and job search strategies from our AI-powered career advisor." />
+                    <title>Echo - Your AI Career Companion</title>
+                    <meta name="description" content="Meet Echo, your intelligent AI career companion. Get personalized career advice, resume optimization, interview preparation, and job search strategies powered by advanced artificial intelligence." />
+                    <meta name="keywords" content="Echo, AI career advisor, career guidance, resume optimization, interview preparation, job search, artificial intelligence" />
+                    <meta property="og:title" content="Echo - Your AI Career Companion" />
+                    <meta property="og:description" content="Transform your career with Echo, the intelligent AI assistant that provides personalized guidance and support." />
+                    <meta property="og:type" content="website" />
                   </Helmet>
                   <Toaster />
                   <Routes>
@@ -43,6 +50,9 @@ function App() {
                     <Route path="/chat/:id" element={<ChatPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/terms" element={<TermsPage />} />
+                    <Route path="/privacy" element={<PrivacyPage />} />
+                    <Route path="/cookies" element={<CookiePage />} />
                     <Route path="*" element={<WelcomePage />} />
                   </Routes>
                 </BrowserRouter>

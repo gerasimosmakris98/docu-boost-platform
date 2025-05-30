@@ -20,17 +20,18 @@ const Logo = ({ size = "md", withLink = true, className, showIcon = true }: Logo
     )}>
       {showIcon && (
         <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full blur-sm opacity-75 animate-pulse"></div>
           <Bot className={cn(
-            "text-green-400",
+            "relative text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500",
             size === "sm" ? "h-5 w-5" : size === "lg" ? "h-8 w-8" : "h-6 w-6"
           )} />
         </div>
       )}
       <span className={cn(
-        "font-bold tracking-tight bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent",
+        "font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent",
         size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-lg"
       )}>
-        AI Career Advisor
+        Echo
       </span>
     </div>
   );
