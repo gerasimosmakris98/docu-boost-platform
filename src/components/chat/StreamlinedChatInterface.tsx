@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
@@ -255,7 +254,6 @@ const StreamlinedChatInterface = ({
                       message={message}
                       onRegenerate={() => handleRegenerateMessage(index)}
                       onEdit={() => handleEditMessage(index)}
-                      onFeedback={(isPositive) => handleMessageFeedback(message.id || '', isPositive)}
                     />
                   </div>
                 </motion.div>
