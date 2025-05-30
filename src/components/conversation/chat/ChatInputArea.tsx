@@ -2,7 +2,7 @@
 import React, { useState, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SendIcon, Paperclip, X, FileType, Image, Link } from "lucide-react";
+import { SendIcon, Paperclip, X, FileText, Image, Link, File } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     if (!textarea) return;
     
     textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   }, [message]);
   
   const handleSubmit = () => {
@@ -40,7 +40,6 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     setMessage("");
     setFiles([]);
     
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -60,7 +59,6 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     
-    // Check file sizes (limit to 10MB each)
     const validFiles = selectedFiles.filter(file => {
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`File ${file.name} exceeds 10MB limit`);
@@ -69,12 +67,9 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
       return true;
     });
     
-    // Add to existing files (limit to 5 files total)
     const newFiles = [...files, ...validFiles].slice(0, 5);
-    
     setFiles(newFiles);
     
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -87,15 +82,15 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const getFileIcon = (file: File) => {
     const fileType = file.type;
     if (fileType.startsWith('image/')) {
-      return <Image className="h-4 w-4 text-blue-400" />;
+      return <Image className="h-3 w-3 text-blue-400" />;
     }
     if (fileType === 'application/pdf') {
-      return <FileType className="h-4 w-4 text-red-400" />;
+      return <FileText className="h-3 w-3 text-red-400" />;
     }
     if (fileType.includes('text') || fileType.includes('document')) {
-      return <FileType className="h-4 w-4 text-green-400" />;
+      return <FileText className="h-3 w-3 text-green-400" />;
     }
-    return <FileType className="h-4 w-4 text-gray-400" />;
+    return <File className="h-3 w-3 text-gray-400" />;
   };
   
   const getFilePreview = (file: File) => {
@@ -105,7 +100,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         <img 
           src={url} 
           alt={file.name}
-          className="w-16 h-16 object-cover rounded border"
+          className="w-12 h-12 object-cover rounded border"
           onLoad={() => URL.revokeObjectURL(url)}
         />
       );
@@ -116,7 +111,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   return (
     <div className="border-t border-gray-800 bg-gray-900/50 backdrop-blur-sm">
       {files.length > 0 && (
-        <div className="p-3 border-b border-gray-700">
+        <div className="p-2 border-b border-gray-700">
           <div className="flex flex-wrap gap-2">
             {files.map((file, index) => (
               <div 
@@ -128,7 +123,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     <div className="flex items-center gap-2">
                       {getFileIcon(file)}
                       <div className="flex flex-col">
-                        <span className="text-xs text-gray-300 truncate max-w-[120px]">
+                        <span className="text-xs text-gray-300 truncate max-w-[100px]">
                           {file.name}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -139,10 +134,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                   )}
                   <button 
                     onClick={() => removeFile(index)}
-                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                     aria-label="Remove file"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-2 w-2" />
                   </button>
                 </div>
               </div>
@@ -151,12 +146,9 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         </div>
       )}
       
-      <div className="p-3 sm:p-4">
-        <div className={cn(
-          "flex items-end gap-2",
-          isMobile && "flex-col space-y-2"
-        )}>
-          <div className="flex-1 relative w-full">
+      <div className="p-3">
+        <div className="flex items-end gap-2">
+          <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
               value={message}
@@ -164,9 +156,9 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               onKeyDown={handleKeyDown}
               placeholder={isAuthenticated ? "Type your message..." : "Sign in to send messages"}
               className={cn(
-                "min-h-[50px] max-h-[200px] pr-12 bg-gray-800/50 border-gray-700 resize-none overflow-hidden text-white placeholder-gray-400",
+                "min-h-[44px] max-h-[120px] pr-20 bg-gray-800/50 border-gray-700 resize-none overflow-hidden text-white placeholder-gray-400",
                 "focus:border-green-500 focus:ring-green-500/20",
-                isMobile && "text-base" // Prevent zoom on iOS
+                "text-sm leading-5"
               )}
               disabled={!isAuthenticated || sending}
             />
@@ -175,12 +167,25 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                 size="icon"
                 variant="ghost"
                 type="button"
-                className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                className="h-7 w-7 text-gray-400 hover:text-white hover:bg-gray-700"
                 onClick={handleFileClick}
                 disabled={!isAuthenticated || sending || files.length >= 5}
                 title="Attach files"
               >
-                <Paperclip className="h-4 w-4" />
+                <Paperclip className="h-3 w-3" />
+              </Button>
+              <Button
+                size="icon"
+                type="button"
+                className="h-7 w-7 bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleSubmit}
+                disabled={!isAuthenticated || sending || (!message.trim() && files.length === 0)}
+              >
+                {sending ? (
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <SendIcon className="h-3 w-3" />
+                )}
               </Button>
             </div>
             <input
@@ -193,30 +198,6 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               disabled={!isAuthenticated || sending}
             />
           </div>
-          
-          <Button
-            size={isMobile ? "default" : "icon"}
-            type="button"
-            className={cn(
-              "bg-green-600 hover:bg-green-700 text-white transition-all",
-              isMobile ? "w-full py-3" : "h-12 w-12 rounded-full",
-              (sending || (!message.trim() && files.length === 0)) && "opacity-50 cursor-not-allowed"
-            )}
-            onClick={handleSubmit}
-            disabled={!isAuthenticated || sending || (!message.trim() && files.length === 0)}
-          >
-            {sending ? (
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                {isMobile && <span>Sending...</span>}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <SendIcon className="h-4 w-4" />
-                {isMobile && <span>Send</span>}
-              </div>
-            )}
-          </Button>
         </div>
         
         {files.length > 0 && (
@@ -225,8 +206,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           </p>
         )}
         
-        <p className="mt-3 text-xs text-center text-gray-500">
-          {isMobile ? "Tap" : "Press"} {isMobile ? "Send" : "Enter"} to send, {isMobile ? "new line for" : "Shift+Enter for"} line break
+        <p className="mt-2 text-xs text-center text-gray-500">
+          Press Enter to send, Shift+Enter for line break
         </p>
       </div>
     </div>

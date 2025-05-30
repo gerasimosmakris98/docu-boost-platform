@@ -27,16 +27,16 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-1", className)}>
       {isExpanded ? (
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-1 flex-1 max-w-48">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
             <Input
-              placeholder="Search messages..."
+              placeholder="Search..."
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+              className="pl-7 h-7 text-xs bg-gray-800 border-gray-700 text-white placeholder-gray-400"
               autoFocus
             />
           </div>
@@ -44,9 +44,9 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
             variant="ghost"
             size="icon"
             onClick={handleClear}
-            className="h-8 w-8 text-gray-400 hover:text-white"
+            className="h-6 w-6 text-gray-400 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3" />
           </Button>
         </div>
       ) : (
@@ -54,10 +54,10 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
           variant="ghost"
           size="icon"
           onClick={() => setIsExpanded(true)}
-          className="h-8 w-8 text-gray-400 hover:text-white"
+          className="h-6 w-6 text-gray-400 hover:text-white"
           title="Search messages"
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-3 w-3" />
         </Button>
       )}
     </div>

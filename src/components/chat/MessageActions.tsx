@@ -17,10 +17,9 @@ interface MessageActionsProps {
   message: Message;
   onRegenerate?: () => void;
   onEdit?: () => void;
-  onFeedback?: (isPositive: boolean) => void;
 }
 
-const MessageActions = ({ message, onRegenerate, onEdit, onFeedback }: MessageActionsProps) => {
+const MessageActions = ({ message, onRegenerate, onEdit }: MessageActionsProps) => {
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
     toast.success("Message copied to clipboard");
@@ -58,36 +57,36 @@ const MessageActions = ({ message, onRegenerate, onEdit, onFeedback }: MessageAc
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="h-6 w-6"
         onClick={handleCopy}
         title="Copy message"
       >
-        <Copy className="h-4 w-4" />
+        <Copy className="h-3 w-3" />
       </Button>
 
       {/* More actions dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-6 w-6">
+            <MoreHorizontal className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem onClick={handleCopy}>
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="h-3 w-3 mr-2" />
             Copy text
           </DropdownMenuItem>
           
           {isUser && onEdit && (
             <DropdownMenuItem onClick={onEdit}>
-              <Edit3 className="h-4 w-4 mr-2" />
+              <Edit3 className="h-3 w-3 mr-2" />
               Edit message
             </DropdownMenuItem>
           )}
           
           {isAssistant && onRegenerate && (
             <DropdownMenuItem onClick={onRegenerate}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-3 w-3 mr-2" />
               Regenerate
             </DropdownMenuItem>
           )}
@@ -95,12 +94,12 @@ const MessageActions = ({ message, onRegenerate, onEdit, onFeedback }: MessageAc
           <DropdownMenuSeparator />
           
           <DropdownMenuItem onClick={handleShare}>
-            <Share className="h-4 w-4 mr-2" />
+            <Share className="h-3 w-3 mr-2" />
             Share
           </DropdownMenuItem>
           
           <DropdownMenuItem onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-3 w-3 mr-2" />
             Download
           </DropdownMenuItem>
         </DropdownMenuContent>

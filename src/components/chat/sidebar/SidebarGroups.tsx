@@ -1,11 +1,12 @@
 
 import { useState, useMemo } from "react";
-import { Clock, Bot, FileText, Users, MessageSquare, Linkedin, Briefcase, CheckSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, Bot, FileText, Users, MessageSquare, Linkedin, Briefcase, CheckSquare, ChevronDown, ChevronUp, Trash2, MoreHorizontal, Edit } from "lucide-react";
 import { isToday, isYesterday, isThisWeek, isThisMonth, parseISO } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Conversation } from "@/services/conversationService";
 import { conversationService, ConversationType } from "@/services/conversationService";
 import { useNavigate } from "react-router-dom";
@@ -104,7 +105,6 @@ const SidebarGroups = ({
       Older: [],
     };
 
-    // Assuming conversations are sorted: most recent first
     conversations.forEach((conversation) => {
       const date = parseISO(conversation.updated_at);
       if (isToday(date)) {
@@ -122,8 +122,15 @@ const SidebarGroups = ({
     return groups;
   }, [conversations]);
 
+  const handleRenameConversation = (conversationId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // TODO: Implement rename functionality
+    toast.info("Rename feature coming soon!");
+  };
+
   return (
-    <div className="flex-1 flex flex-col"> {/* Removed overflow-hidden */}
+    <div className="flex-1 flex flex-col">
       {/* AI Advisors Section */}
       {!isCollapsed && (
         <div className="px-3 py-2 text-xs font-semibold text-gray-400">
@@ -143,14 +150,14 @@ const SidebarGroups = ({
               key={advisor.id}
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-2 h-9 px-2 text-gray-300 hover:text-white",
+                "w-full justify-start gap-2 h-8 px-2 text-gray-300 hover:text-white",
                 isCollapsed && "justify-center p-0"
               )}
               onClick={() => handleCreateConversation(advisor)}
               title={isCollapsed ? advisor.name : undefined}
             >
               {advisor.icon}
-              {!isCollapsed && <span>{advisor.name}</span>}
+              {!isCollapsed && <span className="text-sm">{advisor.name}</span>}
             </Button>
           ))}
         </div>
@@ -204,43 +211,44 @@ const SidebarGroups = ({
                     >
                       <Link 
                         to={`/chat/${conversation.id}`}
-                        className="truncate flex-1"
+                        className="truncate flex-1 min-w-0"
                       >
                         {!isCollapsed && (
-                          <span className="truncate">{conversation.title}</span>
+                          <span className="truncate block">{conversation.title}</span>
                         )}
                         {isCollapsed && (
                           <div className="w-full flex justify-center">
-                            <MessageSquare className="h-4 w-4" /> {/* TODO: Use dynamic icon based on conversation type if available */}
+                            <MessageSquare className="h-4 w-4" />
                           </div>
                         )}
                       </Link>
                       
                       {!isCollapsed && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                          onClick={(e) => onConversationDelete(conversation.id, e)}
-                          title="Delete conversation"
-                        >
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="14" 
-                            height="14" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            className="text-gray-400 hover:text-red-400"
-                          >
-                            <path d="M3 6h18"></path>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                          </svg>
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <MoreHorizontal className="h-3 w-3 text-gray-400 hover:text-white" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={(e) => handleRenameConversation(conversation.id, e)}>
+                              <Edit className="h-3 w-3 mr-2" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => onConversationDelete(conversation.id, e)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                   ))}
@@ -280,4 +288,3 @@ const SidebarGroups = ({
 };
 
 export default SidebarGroups;
-

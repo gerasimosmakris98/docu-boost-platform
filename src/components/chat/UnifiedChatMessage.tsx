@@ -172,7 +172,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-3 sm:gap-4 max-w-4xl mx-auto p-3 sm:p-4 group",
+        "flex gap-3 max-w-4xl mx-auto p-3 group",
         isUserMessage ? "flex-row-reverse" : "flex-row"
       )}
       aria-label={
@@ -182,21 +182,21 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       }
     >
       <Avatar className={cn(
-        "h-7 w-7 sm:h-8 sm:w-8 mt-1 border flex-shrink-0",
+        "h-7 w-7 mt-1 border flex-shrink-0",
         isUserMessage ? "bg-green-500/10 border-green-500/20" : "bg-gray-700/50 border-gray-600/30"
       )}>
         {isUserMessage ? (
           <>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback className="text-white bg-green-700">
-              <UserIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <UserIcon className="h-3 w-3" />
             </AvatarFallback>
           </>
         ) : (
           <>
             <AvatarImage src="" />
             <AvatarFallback className="text-white bg-gradient-to-r from-green-400 to-blue-500">
-              <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Bot className="h-3 w-3" />
             </AvatarFallback>
           </>
         )}
@@ -204,7 +204,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       
       <div className="flex-1 space-y-2 min-w-0">
         <div className="flex justify-between items-center">
-          <div className="font-medium text-xs sm:text-sm text-gray-300">
+          <div className="font-medium text-xs text-gray-300">
             <span className="sr-only">Sender: </span>{isUserMessage ? "You" : "AI Career Advisor"}
           </div>
           <div className="text-xs text-gray-500 flex-shrink-0">
@@ -251,7 +251,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                   )}
                   
                   {/* Action buttons for AI messages */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-2 mt-3 border-t border-gray-800">
+                  <div className="flex flex-wrap items-center gap-1 pt-2 mt-3 border-t border-gray-800">
                     {/* Feedback buttons */}
                     <div className="flex items-center gap-1 mr-2">
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -259,14 +259,14 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           variant={liked === true ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-8 w-8 transition-all",
+                            "h-6 w-6 transition-all",
                             liked === true && "bg-green-600 hover:bg-green-700 text-white",
                             liked !== null && liked !== true && "opacity-50",
                           )}
                           onClick={() => handleFeedback(true)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsUp className="h-4 w-4" />
+                          <ThumbsUp className="h-3 w-3" />
                         </Button>
                       </motion.div>
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -274,14 +274,14 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           variant={liked === false ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-8 w-8 transition-all",
+                            "h-6 w-6 transition-all",
                             liked === false && "bg-red-600 hover:bg-red-700 text-white",
                             liked !== null && liked !== false && "opacity-50",
                           )}
                           onClick={() => handleFeedback(false)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsDown className="h-4 w-4" />
+                          <ThumbsDown className="h-3 w-3" />
                         </Button>
                       </motion.div>
                     </div>
@@ -294,29 +294,29 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                       <Button
                         variant={contentFormat === 'normal' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-6 w-6"
                         onClick={() => setContentFormat('normal')}
                         title="Normal text"
                       >
-                        <span className="text-sm font-mono">T</span>
+                        <span className="text-xs font-mono">T</span>
                       </Button>
                       <Button
                         variant={contentFormat === 'bullets' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-6 w-6"
                         onClick={() => setContentFormat('bullets')}
                         title="Bullet points"
                       >
-                        <List className="h-4 w-4" />
+                        <List className="h-3 w-3" />
                       </Button>
                       <Button
                         variant={contentFormat === 'numbered' ? "default" : "ghost"}
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-6 w-6"
                         onClick={() => setContentFormat('numbered')}
                         title="Numbered list"
                       >
-                        <ListOrdered className="h-4 w-4" />
+                        <ListOrdered className="h-3 w-3" />
                       </Button>
                     </div>
                     
@@ -329,11 +329,11 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-6 w-6"
                           onClick={handleCopyText}
                           title="Copy text"
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-3 w-3" />
                         </Button>
                       </motion.div>
                       
@@ -342,11 +342,11 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-6 w-6"
                             onClick={onRegenerate}
                             title="Regenerate response"
                           >
-                            <RotateCcw className="h-4 w-4" />
+                            <RotateCcw className="h-3 w-3" />
                           </Button>
                         </motion.div>
                       )}
