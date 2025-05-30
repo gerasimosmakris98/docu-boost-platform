@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass' | 'gradient';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
-interface AnimatedButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag'> {
+interface AnimatedButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragEnd' | 'onDragEnter' | 'onDragExit' | 'onDragLeave' | 'onDragOver' | 'onDragStart' | 'onDrop'> {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
