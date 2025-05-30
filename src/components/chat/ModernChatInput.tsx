@@ -65,13 +65,13 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   const canSend = (message.trim().length > 0 || files.length > 0) && !disabled;
 
   return (
-    <div className="border-t border-white/20 bg-transparent p-4">
+    <div className="border-t border-white/10 bg-transparent p-4">
       <div className="max-w-4xl mx-auto">
         {/* File Attachments Preview */}
         {files.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
             {files.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 bg-white/10 rounded-lg p-2 border border-white/20">
+              <div key={index} className="flex items-center gap-2 bg-white/5 rounded-lg p-2 border border-white/20">
                 <span className="text-sm text-white/80 truncate max-w-32">
                   {file.name}
                 </span>
@@ -88,15 +88,15 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
           </div>
         )}
 
-        {/* Input Container */}
-        <div className="relative bg-white/10 border border-white/30 rounded-2xl backdrop-blur-sm">
+        {/* Input Container - Removed dark backgrounds, added subtle border */}
+        <div className="relative border border-white/20 rounded-2xl bg-transparent">
           <div className="flex items-end gap-3 p-4">
             {/* File Upload Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="h-10 w-10 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0"
+              className="h-11 w-11 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0"
               disabled={disabled}
             >
               <Paperclip className="h-4 w-4" />
@@ -124,7 +124,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
               onClick={handleSubmit}
               disabled={!canSend}
               size="sm"
-              className="h-10 w-10 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              className="h-11 w-11 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>

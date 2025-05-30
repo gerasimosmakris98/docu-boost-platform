@@ -163,7 +163,7 @@ const StreamlinedChatInterface = ({
           onRename={handleRenameConversation}
         />
         
-        {/* Messages area - Fixed scrolling container */}
+        {/* Messages area - Fixed height and scrolling */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full overflow-y-auto p-4">
             {messages.length === 0 ? (

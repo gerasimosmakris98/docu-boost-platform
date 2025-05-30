@@ -171,27 +171,27 @@ const UnifiedSidebar = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
           onClick={onToggleCollapse}
         />
       )}
       
-      {/* Sidebar */}
+      {/* Sidebar - Fixed responsive widths */}
       <motion.div 
         initial={false}
         animate={{ 
-          width: isCollapsed ? (isMobile ? 0 : 64) : 320 
+          width: isCollapsed ? (isMobile ? 0 : 64) : isMobile ? 280 : 320 
         }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className={cn(
-          "fixed left-0 top-0 z-50 h-screen border-r border-white/20 transition-all duration-200 overflow-hidden",
+          "fixed left-0 top-0 z-50 h-screen border-r border-white/10 transition-all duration-200 overflow-hidden",
           "lg:relative lg:z-auto",
-          "bg-white/5 backdrop-blur-xl",
+          "bg-transparent backdrop-blur-sm",
           isMobile && isCollapsed && "w-0"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/20 h-16">
+        <div className="flex items-center justify-between p-4 border-b border-white/10 h-16">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div
@@ -256,7 +256,7 @@ const UnifiedSidebar = ({
                   key={advisor.id}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-10 px-3 text-gray-200 hover:text-white hover:bg-white/10",
+                    "w-full justify-start gap-3 h-11 px-3 text-gray-200 hover:text-white hover:bg-white/10",
                     isCollapsed && "justify-center px-0"
                   )}
                   onClick={() => handleCreateConversation(advisor)}
@@ -294,7 +294,7 @@ const UnifiedSidebar = ({
                       key={conversation.id}
                       to={`/chat/${conversation.id}`}
                       className={cn(
-                        "flex items-center px-3 py-2 rounded text-sm hover:bg-white/10 transition-all duration-200",
+                        "flex items-center px-3 py-3 rounded text-sm hover:bg-white/10 transition-all duration-200 min-h-[44px]",
                         activeConversationId === conversation.id 
                           ? "bg-white/10 text-white" 
                           : "text-gray-300 hover:text-white",
@@ -320,8 +320,8 @@ const UnifiedSidebar = ({
             </ScrollArea>
           </div>
 
-          {/* User Info & Settings */}
-          <div className="mt-auto border-t border-white/20 p-4">
+          {/* User Info & Settings - Fixed dropdown z-index */}
+          <div className="mt-auto border-t border-white/10 p-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30">
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold">
@@ -353,20 +353,27 @@ const UnifiedSidebar = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-gray-300 hover:text-white hover:bg-white/10"
+                    className="h-11 w-11 text-gray-300 hover:text-white hover:bg-white/10"
                     title="Settings"
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-gray-800 border-gray-600 z-[100]">
-                  <DropdownMenuItem onClick={handleProfileSettings} className="text-gray-200 hover:text-white hover:bg-gray-700">
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-48 bg-gray-900/95 backdrop-blur-sm border-gray-600 z-[100] shadow-xl"
+                  sideOffset={8}
+                >
+                  <DropdownMenuItem 
+                    onClick={handleProfileSettings} 
+                    className="text-gray-200 hover:text-white hover:bg-gray-700/50 cursor-pointer h-11"
+                  >
                     <User className="h-4 w-4 mr-2" />
                     Profile Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleSignOut}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 cursor-pointer h-11"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out

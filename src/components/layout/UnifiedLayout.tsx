@@ -41,14 +41,14 @@ const UnifiedLayout = ({ children, activeConversationId, showFooter = false }: U
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-black">
       <div className="flex h-screen text-white">
-        {/* Mobile menu button */}
+        {/* Mobile menu button - Fixed positioning and size */}
         {isMobile && sidebarCollapsed && (
           <div className="absolute top-4 left-4 z-50">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={toggleSidebar}
-              className="text-white bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20"
+              className="h-11 w-11 text-white border border-white/20 hover:bg-white/10 bg-transparent"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -64,7 +64,7 @@ const UnifiedLayout = ({ children, activeConversationId, showFooter = false }: U
         
         {/* Main content */}
         <div className={cn(
-          "flex-1 flex flex-col min-h-0",
+          "flex-1 flex flex-col min-h-0 relative",
           !sidebarCollapsed && isMobile ? "hidden" : "flex"
         )}>
           {children}
