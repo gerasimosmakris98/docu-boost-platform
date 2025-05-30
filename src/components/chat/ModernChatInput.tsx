@@ -65,8 +65,8 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   const canSend = (message.trim().length > 0 || files.length > 0) && !disabled;
 
   return (
-    <div className="border-t border-white/20 bg-transparent p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="border-t border-white/20 bg-transparent p-4 w-full">
+      <div className="max-w-4xl mx-auto w-full">
         {/* File Attachments Preview */}
         {files.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -79,7 +79,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                   variant="ghost"
                   size="sm"
                   onClick={() => removeFile(index)}
-                  className="h-5 w-5 p-0 text-white/60 hover:text-red-400 min-h-[44px] min-w-[44px] touch-optimized"
+                  className="h-5 w-5 p-0 text-white/60 hover:text-red-400 min-h-[44px] min-w-[44px]"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -88,22 +88,22 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
           </div>
         )}
 
-        {/* Input Container - Completely transparent with subtle border */}
-        <div className="relative border border-white/20 rounded-2xl bg-transparent">
-          <div className="flex items-end gap-3 p-4">
+        {/* Input Container - Proper responsive design */}
+        <div className="relative border border-white/20 rounded-2xl bg-white/5 w-full">
+          <div className="flex items-end gap-3 p-4 w-full">
             {/* File Upload Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="h-11 w-11 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0 min-h-[44px] min-w-[44px] touch-optimized"
+              className="h-11 w-11 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0 min-h-[44px] min-w-[44px]"
               disabled={disabled}
             >
               <Paperclip className="h-4 w-4" />
             </Button>
 
             {/* Text Input */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative min-w-0">
               <Textarea
                 ref={textareaRef}
                 value={message}
@@ -113,7 +113,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 disabled={disabled}
                 className={cn(
                   "min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent text-white placeholder:text-white/60",
-                  "focus:ring-0 focus:outline-none text-base leading-relaxed p-0"
+                  "focus:ring-0 focus:outline-none text-base leading-relaxed p-0 w-full"
                 )}
                 style={{ height: 'auto', fontSize: '16px' }}
               />
@@ -124,7 +124,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
               onClick={handleSubmit}
               disabled={!canSend}
               size="sm"
-              className="h-11 w-11 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 min-h-[44px] min-w-[44px] touch-optimized"
+              className="h-11 w-11 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 min-h-[44px] min-w-[44px]"
             >
               <Send className="h-4 w-4" />
             </Button>

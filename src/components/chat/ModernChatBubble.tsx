@@ -39,7 +39,7 @@ const ModernChatBubble = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-3 max-w-4xl mx-auto mb-6 group",
+        "flex gap-3 mb-6 group w-full",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
@@ -71,8 +71,9 @@ const ModernChatBubble = ({
 
       {/* Message Content */}
       <div className={cn(
-        "flex-1 min-w-0 space-y-2",
-        isUser ? "text-right" : "text-left"
+        "flex-1 min-w-0 space-y-2 max-w-[calc(100%-4rem)]",
+        isUser ? "text-right items-end" : "text-left items-start",
+        "flex flex-col"
       )}>
         {/* Message Bubble */}
         <motion.div
@@ -80,10 +81,10 @@ const ModernChatBubble = ({
           animate={{ scale: 1 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            "inline-block max-w-[85%] rounded-2xl px-4 py-3 shadow-lg border relative",
+            "inline-block max-w-full rounded-2xl px-4 py-3 shadow-lg border relative break-words",
             isUser
-              ? "bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white border-blue-300/20 ml-auto"
-              : "bg-transparent text-white border-white/20 mr-auto"
+              ? "bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white border-blue-300/20 self-end"
+              : "bg-white/5 text-white border-white/20 self-start"
           )}
         >
           {isLoading ? (
@@ -105,14 +106,17 @@ const ModernChatBubble = ({
               />
             </div>
           ) : (
-            <div className="prose prose-invert max-w-none text-sm leading-relaxed">
+            <div className="prose prose-invert max-w-none text-sm leading-relaxed overflow-wrap-anywhere">
               {children}
             </div>
           )}
 
           {/* Action Buttons - Only for AI messages */}
           {!isUser && !isLoading && (
-            <div className="absolute -bottom-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className={cn(
+              "absolute -bottom-8 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity",
+              isUser ? "left-0" : "right-0"
+            )}>
               <Button
                 size="sm"
                 variant="ghost"

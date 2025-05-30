@@ -53,23 +53,24 @@ const ChatSuggestions = ({ onSuggestionClick, conversationType = 'general' }: Ch
   const suggestions = getSuggestions();
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 w-full max-w-4xl mx-auto">
       <h3 className="text-sm font-medium text-gray-400 mb-4">✨ Suggested prompts</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
         {suggestions.map((suggestion, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
+            className="w-full"
           >
             <Card 
-              className="p-4 bg-transparent border-white/20 hover:bg-white/5 transition-all cursor-pointer group hover:border-green-500/30 min-h-[44px] touch-optimized"
+              className="p-4 bg-white/5 border-white/20 hover:bg-white/10 transition-all cursor-pointer group hover:border-green-500/30 min-h-[44px] w-full"
               onClick={() => onSuggestionClick(suggestion.prompt)}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 w-full">
                 <suggestion.icon className={`h-5 w-5 ${suggestion.color} flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform`} />
-                <span className="text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed">
+                <span className="text-sm text-gray-300 group-hover:text-white transition-colors leading-relaxed flex-1 min-w-0">
                   {suggestion.text}
                 </span>
               </div>

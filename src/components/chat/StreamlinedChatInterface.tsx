@@ -148,10 +148,10 @@ const StreamlinedChatInterface = ({
   
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-full overflow-hidden">
         {/* Network status indicator */}
         {!isOnline && (
-          <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm">
+          <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm flex-shrink-0">
             No internet connection
           </div>
         )}
@@ -163,16 +163,16 @@ const StreamlinedChatInterface = ({
           onRename={handleRenameConversation}
         />
         
-        {/* Messages area - Fixed height and scrolling */}
-        <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto p-4">
+        {/* Messages area - Proper viewport calculations */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="h-full overflow-y-auto p-4 pb-6">
             {messages.length === 0 ? (
               <motion.div 
                 className="flex flex-col items-center justify-center h-full text-center p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="p-8 text-center max-w-md">
+                <div className="p-8 text-center max-w-md mx-auto">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -192,7 +192,7 @@ const StreamlinedChatInterface = ({
                 </div>
               </motion.div>
             ) : (
-              <div className="space-y-6 pb-4">
+              <div className="space-y-6 max-w-4xl mx-auto">
                 <AnimatePresence>
                   {messages.map((message, index) => (
                     <ModernChatBubble
@@ -214,12 +214,14 @@ const StreamlinedChatInterface = ({
           </div>
         </div>
         
-        {/* Input area */}
-        <ModernChatInput
-          onSubmit={handleSendMessage}
-          disabled={!isAuthenticated || isSending || !isOnline}
-          placeholder="Ask me about your career..."
-        />
+        {/* Input area - Fixed height */}
+        <div className="flex-shrink-0">
+          <ModernChatInput
+            onSubmit={handleSendMessage}
+            disabled={!isAuthenticated || isSending || !isOnline}
+            placeholder="Ask me about your career..."
+          />
+        </div>
       </div>
     </ErrorBoundary>
   );

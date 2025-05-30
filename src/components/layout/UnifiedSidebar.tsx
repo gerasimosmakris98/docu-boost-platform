@@ -165,22 +165,31 @@ const UnifiedSidebar = ({
 
   return (
     <>
-      {/* Mobile overlay - Completely transparent */}
+      {/* Mobile overlay - Completely invisible but functional */}
       {isMobile && !isCollapsed && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-transparent z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: 'transparent' }}
           onClick={onToggleCollapse}
         />
       )}
       
-      {/* Sidebar - Fully transparent with subtle borders */}
+      {/* Sidebar - Responsive widths with no dark backgrounds */}
       <motion.div 
         initial={false}
         animate={{ 
-          width: isCollapsed ? (isMobile ? 0 : 64) : isMobile ? 280 : 320 
+          width: isCollapsed 
+            ? (isMobile ? 0 : 64) 
+            : isMobile 
+              ? '100vw' 
+              : window.innerWidth >= 1024 
+                ? 320 
+                : window.innerWidth >= 768 
+                  ? 280 
+                  : '100vw'
         }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className={cn(
@@ -190,7 +199,7 @@ const UnifiedSidebar = ({
           isMobile && isCollapsed && "w-0"
         )}
       >
-        {/* Header - Transparent */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/20 h-16 bg-transparent">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
@@ -199,9 +208,9 @@ const UnifiedSidebar = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 flex-1 min-w-0"
               >
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
                     <Bot className="h-5 w-5 text-white" />
                   </div>
@@ -213,11 +222,11 @@ const UnifiedSidebar = ({
                     <Sparkles className="h-3 w-3 text-cyan-300" />
                   </motion.div>
                 </div>
-                <div>
-                  <h1 className="text-white font-semibold text-base">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-white font-semibold text-base truncate">
                     AI Career Advisor
                   </h1>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-300 text-sm truncate">
                     Your Career Assistant
                   </p>
                 </div>
@@ -229,7 +238,7 @@ const UnifiedSidebar = ({
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="text-gray-300 hover:text-white hover:bg-white/10 h-11 w-11 min-h-[44px] min-w-[44px]"
+            className="text-gray-300 hover:text-white hover:bg-white/10 h-11 w-11 min-h-[44px] min-w-[44px] flex-shrink-0"
           >
             {isMobile ? (
               isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />
@@ -239,10 +248,10 @@ const UnifiedSidebar = ({
           </Button>
         </div>
 
-        {/* Content - Transparent background */}
+        {/* Content */}
         <div className="flex flex-col h-[calc(100vh-64px)] bg-transparent">
           {/* AI Advisors Section */}
-          <div className="p-4">
+          <div className="p-4 flex-shrink-0">
             <div className={cn(
               "text-xs font-semibold text-gray-300 mb-3",
               isCollapsed && "text-center"
@@ -256,30 +265,30 @@ const UnifiedSidebar = ({
                   key={advisor.id}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start gap-3 h-11 px-3 text-gray-200 hover:text-white hover:bg-white/10 min-h-[44px]",
-                    isCollapsed && "justify-center px-0"
+                    "w-full justify-start gap-3 h-11 px-3 text-gray-200 hover:text-white hover:bg-white/10 min-h-[44px] transition-all duration-200",
+                    isCollapsed && "justify-center px-2"
                   )}
                   onClick={() => handleCreateConversation(advisor)}
                   title={isCollapsed ? advisor.name : undefined}
                 >
                   {advisor.icon}
-                  {!isCollapsed && <span className="text-sm">{advisor.name}</span>}
+                  {!isCollapsed && <span className="text-sm truncate">{advisor.name}</span>}
                 </Button>
               ))}
             </div>
           </div>
 
           {/* Recent Chats Section */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <div className={cn(
-              "px-4 py-2 text-xs font-semibold text-gray-300",
+              "px-4 py-2 text-xs font-semibold text-gray-300 flex-shrink-0",
               isCollapsed && "text-center"
             )}>
               {!isCollapsed ? "RECENT CHATS" : "CHAT"}
             </div>
             
             <ScrollArea className="flex-1 px-2">
-              <div className="space-y-1 px-2">
+              <div className="space-y-1 px-2 pb-4">
                 {isLoading ? (
                   <div className={cn("text-center py-4 text-gray-400 text-sm", isCollapsed && "hidden")}>
                     Loading...
@@ -294,11 +303,11 @@ const UnifiedSidebar = ({
                       key={conversation.id}
                       to={`/chat/${conversation.id}`}
                       className={cn(
-                        "flex items-center px-3 py-3 rounded text-sm hover:bg-white/10 transition-all duration-200 min-h-[44px] touch-optimized",
+                        "flex items-center px-3 py-3 rounded-lg text-sm hover:bg-white/10 transition-all duration-200 min-h-[44px] group",
                         activeConversationId === conversation.id 
                           ? "bg-white/10 text-white" 
                           : "text-gray-300 hover:text-white",
-                        isCollapsed && "justify-center"
+                        isCollapsed && "justify-center px-2"
                       )}
                       onClick={() => isMobile && onToggleCollapse()}
                       title={isCollapsed ? conversation.title : undefined}
@@ -308,7 +317,7 @@ const UnifiedSidebar = ({
                       ) : (
                         <>
                           <MessageSquare className="h-4 w-4 mr-3 flex-shrink-0" />
-                          <span className="truncate">
+                          <span className="truncate flex-1">
                             {conversation.title}
                           </span>
                         </>
@@ -320,10 +329,10 @@ const UnifiedSidebar = ({
             </ScrollArea>
           </div>
 
-          {/* User Info & Settings - Transparent with proper z-index */}
-          <div className="mt-auto border-t border-white/20 p-4 bg-transparent">
+          {/* User Info & Settings - Fixed profile dropdown */}
+          <div className="mt-auto border-t border-white/20 p-4 bg-transparent flex-shrink-0">
             <div className="flex items-center gap-3">
-              <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30">
+              <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30 flex-shrink-0">
                 <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
@@ -336,9 +345,9 @@ const UnifiedSidebar = ({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.15 }}
-                    className="flex-1 truncate"
+                    className="flex-1 truncate min-w-0"
                   >
-                    <p className="text-sm font-medium text-white leading-none">
+                    <p className="text-sm font-medium text-white leading-none truncate">
                       {user?.user_metadata?.full_name || user?.email}
                     </p>
                     {user?.email && (
@@ -353,7 +362,7 @@ const UnifiedSidebar = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-11 w-11 text-gray-300 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px] touch-optimized"
+                    className="h-11 w-11 text-gray-300 hover:text-white hover:bg-white/10 min-h-[44px] min-w-[44px] flex-shrink-0"
                     title="Settings"
                   >
                     <Settings className="h-4 w-4" />
@@ -361,19 +370,19 @@ const UnifiedSidebar = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-48 bg-gray-900/98 backdrop-blur-sm border-gray-600 z-[100] shadow-xl"
+                  className="w-48 bg-white/10 backdrop-blur-md border-white/20 z-[100] shadow-xl"
                   sideOffset={8}
                 >
                   <DropdownMenuItem 
                     onClick={handleProfileSettings} 
-                    className="text-gray-200 hover:text-white hover:bg-gray-700/50 cursor-pointer h-11 min-h-[44px] touch-optimized"
+                    className="text-gray-200 hover:text-white hover:bg-white/10 cursor-pointer h-11 min-h-[44px] focus:bg-white/10 focus:text-white"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Profile Settings
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleSignOut}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 cursor-pointer h-11 min-h-[44px] touch-optimized"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer h-11 min-h-[44px] focus:bg-red-500/10 focus:text-red-300"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
