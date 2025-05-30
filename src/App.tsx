@@ -9,7 +9,7 @@ import { AuthProvider } from "@/contexts/auth/AuthContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import WelcomePage from "./pages/WelcomePage";
 import "./App.css";
-import ChatPage from "./pages/ChatPage";
+import EnhancedChatPage from "./pages/EnhancedChatPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import TermsPage from "./pages/legal/TermsPage";
@@ -44,8 +44,8 @@ function App() {
                   <Toaster />
                   <Routes>
                     <Route path="/" element={<WelcomePage />} />
-                    <Route path="/chat" element={<ChatPage />} />
-                    <Route path="/chat/:id" element={<ChatPage />} />
+                    <Route path="/chat" element={<EnhancedChatPage />} />
+                    <Route path="/chat/:id" element={<EnhancedChatPage />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/terms" element={<TermsPage />} />
