@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/auth/AuthContext";
+import { ThemeProvider } from "@/contexts/theme/ThemeContext";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import WelcomePage from "./pages/WelcomePage";
 import "./App.css";
@@ -30,7 +30,7 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <ThemeProvider defaultTheme="dark" storageKey="ai-career-advisor-theme">
             <TooltipProvider>
               <AuthProvider>
                 <BrowserRouter>
