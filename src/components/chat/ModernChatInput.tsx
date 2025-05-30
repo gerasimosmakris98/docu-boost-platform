@@ -5,6 +5,7 @@ import { Send, Paperclip, Mic, Image, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ModernChatInputProps {
   onSubmit: (message: string) => void;
@@ -16,6 +17,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = () => {
     if (!message.trim() || disabled) return;
@@ -33,8 +35,42 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
     }
   };
 
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      toast.success(`${files.length} file(s) selected`);
+    }
+  };
+
+  const handleImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        toast.success(`${files.length} image(s) selected`);
+      }
+    };
+    input.click();
+  };
+
+  const handleEmojiPicker = () => {
+    toast.info("Emoji picker coming soon!");
+  };
+
   const toggleRecording = () => {
     setIsRecording(!isRecording);
+    if (!isRecording) {
+      toast.info("Voice recording started");
+    } else {
+      toast.info("Voice recording stopped");
+    }
   };
 
   // Auto-resize textarea
@@ -105,6 +141,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={handleFileUpload}
                   className="h-7 w-7 p-0 text-white/60 hover:text-white hover:bg-white/10"
                   disabled={disabled}
                 >
@@ -113,6 +150,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={handleImageUpload}
                   className="h-7 w-7 p-0 text-white/60 hover:text-white hover:bg-white/10"
                   disabled={disabled}
                 >
@@ -121,6 +159,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={handleEmojiPicker}
                   className="h-7 w-7 p-0 text-white/60 hover:text-white hover:bg-white/10"
                   disabled={disabled}
                 >
@@ -165,6 +204,16 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
           Press Enter to send, Shift+Enter for new line
         </p>
       </motion.div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
+      />
     </div>
   );
 };

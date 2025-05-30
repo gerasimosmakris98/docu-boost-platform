@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
@@ -14,7 +13,6 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import GradientBackground from "@/components/ui/GradientBackground";
 import ModernCard from "@/components/ui/ModernCard";
 import { Bot } from "lucide-react";
 
@@ -200,18 +198,22 @@ const StreamlinedChatInterface = ({
     toast.info("Message editing feature coming soon!");
   }, []);
 
-  // Show loading state
+  // Show loading state with improved spinner
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-violet-900 via-blue-900 to-indigo-900">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-900 via-blue-900 to-black">
         <motion.div 
           className="text-center space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent mx-auto"></div>
-          <p className="text-white/70">Loading AI Career Advisor...</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="h-12 w-12 rounded-full border-4 border-cyan-500/30 border-t-cyan-500 mx-auto"
+          />
+          <p className="text-white/70 text-lg">Loading AI Career Advisor...</p>
         </motion.div>
       </div>
     );
@@ -219,17 +221,7 @@ const StreamlinedChatInterface = ({
   
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-full bg-gradient-to-br from-violet-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,_white_2px,_transparent_2px)] bg-[length:60px_60px] animate-pulse"></div>
-        </div>
-        
-        {/* Floating gradient orbs */}
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-
+      <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-blue-900 to-black">
         {/* Network status indicator */}
         {!isOnline && (
           <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm z-10">

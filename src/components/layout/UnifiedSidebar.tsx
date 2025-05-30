@@ -145,7 +145,7 @@ const UnifiedSidebar = ({
         className={cn(
           "fixed left-0 top-0 z-50 h-screen border-r border-white/10 transition-all duration-300 overflow-hidden",
           "lg:relative lg:z-auto",
-          "bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl",
+          "bg-gradient-to-b from-slate-900/95 to-black/95 backdrop-blur-xl",
           isMobile && isCollapsed && "w-0"
         )}
       >
@@ -318,7 +318,7 @@ const UnifiedSidebar = ({
             </ScrollArea>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation with Profile Icon */}
           <AnimatePresence>
             {!isCollapsed && (
               <motion.div
@@ -348,6 +348,27 @@ const UnifiedSidebar = ({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Collapsed Navigation with Profile Icon */}
+          {isCollapsed && (
+            <div className="px-2 py-2">
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Link
+                  to="/profile"
+                  className={cn(
+                    "flex items-center justify-center p-2 rounded text-sm transition-all duration-200",
+                    isActive("/profile")
+                      ? "bg-white/10 text-white"
+                      : "text-gray-400 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={() => isMobile && onToggleCollapse()}
+                  title="Profile"
+                >
+                  <User className="h-4 w-4" />
+                </Link>
+              </motion.div>
+            </div>
+          )}
 
           {/* User Info & Logout */}
           <div className="mt-auto border-t border-white/10 p-3">
