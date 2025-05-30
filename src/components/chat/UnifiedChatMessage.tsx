@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface UnifiedChatMessageProps {
   message: Message;
@@ -30,6 +31,7 @@ interface UnifiedChatMessageProps {
 
 const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }: UnifiedChatMessageProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const isUserMessage = message.role === 'user';
   const isThinking = message.id?.startsWith('temp-ai') || isLoading;
   const [liked, setLiked] = useState<boolean | null>(null);
@@ -106,7 +108,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
   const formatDateTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return format(date, 'MMM d, h:mm a');
+      return format(date, isMobile ? 'h:mm a' : 'MMM d, h:mm a');
     } catch (e) {
       return '';
     }
@@ -129,7 +131,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
     processedContent = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const languageClass = lang ? `language-${lang}` : '';
       const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<pre class="${languageClass} bg-gray-800 rounded-lg p-4 overflow-x-auto my-4" tabIndex="0"><code>${escapedCode}</code></pre>`;
+      return `<pre class="${languageClass} bg-gray-800 rounded-lg p-3 sm:p-4 overflow-x-auto my-3 sm:my-4 text-xs sm:text-sm" tabIndex="0"><code>${escapedCode}</code></pre>`;
     });
     
     // Handle **bold** text
@@ -172,7 +174,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-3 max-w-4xl mx-auto p-3 group",
+        "flex gap-2 sm:gap-3 max-w-4xl mx-auto p-2 sm:p-3 group",
         isUserMessage ? "flex-row-reverse" : "flex-row"
       )}
       aria-label={
@@ -182,27 +184,27 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
       }
     >
       <Avatar className={cn(
-        "h-7 w-7 mt-1 border flex-shrink-0",
+        "h-6 w-6 sm:h-7 sm:w-7 mt-1 border flex-shrink-0",
         isUserMessage ? "bg-green-500/10 border-green-500/20" : "bg-gray-700/50 border-gray-600/30"
       )}>
         {isUserMessage ? (
           <>
             <AvatarImage src={user?.user_metadata?.avatar_url} />
             <AvatarFallback className="text-white bg-green-700">
-              <UserIcon className="h-3 w-3" />
+              <UserIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
             </AvatarFallback>
           </>
         ) : (
           <>
             <AvatarImage src="" />
             <AvatarFallback className="text-white bg-gradient-to-r from-green-400 to-blue-500">
-              <Bot className="h-3 w-3" />
+              <Bot className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
             </AvatarFallback>
           </>
         )}
       </Avatar>
       
-      <div className="flex-1 space-y-2 min-w-0">
+      <div className="flex-1 space-y-1 sm:space-y-2 min-w-0">
         <div className="flex justify-between items-center">
           <div className="font-medium text-xs text-gray-300">
             <span className="sr-only">Sender: </span>{isUserMessage ? "You" : "AI Career Advisor"}
@@ -213,7 +215,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
         </div>
         
         <div className={cn(
-          "text-sm text-white break-words",
+          "text-xs sm:text-sm text-white break-words",
           isThinking && "text-gray-400"
         )}>
           {isThinking ? (
@@ -222,19 +224,19 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin mr-2" />
               <span>Thinking...</span>
             </motion.div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {isUserMessage ? (
-                <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/20 whitespace-pre-wrap">
+                <div className="bg-green-900/30 rounded-lg p-2 sm:p-3 border border-green-500/20 whitespace-pre-wrap">
                   {finalContentToRender}
                 </div>
               ) : (
                 <>
                   <div 
-                    className="prose prose-invert max-w-none prose-p:my-2 prose-headings:mb-2 prose-headings:mt-4 prose-pre:bg-gray-800 prose-pre:border prose-pre:border-gray-700"
+                    className="prose prose-invert max-w-none prose-p:my-1 sm:prose-p:my-2 prose-headings:mb-1 sm:prose-headings:mb-2 prose-headings:mt-2 sm:prose-headings:mt-4 prose-pre:bg-gray-800 prose-pre:border prose-pre:border-gray-700"
                     dangerouslySetInnerHTML={{ __html: finalContentToRender }}
                   />
                   
@@ -251,7 +253,7 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                   )}
                   
                   {/* Action buttons for AI messages */}
-                  <div className="flex flex-wrap items-center gap-1 pt-2 mt-3 border-t border-gray-800">
+                  <div className="flex flex-wrap items-center gap-1 pt-2 mt-2 sm:mt-3 border-t border-gray-800">
                     {/* Feedback buttons */}
                     <div className="flex items-center gap-1 mr-2">
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -259,14 +261,14 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           variant={liked === true ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-6 w-6 transition-all",
+                            "h-5 w-5 sm:h-6 sm:w-6 transition-all",
                             liked === true && "bg-green-600 hover:bg-green-700 text-white",
                             liked !== null && liked !== true && "opacity-50",
                           )}
                           onClick={() => handleFeedback(true)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsUp className="h-3 w-3" />
+                          <ThumbsUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         </Button>
                       </motion.div>
                       <motion.div whileTap={{ scale: 0.9 }}>
@@ -274,54 +276,58 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           variant={liked === false ? "default" : "ghost"} 
                           size="icon" 
                           className={cn(
-                            "h-6 w-6 transition-all",
+                            "h-5 w-5 sm:h-6 sm:w-6 transition-all",
                             liked === false && "bg-red-600 hover:bg-red-700 text-white",
                             liked !== null && liked !== false && "opacity-50",
                           )}
                           onClick={() => handleFeedback(false)}
                           disabled={liked !== null || message.id?.startsWith('temp-') || message.id?.startsWith('error-')}
                         >
-                          <ThumbsDown className="h-3 w-3" />
+                          <ThumbsDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         </Button>
                       </motion.div>
                     </div>
                     
                     {/* Separator */}
-                    <div className="h-4 w-px bg-gray-700 mx-1" />
+                    <div className="h-3 sm:h-4 w-px bg-gray-700 mx-1" />
                     
-                    {/* Format buttons */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant={contentFormat === 'normal' ? "default" : "ghost"}
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setContentFormat('normal')}
-                        title="Normal text"
-                      >
-                        <span className="text-xs font-mono">T</span>
-                      </Button>
-                      <Button
-                        variant={contentFormat === 'bullets' ? "default" : "ghost"}
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setContentFormat('bullets')}
-                        title="Bullet points"
-                      >
-                        <List className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant={contentFormat === 'numbered' ? "default" : "ghost"}
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setContentFormat('numbered')}
-                        title="Numbered list"
-                      >
-                        <ListOrdered className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    
-                    {/* Separator */}
-                    <div className="h-4 w-px bg-gray-700 mx-1" />
+                    {/* Format buttons - hidden on mobile for space */}
+                    {!isMobile && (
+                      <>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant={contentFormat === 'normal' ? "default" : "ghost"}
+                            size="icon"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
+                            onClick={() => setContentFormat('normal')}
+                            title="Normal text"
+                          >
+                            <span className="text-xs font-mono">T</span>
+                          </Button>
+                          <Button
+                            variant={contentFormat === 'bullets' ? "default" : "ghost"}
+                            size="icon"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
+                            onClick={() => setContentFormat('bullets')}
+                            title="Bullet points"
+                          >
+                            <List className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          </Button>
+                          <Button
+                            variant={contentFormat === 'numbered' ? "default" : "ghost"}
+                            size="icon"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
+                            onClick={() => setContentFormat('numbered')}
+                            title="Numbered list"
+                          >
+                            <ListOrdered className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                          </Button>
+                        </div>
+                        
+                        {/* Separator */}
+                        <div className="h-3 sm:h-4 w-px bg-gray-700 mx-1" />
+                      </>
+                    )}
                     
                     {/* Action buttons */}
                     <div className="flex items-center gap-1">
@@ -329,11 +335,11 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6"
+                          className="h-5 w-5 sm:h-6 sm:w-6"
                           onClick={handleCopyText}
                           title="Copy text"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                         </Button>
                       </motion.div>
                       
@@ -342,11 +348,11 @@ const UnifiedChatMessage = ({ message, isLoading = false, onRegenerate, onEdit }
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-5 w-5 sm:h-6 sm:w-6"
                             onClick={onRegenerate}
                             title="Regenerate response"
                           >
-                            <RotateCcw className="h-3 w-3" />
+                            <RotateCcw className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           </Button>
                         </motion.div>
                       )}

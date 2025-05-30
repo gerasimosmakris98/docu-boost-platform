@@ -29,14 +29,14 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
   return (
     <div className={cn("flex items-center gap-1", className)}>
       {isExpanded ? (
-        <div className="flex items-center gap-1 flex-1 max-w-48">
+        <div className="flex items-center gap-1 flex-1 max-w-32">
           <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+            <Search className="absolute left-1.5 top-1/2 transform -translate-y-1/2 h-2.5 w-2.5 text-gray-400" />
             <Input
               placeholder="Search..."
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-7 h-7 text-xs bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+              className="pl-5 h-6 text-xs bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-green-500 focus:ring-green-500/20"
               autoFocus
             />
           </div>
@@ -44,9 +44,9 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
             variant="ghost"
             size="icon"
             onClick={handleClear}
-            className="h-6 w-6 text-gray-400 hover:text-white"
+            className="h-5 w-5 text-gray-400 hover:text-white p-0"
           >
-            <X className="h-3 w-3" />
+            <X className="h-2.5 w-2.5" />
           </Button>
         </div>
       ) : (
@@ -54,10 +54,10 @@ const MessageSearch = ({ onSearch, onClear, className }: MessageSearchProps) => 
           variant="ghost"
           size="icon"
           onClick={() => setIsExpanded(true)}
-          className="h-6 w-6 text-gray-400 hover:text-white"
+          className="h-5 w-5 text-gray-400 hover:text-white p-0"
           title="Search messages"
         >
-          <Search className="h-3 w-3" />
+          <Search className="h-2.5 w-2.5" />
         </Button>
       )}
     </div>

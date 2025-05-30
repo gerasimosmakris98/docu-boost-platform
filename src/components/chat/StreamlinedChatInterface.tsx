@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
@@ -8,7 +9,6 @@ import ChatInput from "./components/ChatInput";
 import ChatHeader from "./ChatHeader";
 import MessageSearch from "./MessageSearch";
 import TypingIndicator from "./TypingIndicator";
-import MessageActions from "./MessageActions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -144,26 +144,17 @@ const StreamlinedChatInterface = ({
   };
 
   const handleRenameConversation = (newTitle: string) => {
-    // Update conversation title in parent component if needed
-    // This would typically be handled by a callback prop
     console.log("Conversation renamed to:", newTitle);
   };
 
   const handleRegenerateMessage = async (messageIndex: number) => {
-    // Implementation for regenerating AI responses
     console.log("Regenerating message at index:", messageIndex);
     toast.info("Regeneration feature coming soon!");
   };
 
   const handleEditMessage = (messageIndex: number) => {
-    // Implementation for editing user messages
     console.log("Editing message at index:", messageIndex);
     toast.info("Message editing feature coming soon!");
-  };
-
-  const handleMessageFeedback = (messageId: string, isPositive: boolean) => {
-    // Implementation for message feedback
-    console.log("Feedback for message:", messageId, "positive:", isPositive);
   };
 
   // Show loading state
@@ -209,32 +200,32 @@ const StreamlinedChatInterface = ({
       >
         {filteredMessages.length === 0 ? (
           <motion.div 
-            className="flex flex-col items-center justify-center h-full text-center p-6"
+            className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-6 border border-green-500/20 mb-6">
+            <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-4 sm:p-6 border border-green-500/20 mb-4 sm:mb-6">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="text-4xl"
+                className="text-2xl sm:text-4xl"
               >
                 🤖
               </motion.div>
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
               Welcome to AI Career Advisor
             </h3>
-            <p className="text-gray-400 mb-4 max-w-md">
+            <p className="text-gray-400 mb-3 sm:mb-4 max-w-md text-sm sm:text-base">
               I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               Start by typing a message below.
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <AnimatePresence>
               {filteredMessages.map((message, index) => (
                 <motion.div
@@ -248,14 +239,9 @@ const StreamlinedChatInterface = ({
                   <UnifiedChatMessage
                     message={message}
                     isLoading={message.id?.startsWith('temp')}
+                    onRegenerate={() => handleRegenerateMessage(index)}
+                    onEdit={() => handleEditMessage(index)}
                   />
-                  <div className="mt-2">
-                    <MessageActions
-                      message={message}
-                      onRegenerate={() => handleRegenerateMessage(index)}
-                      onEdit={() => handleEditMessage(index)}
-                    />
-                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
