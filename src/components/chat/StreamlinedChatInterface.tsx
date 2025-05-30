@@ -164,53 +164,55 @@ const StreamlinedChatInterface = ({
           onRename={handleRenameConversation}
         />
         
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto p-4 min-h-0">
-          {messages.length === 0 ? (
-            <motion.div 
-              className="flex flex-col items-center justify-center h-full text-center p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <ModernCard className="p-8 text-center max-w-md bg-white/10 border-white/20">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="text-4xl mb-4"
-                >
-                  <Bot className="h-16 w-16 mx-auto text-blue-400" />
-                </motion.div>
-                <h3 className="text-xl font-semibold mb-3 text-white">
-                  Welcome to AI Career Advisor
-                </h3>
-                <p className="text-white/80 mb-4 leading-relaxed">
-                  I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
-                </p>
-                <p className="text-sm text-white/60">
-                  Start by typing a message below.
-                </p>
-              </ModernCard>
-            </motion.div>
-          ) : (
-            <div className="space-y-6">
-              <AnimatePresence>
-                {messages.map((message, index) => (
-                  <ModernChatBubble
-                    key={message.id || `msg-${index}-${message.created_at}`}
-                    isUser={message.role === 'user'}
-                    isLoading={message.id?.startsWith('temp')}
-                    timestamp={new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {/* Messages area - Fixed scrolling container */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto p-4">
+            {messages.length === 0 ? (
+              <motion.div 
+                className="flex flex-col items-center justify-center h-full text-center p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="p-8 text-center max-w-md">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="text-4xl mb-4"
                   >
-                    {message.content}
-                  </ModernChatBubble>
-                ))}
-              </AnimatePresence>
-              
-              {/* Typing indicator */}
-              {isTyping && <TypingIndicator />}
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+                    <Bot className="h-16 w-16 mx-auto text-blue-400" />
+                  </motion.div>
+                  <h3 className="text-xl font-semibold mb-3 text-white">
+                    Welcome to AI Career Advisor
+                  </h3>
+                  <p className="text-white/80 mb-4 leading-relaxed">
+                    I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
+                  </p>
+                  <p className="text-sm text-white/60">
+                    Start by typing a message below.
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="space-y-6 pb-4">
+                <AnimatePresence>
+                  {messages.map((message, index) => (
+                    <ModernChatBubble
+                      key={message.id || `msg-${index}-${message.created_at}`}
+                      isUser={message.role === 'user'}
+                      isLoading={message.id?.startsWith('temp')}
+                      timestamp={new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    >
+                      {message.content}
+                    </ModernChatBubble>
+                  ))}
+                </AnimatePresence>
+                
+                {/* Typing indicator */}
+                {isTyping && <TypingIndicator />}
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
         
         {/* Input area */}

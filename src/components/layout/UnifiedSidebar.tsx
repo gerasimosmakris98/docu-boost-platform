@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/useAuth";
 import { conversationService, Conversation } from "@/services/conversationService";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   ChevronLeft, 
   Menu, 
@@ -13,7 +14,13 @@ import {
   LogOut,
   MessageSquare,
   Bot,
-  Sparkles
+  Sparkles,
+  Settings,
+  FileText,
+  Users,
+  Linkedin,
+  Briefcase,
+  CheckSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,6 +34,58 @@ interface UnifiedSidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
+
+const advisors = [
+  {
+    id: 'general',
+    name: 'Career Advisor',
+    type: 'general' as const,
+    icon: <Bot className="h-4 w-4" />,
+    description: 'General career guidance and advice'
+  },
+  {
+    id: 'resume',
+    name: 'Resume Advisor',
+    type: 'resume' as const,
+    icon: <FileText className="h-4 w-4" />,
+    description: 'Resume reviews and optimization'
+  },
+  {
+    id: 'interview',
+    name: 'Interview Advisor',
+    type: 'interview_prep' as const,
+    icon: <Users className="h-4 w-4" />,
+    description: 'Interview preparation and practice'
+  },
+  {
+    id: 'cover-letter',
+    name: 'Cover Letter Advisor',
+    type: 'cover_letter' as const,
+    icon: <MessageSquare className="h-4 w-4" />,
+    description: 'Cover letter writing assistance'
+  },
+  {
+    id: 'job-search',
+    name: 'Job Search Advisor',
+    type: 'job_search' as const,
+    icon: <Briefcase className="h-4 w-4" />,
+    description: 'Job search strategy and advice'
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn Advisor',
+    type: 'linkedin' as const,
+    icon: <Linkedin className="h-4 w-4" />,
+    description: 'LinkedIn profile optimization'
+  },
+  {
+    id: 'assessment',
+    name: 'Assessment Advisor',
+    type: 'assessment' as const,
+    icon: <CheckSquare className="h-4 w-4" />,
+    description: 'Assessment preparation'
+  },
+];
 
 const UnifiedSidebar = ({ 
   activeConversationId, 
@@ -59,16 +118,17 @@ const UnifiedSidebar = ({
     }
   };
 
-  const handleCreateChat = async () => {
+  const handleCreateConversation = async (advisor: typeof advisors[0]) => {
     try {
-      const conversation = await conversationService.createSpecializedConversation('general');
+      const conversation = await conversationService.createSpecializedConversation(advisor.type);
       if (conversation) {
         navigate(`/chat/${conversation.id}`);
         if (isMobile) onToggleCollapse();
+        toast.success(`Started conversation with ${advisor.name}`);
       }
     } catch (error) {
-      console.error("Error creating chat:", error);
-      toast.error("Failed to create new chat");
+      console.error("Error creating conversation:", error);
+      toast.error("Failed to create new conversation");
     }
   };
 
@@ -76,6 +136,11 @@ const UnifiedSidebar = ({
     await logout();
     navigate('/auth');
     toast.success("Logged out successfully");
+  };
+
+  const handleProfileSettings = () => {
+    navigate('/profile');
+    if (isMobile) onToggleCollapse();
   };
 
   // Get user initials
@@ -115,18 +180,18 @@ const UnifiedSidebar = ({
       <motion.div 
         initial={false}
         animate={{ 
-          width: isCollapsed ? (isMobile ? 0 : 60) : 280 
+          width: isCollapsed ? (isMobile ? 0 : 64) : 320 
         }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
         className={cn(
           "fixed left-0 top-0 z-50 h-screen border-r border-white/10 transition-all duration-200 overflow-hidden",
           "lg:relative lg:z-auto",
-          "bg-black/80 backdrop-blur-xl",
+          "bg-black/20 backdrop-blur-xl",
           isMobile && isCollapsed && "w-0"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-white/10 h-16">
+        <div className="flex items-center justify-between p-4 border-b border-white/10 h-16">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div
@@ -134,25 +199,25 @@ const UnifiedSidebar = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-3"
               >
                 <div className="relative">
-                  <div className="h-7 w-7 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-white" />
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                    <Bot className="h-5 w-5 text-white" />
                   </div>
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    className="absolute -top-0.5 -right-0.5"
+                    className="absolute -top-1 -right-1"
                   >
-                    <Sparkles className="h-2.5 w-2.5 text-cyan-300" />
+                    <Sparkles className="h-3 w-3 text-cyan-300" />
                   </motion.div>
                 </div>
                 <div>
-                  <h1 className="text-white font-semibold text-sm">
+                  <h1 className="text-white font-semibold text-base">
                     AI Career Advisor
                   </h1>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-gray-400 text-sm">
                     Your Career Assistant
                   </p>
                 </div>
@@ -164,43 +229,56 @@ const UnifiedSidebar = ({
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="text-gray-400 hover:text-white hover:bg-white/10 h-8 w-8"
+            className="text-gray-400 hover:text-white hover:bg-white/10 h-9 w-9"
           >
             {isMobile ? (
-              isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />
+              isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />
             ) : (
-              isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
+              isCollapsed ? <Menu className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />
             )}
           </Button>
         </div>
 
         {/* Content */}
         <div className="flex flex-col h-[calc(100vh-64px)]">
-          {/* New Chat Button */}
-          <div className="p-3">
-            <Button 
-              onClick={handleCreateChat}
-              className={cn(
-                "w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white",
-                isCollapsed && "p-2"
-              )}
-              size={isCollapsed ? "icon" : "default"}
-            >
-              <Plus className="h-4 w-4" />
-              {!isCollapsed && <span className="ml-2">New Chat</span>}
-            </Button>
-          </div>
-
-          {/* Recent Chats */}
-          <div className="flex-1 overflow-hidden">
+          {/* AI Advisors Section */}
+          <div className="p-4">
             <div className={cn(
-              "px-3 py-2 text-xs font-semibold text-gray-400",
+              "text-xs font-semibold text-gray-400 mb-3",
               isCollapsed && "text-center"
             )}>
-              {!isCollapsed && "RECENT CHATS"}
+              {!isCollapsed ? "AI ADVISORS" : "AI"}
             </div>
             
-            <ScrollArea className="flex-1 px-1">
+            <div className="space-y-1">
+              {advisors.map((advisor) => (
+                <Button
+                  key={advisor.id}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-3 h-10 px-3 text-gray-300 hover:text-white hover:bg-white/10",
+                    isCollapsed && "justify-center px-0"
+                  )}
+                  onClick={() => handleCreateConversation(advisor)}
+                  title={isCollapsed ? advisor.name : undefined}
+                >
+                  {advisor.icon}
+                  {!isCollapsed && <span className="text-sm">{advisor.name}</span>}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Chats Section */}
+          <div className="flex-1 overflow-hidden">
+            <div className={cn(
+              "px-4 py-2 text-xs font-semibold text-gray-400",
+              isCollapsed && "text-center"
+            )}>
+              {!isCollapsed ? "RECENT CHATS" : "CHAT"}
+            </div>
+            
+            <ScrollArea className="flex-1 px-2">
               <div className="space-y-1 px-2">
                 {isLoading ? (
                   <div className={cn("text-center py-4 text-gray-500 text-sm", isCollapsed && "hidden")}>
@@ -216,7 +294,7 @@ const UnifiedSidebar = ({
                       key={conversation.id}
                       to={`/chat/${conversation.id}`}
                       className={cn(
-                        "flex items-center px-2 py-2 rounded text-sm hover:bg-white/10 transition-all duration-200",
+                        "flex items-center px-3 py-2 rounded text-sm hover:bg-white/10 transition-all duration-200",
                         activeConversationId === conversation.id 
                           ? "bg-white/10 text-white" 
                           : "text-gray-400 hover:text-white",
@@ -242,47 +320,11 @@ const UnifiedSidebar = ({
             </ScrollArea>
           </div>
 
-          {/* Profile Navigation */}
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="px-3 py-2"
-              >
-                <Link
-                  to="/profile"
-                  className="flex items-center px-3 py-2 rounded text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  onClick={() => isMobile && onToggleCollapse()}
-                >
-                  <User className="h-4 w-4 mr-3" />
-                  Profile
-                </Link>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Collapsed Profile */}
-          {isCollapsed && (
-            <div className="px-2 py-2">
-              <Link
-                to="/profile"
-                className="flex items-center justify-center p-2 rounded text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
-                onClick={() => isMobile && onToggleCollapse()}
-                title="Profile"
-              >
-                <User className="h-4 w-4" />
-              </Link>
-            </div>
-          )}
-
-          {/* User Info & Logout */}
-          <div className="mt-auto border-t border-white/10 p-3">
+          {/* User Info & Settings */}
+          <div className="mt-auto border-t border-white/10 p-4">
             <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8 ring-2 ring-cyan-500/30">
-                <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-semibold">
+              <Avatar className="h-9 w-9 ring-2 ring-cyan-500/30">
+                <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -306,15 +348,31 @@ const UnifiedSidebar = ({
                 )}
               </AnimatePresence>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-                title="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-gray-400 hover:text-white hover:bg-white/10"
+                    title="Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700">
+                  <DropdownMenuItem onClick={handleProfileSettings} className="text-gray-300 hover:text-white hover:bg-gray-800">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

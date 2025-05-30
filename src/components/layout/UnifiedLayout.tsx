@@ -30,21 +30,21 @@ const UnifiedLayout = ({ children, activeConversationId, showFooter = false }: U
 
   if (!isAuthenticated) {
     return (
-      <GradientBackground variant="primary" className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-black">
         <div className="flex-1">
           {children}
         </div>
         {showFooter && <Footer />}
-      </GradientBackground>
+      </div>
     );
   }
 
   return (
-    <GradientBackground variant="primary" className="h-screen">
-      <div className="flex h-full text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-black">
+      <div className="flex h-screen text-white">
         {/* Mobile menu button */}
         {isMobile && sidebarCollapsed && (
-          <div className="absolute top-4 left-4 z-10">
+          <div className="absolute top-4 left-4 z-50">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -65,17 +65,14 @@ const UnifiedLayout = ({ children, activeConversationId, showFooter = false }: U
         
         {/* Main content */}
         <div className={cn(
-          "flex-1 flex flex-col overflow-hidden",
-          !sidebarCollapsed && "ml-0",
-          sidebarCollapsed && !isMobile && "ml-0"
+          "flex-1 flex flex-col min-h-0",
+          !sidebarCollapsed && isMobile ? "hidden" : "flex"
         )}>
-          <div className="flex-1 overflow-hidden">
-            {children}
-          </div>
+          {children}
           {showFooter && <Footer />}
         </div>
       </div>
-    </GradientBackground>
+    </div>
   );
 };
 

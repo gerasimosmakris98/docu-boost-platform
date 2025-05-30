@@ -1,6 +1,5 @@
 
 import { useState, useRef, KeyboardEvent } from "react";
-import { motion } from "framer-motion";
 import { Send, Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,12 +65,8 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
   const canSend = (message.trim().length > 0 || files.length > 0) && !disabled;
 
   return (
-    <div className="sticky bottom-0 bg-black/20 backdrop-blur-sm border-t border-white/10 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
-      >
+    <div className="border-t border-white/10 bg-black/20 backdrop-blur-sm p-4">
+      <div className="max-w-4xl mx-auto">
         {/* File Attachments Preview */}
         {files.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -101,7 +96,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="h-10 w-10 p-0 text-white/60 hover:text-white hover:bg-white/10"
+              className="h-10 w-10 p-0 text-white/60 hover:text-white hover:bg-white/10 flex-shrink-0"
               disabled={disabled}
             >
               <Paperclip className="h-4 w-4" />
@@ -129,7 +124,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
               onClick={handleSubmit}
               disabled={!canSend}
               size="sm"
-              className="h-10 w-10 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-10 w-10 p-0 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>
@@ -140,7 +135,7 @@ const ModernChatInput = ({ onSubmit, disabled, placeholder = "Type your message.
         <p className="text-center text-xs text-white/50 mt-2">
           Press Enter to send, Shift+Enter for new line
         </p>
-      </motion.div>
+      </div>
 
       {/* Hidden File Input */}
       <input

@@ -72,7 +72,7 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 flex items-center justify-between p-4 border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-semibold truncate text-white">
@@ -95,7 +95,7 @@ const ChatHeader = ({ conversation, onDelete, onRename }: ChatHeaderProps) => {
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700">
+          <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-700 z-50">
             <DropdownMenuItem onClick={() => setShowRenameDialog(true)} className="text-gray-300 hover:text-white hover:bg-gray-800">
               <Edit3 className="h-4 w-4 mr-2" />
               Rename
