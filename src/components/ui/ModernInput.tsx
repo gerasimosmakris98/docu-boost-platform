@@ -1,11 +1,11 @@
 
-import { forwardRef, ReactNode, InputHTMLAttributes } from "react";
+import React, { forwardRef, ReactNode, InputHTMLAttributes } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
 import { useState } from "react";
 
-interface ModernInputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface ModernInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onDrag'> {
   label?: string;
   icon?: ReactNode;
   iconPosition?: 'left' | 'right';
@@ -71,7 +71,7 @@ const ModernInput = forwardRef<HTMLInputElement, ModernInputProps>(({
         )}
 
         {/* Input field */}
-        <motion.input
+        <input
           ref={ref}
           type={inputType}
           className={cn(

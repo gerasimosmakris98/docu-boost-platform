@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass' | 'gradient';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
-interface AnimatedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface AnimatedButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag'> {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -69,10 +69,11 @@ const AnimatedButton = ({
   };
 
   const isDisabled = disabled || loading;
+  const motionProps = animations[animation];
 
   return (
     <motion.button
-      {...animations[animation]}
+      {...motionProps}
       className={cn(
         "relative overflow-hidden font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900",
         "disabled:opacity-50 disabled:cursor-not-allowed",
