@@ -53,15 +53,15 @@ const TermsPage = () => {
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">1. Agreement to Terms</h2>
                 <p className="text-white/80 leading-relaxed">
-                  By accessing and using Echo, you accept and agree to be bound by the terms and provision of this agreement. 
-                  Echo is an AI-powered career guidance platform designed to help users achieve their professional goals.
+                  By accessing and using AI Career Advisor, you accept and agree to be bound by the terms and provision of this agreement. 
+                  AI Career Advisor is an AI-powered career guidance platform designed to help users achieve their professional goals.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">2. Use License</h2>
                 <p className="text-white/80 leading-relaxed mb-4">
-                  Permission is granted to temporarily use Echo for personal, non-commercial transitory viewing only. This includes:
+                  Permission is granted to temporarily use AI Career Advisor for personal, non-commercial transitory viewing only. This includes:
                 </p>
                 <ul className="list-disc list-inside text-white/80 space-y-2 ml-4">
                   <li>Receiving personalized career advice and guidance</li>
@@ -74,7 +74,7 @@ const TermsPage = () => {
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">3. AI Services Disclaimer</h2>
                 <p className="text-white/80 leading-relaxed">
-                  Echo provides AI-generated career advice and guidance. While we strive for accuracy and relevance, 
+                  AI Career Advisor provides AI-generated career advice and guidance. While we strive for accuracy and relevance, 
                   AI recommendations should be considered as supplementary guidance rather than definitive career decisions. 
                   Users are encouraged to verify information and consult with professional career counselors when making significant career choices.
                 </p>
@@ -83,14 +83,14 @@ const TermsPage = () => {
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">4. User Data and Privacy</h2>
                 <p className="text-white/80 leading-relaxed">
-                  Your privacy is important to us. Echo collects and processes personal information in accordance with our Privacy Policy. 
+                  Your privacy is important to us. AI Career Advisor collects and processes personal information in accordance with our Privacy Policy. 
                   By using our services, you consent to the collection and use of information as outlined in our privacy practices.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">5. Prohibited Uses</h2>
-                <p className="text-white/80 leading-relaxed mb-4">You may not use Echo for:</p>
+                <p className="text-white/80 leading-relaxed mb-4">You may not use AI Career Advisor for:</p>
                 <ul className="list-disc list-inside text-white/80 space-y-2 ml-4">
                   <li>Any unlawful purpose or to solicit others to perform illegal acts</li>
                   <li>Violating any international, federal, provincial, or state regulations, rules, laws, or local ordinances</li>

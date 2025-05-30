@@ -39,13 +39,13 @@ const WelcomePage = () => {
   const quickActions = [
     {
       icon: <MessageCircle className="h-6 w-6" />,
-      title: "Talk with Echo",
+      title: "Talk with AI Career Advisor",
       subtitle: "Start chatting now",
       variant: "primary" as const
     },
     {
       icon: <Search className="h-6 w-6" />,
-      title: "Chat with Echo",
+      title: "Chat with AI Career Advisor",
       subtitle: "Voice conversation",
       variant: "secondary" as const
     },
@@ -114,7 +114,7 @@ const WelcomePage = () => {
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Meet Echo!
+                Meet AI Career Advisor!
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-white/90 mb-12 leading-relaxed max-w-3xl mx-auto">
@@ -180,7 +180,7 @@ const WelcomePage = () => {
           className="max-w-6xl mx-auto"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
-            Why Choose Echo?
+            Why Choose AI Career Advisor?
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -211,7 +211,7 @@ const WelcomePage = () => {
           className="text-center mt-20 pb-8"
         >
           <p className="text-white/70 mb-4 text-lg">
-            Join thousands of professionals transforming their careers with Echo
+            Join thousands of professionals transforming their careers with AI Career Advisor
           </p>
           <p className="text-sm text-white/50">
             ✨ Free to start • 🚀 No credit card required • 🔒 Your data is secure

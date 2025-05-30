@@ -31,7 +31,7 @@ const Logo = ({ size = "md", withLink = true, className, showIcon = true }: Logo
         "font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent",
         size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-lg"
       )}>
-        Echo
+        AI Career Advisor
       </span>
     </div>
   );

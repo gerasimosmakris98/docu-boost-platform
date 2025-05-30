@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { conversationService, Conversation, Message } from "@/services/conversationService";
 import { unifiedMessageService } from "@/services/unifiedMessageService";
 import UnifiedChatMessage from "./UnifiedChatMessage";
-import ChatInput from "./components/ChatInput";
+import ModernChatInput from "./ModernChatInput";
 import ChatHeader from "./ChatHeader";
 import MessageSearch from "./MessageSearch";
 import TypingIndicator from "./TypingIndicator";
@@ -14,6 +14,8 @@ import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import GradientBackground from "@/components/ui/GradientBackground";
+import ModernCard from "@/components/ui/ModernCard";
 
 interface StreamlinedChatInterfaceProps {
   conversationId?: string;
@@ -77,7 +79,7 @@ const StreamlinedChatInterface = ({
     }
   }, [isOnline, isReconnecting]);
   
-  const handleSendMessage = useCallback(async (messageText: string, attachmentUrls: string[]) => {
+  const handleSendMessage = useCallback(async (messageText: string) => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: location.pathname } });
       return;
@@ -88,8 +90,8 @@ const StreamlinedChatInterface = ({
       return;
     }
     
-    if (!messageText.trim() && attachmentUrls.length === 0) {
-      toast.error("Please enter a message or attach a file.");
+    if (!messageText.trim()) {
+      toast.error("Please enter a message.");
       return;
     }
 
@@ -98,7 +100,7 @@ const StreamlinedChatInterface = ({
       return;
     }
     
-    console.log('Sending message:', messageText, 'attachments:', attachmentUrls);
+    console.log('Sending message:', messageText);
     
     // Add user message to UI immediately
     const optimisticUserMessage: Message = {
@@ -107,7 +109,7 @@ const StreamlinedChatInterface = ({
       role: 'user',
       content: messageText,
       created_at: new Date().toISOString(),
-      attachments: attachmentUrls
+      attachments: []
     };
     
     setMessages(prev => {
@@ -121,7 +123,7 @@ const StreamlinedChatInterface = ({
     
     try {
       console.log('Calling unifiedMessageService.sendMessage');
-      const response = await unifiedMessageService.sendMessage(conversationId, messageText, attachmentUrls);
+      const response = await unifiedMessageService.sendMessage(conversationId, messageText, []);
       
       console.log('Response received:', response);
       
@@ -200,23 +202,23 @@ const StreamlinedChatInterface = ({
   // Show loading state
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <GradientBackground className="flex items-center justify-center h-full">
         <motion.div 
           className="text-center space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-green-500 border-t-transparent mx-auto"></div>
-          <p className="text-gray-400">Loading conversation...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent mx-auto"></div>
+          <p className="text-white/70">Loading AI Career Advisor...</p>
         </motion.div>
-      </div>
+      </GradientBackground>
     );
   }
   
   return (
     <ErrorBoundary>
-      <div className="flex flex-col h-full bg-black">
+      <GradientBackground className="flex flex-col h-full">
         {/* Network status indicator */}
         {!isOnline && (
           <div className="bg-red-500/20 border-b border-red-500/30 p-2 text-center text-red-300 text-sm">
@@ -232,7 +234,7 @@ const StreamlinedChatInterface = ({
         />
 
         {/* Search Bar */}
-        <div className="p-2 border-b border-gray-800">
+        <div className="p-2 border-b border-white/10">
           <MessageSearch
             onSearch={setSearchQuery}
             onClear={() => setSearchQuery("")}
@@ -253,24 +255,24 @@ const StreamlinedChatInterface = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="rounded-full bg-gradient-to-r from-green-500/10 to-blue-500/10 p-4 sm:p-6 border border-green-500/20 mb-4 sm:mb-6">
+              <ModernCard className="p-8 text-center max-w-md" gradient>
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="text-2xl sm:text-4xl"
+                  className="text-4xl mb-4"
                 >
                   🤖
                 </motion.div>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2 text-white bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                Welcome to AI Career Advisor
-              </h3>
-              <p className="text-gray-400 mb-3 sm:mb-4 max-w-md text-sm sm:text-base">
-                I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Start by typing a message below.
-              </p>
+                <h3 className="text-xl font-semibold mb-3 text-white bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  Welcome to AI Career Advisor
+                </h3>
+                <p className="text-white/80 mb-4 leading-relaxed">
+                  I'm here to help you with your career journey. Ask me about resumes, interviews, job search strategies, or any career-related questions.
+                </p>
+                <p className="text-sm text-white/60">
+                  Start by typing a message below.
+                </p>
+              </ModernCard>
             </motion.div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
@@ -302,14 +304,14 @@ const StreamlinedChatInterface = ({
         </div>
         
         {/* Input area */}
-        <div>
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            isDisabled={!isAuthenticated || isSending || !isOnline}
-            isSending={isSending}
+        <div className="border-t border-white/10">
+          <ModernChatInput
+            onSubmit={handleSendMessage}
+            disabled={!isAuthenticated || isSending || !isOnline}
+            placeholder="Ask me about your career..."
           />
         </div>
-      </div>
+      </GradientBackground>
     </ErrorBoundary>
   );
 };

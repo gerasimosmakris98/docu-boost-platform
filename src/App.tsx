@@ -15,8 +15,6 @@ import ProfilePage from "./pages/ProfilePage";
 import TermsPage from "./pages/legal/TermsPage";
 import PrivacyPage from "./pages/legal/PrivacyPage";
 import CookiePage from "./pages/legal/CookiePage";
-import { useEffect, useState } from "react";
-import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,11 +34,11 @@ function App() {
               <AuthProvider>
                 <BrowserRouter>
                   <Helmet>
-                    <title>Echo - Your AI Career Companion</title>
-                    <meta name="description" content="Meet Echo, your intelligent AI career companion. Get personalized career advice, resume optimization, interview preparation, and job search strategies powered by advanced artificial intelligence." />
-                    <meta name="keywords" content="Echo, AI career advisor, career guidance, resume optimization, interview preparation, job search, artificial intelligence" />
-                    <meta property="og:title" content="Echo - Your AI Career Companion" />
-                    <meta property="og:description" content="Transform your career with Echo, the intelligent AI assistant that provides personalized guidance and support." />
+                    <title>AI Career Advisor - Your Intelligent Career Companion</title>
+                    <meta name="description" content="Meet AI Career Advisor, your intelligent career companion. Get personalized career advice, resume optimization, interview preparation, and job search strategies powered by advanced artificial intelligence." />
+                    <meta name="keywords" content="AI Career Advisor, career guidance, resume optimization, interview preparation, job search, artificial intelligence" />
+                    <meta property="og:title" content="AI Career Advisor - Your Intelligent Career Companion" />
+                    <meta property="og:description" content="Transform your career with AI Career Advisor, the intelligent assistant that provides personalized guidance and support." />
                     <meta property="og:type" content="website" />
                   </Helmet>
                   <Toaster />

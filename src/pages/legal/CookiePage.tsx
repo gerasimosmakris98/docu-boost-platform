@@ -54,13 +54,13 @@ const CookiePage = () => {
                 <h2 className="text-xl font-semibold text-white mb-4">1. What Are Cookies</h2>
                 <p className="text-white/80 leading-relaxed">
                   Cookies are small text files that are placed on your computer or mobile device when you visit our website. 
-                  They help Echo provide you with a better experience by remembering your preferences and improving our services.
+                  They help AI Career Advisor provide you with a better experience by remembering your preferences and improving our services.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-xl font-semibold text-white mb-4">2. How We Use Cookies</h2>
-                <p className="text-white/80 leading-relaxed mb-4">Echo uses cookies for the following purposes:</p>
+                <p className="text-white/80 leading-relaxed mb-4">AI Career Advisor uses cookies for the following purposes:</p>
                 <ul className="list-disc list-inside text-white/80 space-y-2 ml-4">
                   <li><strong>Essential Cookies:</strong> Required for basic website functionality and security</li>
                   <li><strong>Authentication Cookies:</strong> To keep you logged in and maintain your session</li>
@@ -100,7 +100,7 @@ const CookiePage = () => {
                   <li>Opt-out of specific tracking cookies through industry tools</li>
                 </ul>
                 <p className="text-white/80 leading-relaxed mt-4">
-                  Please note that disabling certain cookies may affect the functionality of Echo and your user experience.
+                  Please note that disabling certain cookies may affect the functionality of AI Career Advisor and your user experience.
                 </p>
               </section>
 
@@ -109,7 +109,7 @@ const CookiePage = () => {
                 <p className="text-white/80 leading-relaxed">
                   Some cookies help our AI system provide more personalized career advice by remembering your 
                   preferences, career goals, and interaction patterns. This data is processed securely and 
-                  helps Echo deliver more relevant and useful guidance.
+                  helps AI Career Advisor deliver more relevant and useful guidance.
                 </p>
               </section>
 

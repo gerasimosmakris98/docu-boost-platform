@@ -20,30 +20,30 @@ const ModernChatBubble = ({ children, isUser, avatar, timestamp, isLoading }: Mo
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-3 max-w-4xl mx-auto mb-6",
+        "flex gap-4 max-w-4xl mx-auto mb-6",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
         <Avatar className={cn(
-          "h-10 w-10 border-2 shadow-lg",
+          "h-12 w-12 border-2 shadow-lg backdrop-blur-sm",
           isUser 
-            ? "border-blue-300 bg-gradient-to-br from-blue-500 to-purple-500" 
-            : "border-emerald-300 bg-gradient-to-br from-emerald-500 to-teal-500"
+            ? "border-blue-300/50 bg-gradient-to-br from-blue-500/80 to-purple-500/80" 
+            : "border-cyan-300/50 bg-gradient-to-br from-cyan-500/80 to-teal-500/80"
         )}>
           {isUser ? (
             <>
               <AvatarImage src={avatar} />
-              <AvatarFallback className="text-white">
-                <User className="h-5 w-5" />
+              <AvatarFallback className="text-white bg-transparent">
+                <User className="h-6 w-6" />
               </AvatarFallback>
             </>
           ) : (
             <>
               <AvatarImage src="" />
-              <AvatarFallback className="text-white">
-                <Bot className="h-5 w-5" />
+              <AvatarFallback className="text-white bg-transparent">
+                <Bot className="h-6 w-6" />
               </AvatarFallback>
             </>
           )}
@@ -61,10 +61,10 @@ const ModernChatBubble = ({ children, isUser, avatar, timestamp, isLoading }: Mo
           animate={{ scale: 1 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            "inline-block max-w-[80%] rounded-2xl px-6 py-4 shadow-lg backdrop-blur-sm",
+            "inline-block max-w-[85%] rounded-2xl px-6 py-4 shadow-xl backdrop-blur-sm border",
             isUser
-              ? "bg-gradient-to-br from-blue-600 to-purple-600 text-white"
-              : "bg-white/90 dark:bg-gray-800/90 text-gray-900 dark:text-white border border-gray-200/50 dark:border-gray-700/50"
+              ? "bg-gradient-to-br from-blue-600/90 to-purple-600/90 text-white border-blue-300/20"
+              : "bg-white/10 text-white border-white/20"
           )}
         >
           {isLoading ? (
@@ -93,7 +93,7 @@ const ModernChatBubble = ({ children, isUser, avatar, timestamp, isLoading }: Mo
         {/* Timestamp */}
         {timestamp && (
           <div className={cn(
-            "text-xs text-gray-500 mt-1 px-2",
+            "text-xs text-white/50 mt-2 px-2",
             isUser ? "text-right" : "text-left"
           )}>
             {timestamp}
